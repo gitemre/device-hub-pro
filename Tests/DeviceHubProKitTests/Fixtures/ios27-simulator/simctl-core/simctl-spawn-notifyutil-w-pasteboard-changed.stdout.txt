@@ -1,0 +1,2 @@
+com.apple.pasteboard.notify.changed
+com.apple.pasteboard.notify.changed

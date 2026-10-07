@@ -1,0 +1,35 @@
+{
+  "devices" : {
+    "com.apple.CoreSimulator.SimRuntime.iOS-27-0" : [
+      {
+        "dataPath" : "\/private\/tmp\/aqa-tmp-01\/aqa-project-placeholder-01\/aqa-session-placeholder-000000000000\/fixtures00\/simtier\/set\/425BD068-3D87-4F27-BE58-EB56A58B2C3A\/data",
+        "dataPathSize" : 18337792,
+        "logPath" : "\/Users\/aqauser001\/Library\/Logs\/CoreSimulator\/425BD068-3D87-4F27-BE58-EB56A58B2C3A",
+        "udid" : "425BD068-3D87-4F27-BE58-EB56A58B2C3A",
+        "isAvailable" : true,
+        "deviceTypeIdentifier" : "com.apple.CoreSimulator.SimDeviceType.iPhone-17-Pro",
+        "state" : "Shutdown",
+        "name" : "DeviceHubPro-UI-core"
+      },
+      {
+        "dataPath" : "\/private\/tmp\/aqa-tmp-01\/aqa-project-placeholder-01\/aqa-session-placeholder-000000000000\/fixtures00\/simtier\/set\/B225F7EA-C520-4579-BB1C-5A6E2BB622EC\/data",
+        "dataPathSize" : 18337792,
+        "logPath" : "\/Users\/aqauser001\/Library\/Logs\/CoreSimulator\/B225F7EA-C520-4579-BB1C-5A6E2BB622EC",
+        "udid" : "B225F7EA-C520-4579-BB1C-5A6E2BB622EC",
+        "isAvailable" : true,
+        "deviceTypeIdentifier" : "com.apple.CoreSimulator.SimDeviceType.iPhone-17-Pro",
+        "state" : "Shutdown",
+        "name" : "DeviceHubPro-UI-core-clone"
+      }
+    ],
+    "com.apple.CoreSimulator.SimRuntime.tvOS-27-0" : [
+
+    ],
+    "com.apple.CoreSimulator.SimRuntime.tvOS-26-5" : [
+
+    ],
+    "com.apple.CoreSimulator.SimRuntime.iOS-26-5" : [
+
+    ]
+  }
+}

@@ -1,0 +1,8 @@
+Starting: Intent { act=android.intent.action.VIEW cat=[android.intent.category.BROWSABLE] dat=https://video.example.com/... }
+Status: ok
+LaunchState: WARM
+Activity: com.google.android.permissioncontroller/com.android.permissioncontroller.permission.ui.GrantPermissionsActivity
+TotalTime: 374
+WaitTime: 377
+Complete
+@@devicehubpro:link:exit=0

@@ -1,0 +1,20 @@
+@@devicehubpro-lt:clock
+1790338698.906221
+@@devicehubpro-lt:offset
++0300
+@@devicehubpro-lt:config
+config: mcc310-mnc260-en-rUS-ldrtl-sw852dp-w852dp-h883dp-large-notlong-notround-nowidecg-lowdr-port-night-390dpi-finger-keysexposed-qwerty-navexposed-dpad-2152x2076-v37
+@@devicehubpro-lt:system-locales
+en-US-u-mu-celsius
+@@devicehubpro-lt:timezone
+Europe/Istanbul
+@@devicehubpro-lt:auto-time-zone
+1
+@@devicehubpro-lt:auto-time
+1
+@@devicehubpro-lt:time-12-24
+null
+@@devicehubpro-lt:tz-detector
+true
+@@devicehubpro-lt:time-detector
+true

@@ -1,0 +1,2 @@
+config: mcc310-mnc260-tr-rTR,de-rDE,en-rUS-ldrtl-sw852dp-w852dp-h883dp-large-notlong-notround-nowidecg-lowdr-port-night-390dpi-finger-keysexposed-qwerty-navexposed-dpad-2152x2076-v37
+abi: arm64-v8a

@@ -1,0 +1,32 @@
+{
+  "info" : {
+    "arguments" : [
+      "devicectl",
+      "device",
+      "info",
+      "apps",
+      "--device",
+      "00000000-0000000000000000",
+      "--json-output",
+      "raw/info-apps.json",
+      "-q"
+    ],
+    "commandType" : "devicectl.device.info.apps",
+    "environment" : {
+
+    },
+    "jsonVersion" : 5,
+    "outcome" : "success",
+    "version" : "642.16"
+  },
+  "result" : {
+    "apps" : [
+
+    ],
+    "defaultAppsIncluded" : false,
+    "deviceIdentifier" : "00000000-0000-4000-8000-000000000001",
+    "hiddenAppsIncluded" : false,
+    "internalAppsIncluded" : false,
+    "removableAppsIncluded" : true
+  }
+}

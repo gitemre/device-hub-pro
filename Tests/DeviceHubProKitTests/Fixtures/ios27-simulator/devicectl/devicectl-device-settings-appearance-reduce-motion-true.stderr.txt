@@ -1,0 +1,4 @@
+Error: The value 'true' is invalid for '--reduce-motion <reduce-motion>'. Please provide one of 'on' and 'off'.
+Help:  --reduce-motion <reduce-motion>  The reduce motion setting
+Usage: devicectl device settings appearance [<options>] --device <uuid|ecid|serial_number|udid|name|dns_name>
+  See 'devicectl device settings appearance --help' for more information.

@@ -1,0 +1,3 @@
+usage	layer	read_back_hex	read_back
+0x20	shift	U+0030 U+005E	0^
+0x21	shift	U+0030 U+002B U+0020	0+ 

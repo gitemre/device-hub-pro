@@ -1,0 +1,3 @@
+Error: --color-filter-intensity must be between 0.25 and 1.0
+Usage: devicectl device settings appearance [<options>] --device <uuid|ecid|serial_number|udid|name|dns_name>
+  See 'devicectl device settings appearance --help' for more information.

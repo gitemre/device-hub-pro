@@ -1,0 +1,215 @@
+add device 1: /dev/input/event11
+  name:     "virtio_input_multi_touch_11"
+  events:
+    KEY (0001): BTN_TOOL_RUBBER       BTN_STYLUS           
+    ABS (0003): ABS_X                 : value 0, min 0, max 32767, fuzz 0, flat 0, resolution 0
+                ABS_Y                 : value 0, min 0, max 32767, fuzz 0, flat 0, resolution 0
+                ABS_Z                 : value 0, min 0, max 1, fuzz 0, flat 0, resolution 0
+                ABS_MT_SLOT           : value 0, min 0, max 10, fuzz 0, flat 0, resolution 0
+                ABS_MT_TOUCH_MAJOR    : value 0, min 0, max 2147483647, fuzz 0, flat 0, resolution 0
+                ABS_MT_TOUCH_MINOR    : value 0, min 0, max 2147483647, fuzz 0, flat 0, resolution 0
+                ABS_MT_ORIENTATION    : value 0, min 0, max 90, fuzz 0, flat 0, resolution 0
+                ABS_MT_POSITION_X     : value 0, min 0, max 32767, fuzz 0, flat 0, resolution 0
+                ABS_MT_POSITION_Y     : value 0, min 0, max 32767, fuzz 0, flat 0, resolution 0
+                ABS_MT_TOOL_TYPE      : value 0, min 0, max 15, fuzz 0, flat 0, resolution 0
+                ABS_MT_TRACKING_ID    : value 0, min 0, max 65535, fuzz 0, flat 0, resolution 0
+                ABS_MT_PRESSURE       : value 0, min 0, max 1024, fuzz 0, flat 0, resolution 0
+    SW  (0005): SW_LID               
+  input props:
+    <none>
+add device 2: /dev/input/event10
+  name:     "virtio_input_multi_touch_10"
+  events:
+    KEY (0001): BTN_TOOL_RUBBER       BTN_STYLUS           
+    ABS (0003): ABS_X                 : value 0, min 0, max 32767, fuzz 0, flat 0, resolution 0
+                ABS_Y                 : value 0, min 0, max 32767, fuzz 0, flat 0, resolution 0
+                ABS_Z                 : value 0, min 0, max 1, fuzz 0, flat 0, resolution 0
+                ABS_MT_SLOT           : value 0, min 0, max 10, fuzz 0, flat 0, resolution 0
+                ABS_MT_TOUCH_MAJOR    : value 0, min 0, max 2147483647, fuzz 0, flat 0, resolution 0
+                ABS_MT_TOUCH_MINOR    : value 0, min 0, max 2147483647, fuzz 0, flat 0, resolution 0
+                ABS_MT_ORIENTATION    : value 0, min 0, max 90, fuzz 0, flat 0, resolution 0
+                ABS_MT_POSITION_X     : value 0, min 0, max 32767, fuzz 0, flat 0, resolution 0
+                ABS_MT_POSITION_Y     : value 0, min 0, max 32767, fuzz 0, flat 0, resolution 0
+                ABS_MT_TOOL_TYPE      : value 0, min 0, max 15, fuzz 0, flat 0, resolution 0
+                ABS_MT_TRACKING_ID    : value 0, min 0, max 65535, fuzz 0, flat 0, resolution 0
+                ABS_MT_PRESSURE       : value 0, min 0, max 1024, fuzz 0, flat 0, resolution 0
+    SW  (0005): SW_LID               
+  input props:
+    <none>
+add device 3: /dev/input/event9
+  name:     "virtio_input_multi_touch_9"
+  events:
+    KEY (0001): BTN_TOOL_RUBBER       BTN_STYLUS           
+    ABS (0003): ABS_X                 : value 0, min 0, max 32767, fuzz 0, flat 0, resolution 0
+                ABS_Y                 : value 0, min 0, max 32767, fuzz 0, flat 0, resolution 0
+                ABS_Z                 : value 0, min 0, max 1, fuzz 0, flat 0, resolution 0
+                ABS_MT_SLOT           : value 0, min 0, max 10, fuzz 0, flat 0, resolution 0
+                ABS_MT_TOUCH_MAJOR    : value 0, min 0, max 2147483647, fuzz 0, flat 0, resolution 0
+                ABS_MT_TOUCH_MINOR    : value 0, min 0, max 2147483647, fuzz 0, flat 0, resolution 0
+                ABS_MT_ORIENTATION    : value 0, min 0, max 90, fuzz 0, flat 0, resolution 0
+                ABS_MT_POSITION_X     : value 0, min 0, max 32767, fuzz 0, flat 0, resolution 0
+                ABS_MT_POSITION_Y     : value 0, min 0, max 32767, fuzz 0, flat 0, resolution 0
+                ABS_MT_TOOL_TYPE      : value 0, min 0, max 15, fuzz 0, flat 0, resolution 0
+                ABS_MT_TRACKING_ID    : value 0, min 0, max 65535, fuzz 0, flat 0, resolution 0
+                ABS_MT_PRESSURE       : value 0, min 0, max 1024, fuzz 0, flat 0, resolution 0
+    SW  (0005): SW_LID               
+  input props:
+    <none>
+add device 4: /dev/input/event8
+  name:     "virtio_input_multi_touch_8"
+  events:
+    KEY (0001): BTN_TOOL_RUBBER       BTN_STYLUS           
+    ABS (0003): ABS_X                 : value 0, min 0, max 32767, fuzz 0, flat 0, resolution 0
+                ABS_Y                 : value 0, min 0, max 32767, fuzz 0, flat 0, resolution 0
+                ABS_Z                 : value 0, min 0, max 1, fuzz 0, flat 0, resolution 0
+                ABS_MT_SLOT           : value 0, min 0, max 10, fuzz 0, flat 0, resolution 0
+                ABS_MT_TOUCH_MAJOR    : value 0, min 0, max 2147483647, fuzz 0, flat 0, resolution 0
+                ABS_MT_TOUCH_MINOR    : value 0, min 0, max 2147483647, fuzz 0, flat 0, resolution 0
+                ABS_MT_ORIENTATION    : value 0, min 0, max 90, fuzz 0, flat 0, resolution 0
+                ABS_MT_POSITION_X     : value 0, min 0, max 32767, fuzz 0, flat 0, resolution 0
+                ABS_MT_POSITION_Y     : value 0, min 0, max 32767, fuzz 0, flat 0, resolution 0
+                ABS_MT_TOOL_TYPE      : value 0, min 0, max 15, fuzz 0, flat 0, resolution 0
+                ABS_MT_TRACKING_ID    : value 0, min 0, max 65535, fuzz 0, flat 0, resolution 0
+                ABS_MT_PRESSURE       : value 0, min 0, max 1024, fuzz 0, flat 0, resolution 0
+    SW  (0005): SW_LID               
+  input props:
+    <none>
+add device 5: /dev/input/event7
+  name:     "virtio_input_multi_touch_7"
+  events:
+    KEY (0001): BTN_TOOL_RUBBER       BTN_STYLUS           
+    ABS (0003): ABS_X                 : value 0, min 0, max 32767, fuzz 0, flat 0, resolution 0
+                ABS_Y                 : value 0, min 0, max 32767, fuzz 0, flat 0, resolution 0
+                ABS_Z                 : value 0, min 0, max 1, fuzz 0, flat 0, resolution 0
+                ABS_MT_SLOT           : value 0, min 0, max 10, fuzz 0, flat 0, resolution 0
+                ABS_MT_TOUCH_MAJOR    : value 0, min 0, max 2147483647, fuzz 0, flat 0, resolution 0
+                ABS_MT_TOUCH_MINOR    : value 0, min 0, max 2147483647, fuzz 0, flat 0, resolution 0
+                ABS_MT_ORIENTATION    : value 0, min 0, max 90, fuzz 0, flat 0, resolution 0
+                ABS_MT_POSITION_X     : value 0, min 0, max 32767, fuzz 0, flat 0, resolution 0
+                ABS_MT_POSITION_Y     : value 0, min 0, max 32767, fuzz 0, flat 0, resolution 0
+                ABS_MT_TOOL_TYPE      : value 0, min 0, max 15, fuzz 0, flat 0, resolution 0
+                ABS_MT_TRACKING_ID    : value 0, min 0, max 65535, fuzz 0, flat 0, resolution 0
+                ABS_MT_PRESSURE       : value 0, min 0, max 1024, fuzz 0, flat 0, resolution 0
+    SW  (0005): SW_LID               
+  input props:
+    <none>
+add device 6: /dev/input/event6
+  name:     "virtio_input_multi_touch_6"
+  events:
+    KEY (0001): BTN_TOOL_RUBBER       BTN_STYLUS           
+    ABS (0003): ABS_X                 : value 0, min 0, max 32767, fuzz 0, flat 0, resolution 0
+                ABS_Y                 : value 0, min 0, max 32767, fuzz 0, flat 0, resolution 0
+                ABS_Z                 : value 0, min 0, max 1, fuzz 0, flat 0, resolution 0
+                ABS_MT_SLOT           : value 0, min 0, max 10, fuzz 0, flat 0, resolution 0
+                ABS_MT_TOUCH_MAJOR    : value 0, min 0, max 2147483647, fuzz 0, flat 0, resolution 0
+                ABS_MT_TOUCH_MINOR    : value 0, min 0, max 2147483647, fuzz 0, flat 0, resolution 0
+                ABS_MT_ORIENTATION    : value 0, min 0, max 90, fuzz 0, flat 0, resolution 0
+                ABS_MT_POSITION_X     : value 0, min 0, max 32767, fuzz 0, flat 0, resolution 0
+                ABS_MT_POSITION_Y     : value 0, min 0, max 32767, fuzz 0, flat 0, resolution 0
+                ABS_MT_TOOL_TYPE      : value 0, min 0, max 15, fuzz 0, flat 0, resolution 0
+                ABS_MT_TRACKING_ID    : value 0, min 0, max 65535, fuzz 0, flat 0, resolution 0
+                ABS_MT_PRESSURE       : value 0, min 0, max 1024, fuzz 0, flat 0, resolution 0
+    SW  (0005): SW_LID               
+  input props:
+    <none>
+add device 7: /dev/input/event5
+  name:     "virtio_input_multi_touch_5"
+  events:
+    KEY (0001): BTN_TOOL_RUBBER       BTN_STYLUS           
+    ABS (0003): ABS_X                 : value 0, min 0, max 32767, fuzz 0, flat 0, resolution 0
+                ABS_Y                 : value 0, min 0, max 32767, fuzz 0, flat 0, resolution 0
+                ABS_Z                 : value 0, min 0, max 1, fuzz 0, flat 0, resolution 0
+                ABS_MT_SLOT           : value 0, min 0, max 10, fuzz 0, flat 0, resolution 0
+                ABS_MT_TOUCH_MAJOR    : value 0, min 0, max 2147483647, fuzz 0, flat 0, resolution 0
+                ABS_MT_TOUCH_MINOR    : value 0, min 0, max 2147483647, fuzz 0, flat 0, resolution 0
+                ABS_MT_ORIENTATION    : value 0, min 0, max 90, fuzz 0, flat 0, resolution 0
+                ABS_MT_POSITION_X     : value 0, min 0, max 32767, fuzz 0, flat 0, resolution 0
+                ABS_MT_POSITION_Y     : value 0, min 0, max 32767, fuzz 0, flat 0, resolution 0
+                ABS_MT_TOOL_TYPE      : value 0, min 0, max 15, fuzz 0, flat 0, resolution 0
+                ABS_MT_TRACKING_ID    : value 0, min 0, max 65535, fuzz 0, flat 0, resolution 0
+                ABS_MT_PRESSURE       : value 0, min 0, max 1024, fuzz 0, flat 0, resolution 0
+    SW  (0005): SW_LID               
+  input props:
+    <none>
+add device 8: /dev/input/event4
+  name:     "virtio_input_multi_touch_4"
+  events:
+    KEY (0001): BTN_TOOL_RUBBER       BTN_STYLUS           
+    ABS (0003): ABS_X                 : value 0, min 0, max 32767, fuzz 0, flat 0, resolution 0
+                ABS_Y                 : value 0, min 0, max 32767, fuzz 0, flat 0, resolution 0
+                ABS_Z                 : value 0, min 0, max 1, fuzz 0, flat 0, resolution 0
+                ABS_MT_SLOT           : value 0, min 0, max 10, fuzz 0, flat 0, resolution 0
+                ABS_MT_TOUCH_MAJOR    : value 0, min 0, max 2147483647, fuzz 0, flat 0, resolution 0
+                ABS_MT_TOUCH_MINOR    : value 0, min 0, max 2147483647, fuzz 0, flat 0, resolution 0
+                ABS_MT_ORIENTATION    : value 0, min 0, max 90, fuzz 0, flat 0, resolution 0
+                ABS_MT_POSITION_X     : value 0, min 0, max 32767, fuzz 0, flat 0, resolution 0
+                ABS_MT_POSITION_Y     : value 0, min 0, max 32767, fuzz 0, flat 0, resolution 0
+                ABS_MT_TOOL_TYPE      : value 0, min 0, max 15, fuzz 0, flat 0, resolution 0
+                ABS_MT_TRACKING_ID    : value 0, min 0, max 65535, fuzz 0, flat 0, resolution 0
+                ABS_MT_PRESSURE       : value 0, min 0, max 1024, fuzz 0, flat 0, resolution 0
+    SW  (0005): SW_LID               
+  input props:
+    <none>
+add device 9: /dev/input/event3
+  name:     "virtio_input_multi_touch_3"
+  events:
+    KEY (0001): BTN_TOOL_RUBBER       BTN_STYLUS           
+    ABS (0003): ABS_X                 : value 0, min 0, max 32767, fuzz 0, flat 0, resolution 0
+                ABS_Y                 : value 0, min 0, max 32767, fuzz 0, flat 0, resolution 0
+                ABS_Z                 : value 0, min 0, max 1, fuzz 0, flat 0, resolution 0
+                ABS_MT_SLOT           : value 0, min 0, max 10, fuzz 0, flat 0, resolution 0
+                ABS_MT_TOUCH_MAJOR    : value 0, min 0, max 2147483647, fuzz 0, flat 0, resolution 0
+                ABS_MT_TOUCH_MINOR    : value 0, min 0, max 2147483647, fuzz 0, flat 0, resolution 0
+                ABS_MT_ORIENTATION    : value 0, min 0, max 90, fuzz 0, flat 0, resolution 0
+                ABS_MT_POSITION_X     : value 0, min 0, max 32767, fuzz 0, flat 0, resolution 0
+                ABS_MT_POSITION_Y     : value 0, min 0, max 32767, fuzz 0, flat 0, resolution 0
+                ABS_MT_TOOL_TYPE      : value 0, min 0, max 15, fuzz 0, flat 0, resolution 0
+                ABS_MT_TRACKING_ID    : value 0, min 0, max 65535, fuzz 0, flat 0, resolution 0
+                ABS_MT_PRESSURE       : value 0, min 0, max 1024, fuzz 0, flat 0, resolution 0
+    SW  (0005): SW_LID               
+  input props:
+    <none>
+add device 10: /dev/input/event2
+  name:     "virtio_input_multi_touch_2"
+  events:
+    KEY (0001): BTN_TOOL_RUBBER       BTN_STYLUS           
+    ABS (0003): ABS_X                 : value 0, min 0, max 32767, fuzz 0, flat 0, resolution 0
+                ABS_Y                 : value 0, min 0, max 32767, fuzz 0, flat 0, resolution 0
+                ABS_Z                 : value 0, min 0, max 1, fuzz 0, flat 0, resolution 0
+                ABS_MT_SLOT           : value 0, min 0, max 10, fuzz 0, flat 0, resolution 0
+                ABS_MT_TOUCH_MAJOR    : value 0, min 0, max 2147483647, fuzz 0, flat 0, resolution 0
+                ABS_MT_TOUCH_MINOR    : value 0, min 0, max 2147483647, fuzz 0, flat 0, resolution 0
+                ABS_MT_ORIENTATION    : value 0, min 0, max 90, fuzz 0, flat 0, resolution 0
+                ABS_MT_POSITION_X     : value 0, min 0, max 32767, fuzz 0, flat 0, resolution 0
+                ABS_MT_POSITION_Y     : value 0, min 0, max 32767, fuzz 0, flat 0, resolution 0
+                ABS_MT_TOOL_TYPE      : value 0, min 0, max 15, fuzz 0, flat 0, resolution 0
+                ABS_MT_TRACKING_ID    : value 0, min 0, max 65535, fuzz 0, flat 0, resolution 0
+                ABS_MT_PRESSURE       : value 0, min 0, max 1024, fuzz 0, flat 0, resolution 0
+    SW  (0005): SW_LID               
+  input props:
+    <none>
+add device 11: /dev/input/event1
+  name:     "virtio_input_multi_touch_1"
+  events:
+    KEY (0001): BTN_TOOL_RUBBER       BTN_STYLUS           
+    ABS (0003): ABS_X                 : value 0, min 0, max 32767, fuzz 0, flat 0, resolution 0
+                ABS_Y                 : value 0, min 0, max 32767, fuzz 0, flat 0, resolution 0
+                ABS_Z                 : value 0, min 0, max 1, fuzz 0, flat 0, resolution 0
+                ABS_MT_SLOT           : value 0, min 0, max 10, fuzz 0, flat 0, resolution 0
+                ABS_MT_TOUCH_MAJOR    : value 0, min 0, max 2147483647, fuzz 0, flat 0, resolution 0
+                ABS_MT_TOUCH_MINOR    : value 0, min 0, max 2147483647, fuzz 0, flat 0, resolution 0
+                ABS_MT_ORIENTATION    : value 0, min 0, max 90, fuzz 0, flat 0, resolution 0
+                ABS_MT_POSITION_X     : value 0, min 0, max 32767, fuzz 0, flat 0, resolution 0
+                ABS_MT_POSITION_Y     : value 0, min 0, max 32767, fuzz 0, flat 0, resolution 0
+                ABS_MT_TOOL_TYPE      : value 0, min 0, max 15, fuzz 0, flat 0, resolution 0
+                ABS_MT_TRACKING_ID    : value 0, min 0, max 65535, fuzz 0, flat 0, resolution 0
+                ABS_MT_PRESSURE       : value 0, min 0, max 1024, fuzz 0, flat 0, resolution 0
+    SW  (0005): SW_LID               
+  input props:
+    <none>
+add device 12: /dev/input/event0
+  name:     "gpio-keys"
+  events:
+    KEY (0001): KEY_POWER            
+  input props:
+    <none>

@@ -1,0 +1,12 @@
+0|android|0|0|android|g:Aggregate_AlertingSection|1000|0|android|g:Aggregate_AlertingSection
+0|com.google.android.dialer|1|MissedCall_1790293465364|10154
+0|com.google.android.dialer|1|MissedCall_1790322869657|10154
+0|com.example.messages|2|com.example.messages:incoming_message:2|10149
+0|com.google.android.dialer|1|MissedCall_1790290755707|10154
+0|com.google.android.dialer|1|MissedCall_1790294509437|10154
+0|android|2345|ChFBbmRyb2lkTG9ja1NjcmVlbhIRTm9TY3JlZW5Mb2NrSXNzdWUYAA==|1000
+0|com.google.android.dialer|1|GroupSummary_MissedCall|10154
+0|com.google.android.dialer|1|MissedCall_1790291043044|10154
+0|com.google.android.dialer|1|MissedCall_1790322879327|10154
+0|com.google.android.dialer|1|MissedCall_1790291368610|10154
+0|com.google.android.dialer|1|MissedCall_1790291054002|10154

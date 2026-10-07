@@ -1,0 +1,495 @@
+{
+  "info" : {
+    "arguments" : [
+      "devicectl",
+      "device",
+      "info",
+      "files",
+      "--device",
+      "00000000-0000000000000000",
+      "--domain-type",
+      "appDataContainer",
+      "--domain-identifier",
+      "com.devicehubpro.verifier",
+      "--json-output",
+      "raw-write/info-files-verifier.json",
+      "-q"
+    ],
+    "commandType" : "devicectl.device.info.files",
+    "environment" : {
+
+    },
+    "jsonVersion" : 5,
+    "outcome" : "success",
+    "version" : "642.16"
+  },
+  "result" : {
+    "deviceIdentifier" : "00000000-0000-4000-8000-000000000001",
+    "domain" : "appDataContainer",
+    "domainIdentifier" : "com.devicehubpro.verifier",
+    "files" : [
+      {
+        "metadata" : {
+          "extendedAttributes" : {
+
+          },
+          "lastModDate" : "2026-09-28T21:47:12.000Z",
+          "ownerGid" : 501,
+          "ownerUid" : 501,
+          "permissions" : 493,
+          "size" : 96
+        },
+        "name" : "Documents",
+        "relativePath" : "Documents",
+        "resources" : {
+          "isDirectory" : true,
+          "isHidden" : false,
+          "isReadable" : true,
+          "isSymbolicLink" : false,
+          "isWritable" : true
+        }
+      },
+      {
+        "metadata" : {
+          "extendedAttributes" : {
+
+          },
+          "lastModDate" : "2026-09-28T21:47:12.000Z",
+          "ownerGid" : 501,
+          "ownerUid" : 501,
+          "permissions" : 420,
+          "size" : 4724
+        },
+        "name" : "Documents/readings.json",
+        "relativePath" : "Documents/readings.json",
+        "resources" : {
+          "isDirectory" : false,
+          "isHidden" : false,
+          "isReadable" : true,
+          "isSymbolicLink" : false,
+          "isWritable" : true
+        }
+      },
+      {
+        "metadata" : {
+          "extendedAttributes" : {
+
+          },
+          "lastModDate" : "2026-09-28T21:47:12.000Z",
+          "ownerGid" : 501,
+          "ownerUid" : 501,
+          "permissions" : 493,
+          "size" : 192
+        },
+        "name" : "Library",
+        "relativePath" : "Library",
+        "resources" : {
+          "isDirectory" : true,
+          "isHidden" : false,
+          "isReadable" : true,
+          "isSymbolicLink" : false,
+          "isWritable" : true
+        }
+      },
+      {
+        "metadata" : {
+          "extendedAttributes" : {
+
+          },
+          "lastModDate" : "2026-09-28T21:47:11.000Z",
+          "ownerGid" : 501,
+          "ownerUid" : 501,
+          "permissions" : 493,
+          "size" : 96
+        },
+        "name" : "Library/Caches",
+        "relativePath" : "Library/Caches",
+        "resources" : {
+          "isDirectory" : true,
+          "isHidden" : false,
+          "isReadable" : true,
+          "isSymbolicLink" : false,
+          "isWritable" : true
+        }
+      },
+      {
+        "metadata" : {
+          "extendedAttributes" : {
+
+          },
+          "lastModDate" : "2026-09-28T21:47:11.000Z",
+          "ownerGid" : 501,
+          "ownerUid" : 501,
+          "permissions" : 493,
+          "size" : 96
+        },
+        "name" : "Library/Caches/com.apple.dyld",
+        "relativePath" : "Library/Caches/com.apple.dyld",
+        "resources" : {
+          "isDirectory" : true,
+          "isHidden" : false,
+          "isReadable" : true,
+          "isSymbolicLink" : false,
+          "isWritable" : true
+        }
+      },
+      {
+        "metadata" : {
+          "extendedAttributes" : {
+
+          },
+          "lastModDate" : "2026-09-28T21:47:11.000Z",
+          "ownerGid" : 501,
+          "ownerUid" : 501,
+          "permissions" : 256,
+          "size" : 12568
+        },
+        "name" : "Library/Caches/com.apple.dyld/DeviceHubProVerifier.dyld4",
+        "relativePath" : "Library/Caches/com.apple.dyld/DeviceHubProVerifier.dyld4",
+        "resources" : {
+          "isDirectory" : false,
+          "isHidden" : false,
+          "isReadable" : true,
+          "isSymbolicLink" : false,
+          "isWritable" : true
+        }
+      },
+      {
+        "metadata" : {
+          "extendedAttributes" : {
+
+          },
+          "lastModDate" : "2026-09-28T21:47:05.000Z",
+          "ownerGid" : 501,
+          "ownerUid" : 501,
+          "permissions" : 493,
+          "size" : 64
+        },
+        "name" : "Library/Preferences",
+        "relativePath" : "Library/Preferences",
+        "resources" : {
+          "isDirectory" : true,
+          "isHidden" : false,
+          "isReadable" : true,
+          "isSymbolicLink" : false,
+          "isWritable" : true
+        }
+      },
+      {
+        "metadata" : {
+          "extendedAttributes" : {
+
+          },
+          "lastModDate" : "2026-09-28T21:47:12.000Z",
+          "ownerGid" : 501,
+          "ownerUid" : 501,
+          "permissions" : 493,
+          "size" : 96
+        },
+        "name" : "Library/Saved Application State",
+        "relativePath" : "Library/Saved Application State",
+        "resources" : {
+          "isDirectory" : true,
+          "isHidden" : false,
+          "isReadable" : true,
+          "isSymbolicLink" : false,
+          "isWritable" : true
+        }
+      },
+      {
+        "metadata" : {
+          "extendedAttributes" : {
+
+          },
+          "lastModDate" : "2026-09-28T21:47:12.000Z",
+          "ownerGid" : 501,
+          "ownerUid" : 501,
+          "permissions" : 493,
+          "size" : 128
+        },
+        "name" : "Library/Saved Application State/com.devicehubpro.verifier.savedState",
+        "relativePath" : "Library/Saved Application State/com.devicehubpro.verifier.savedState",
+        "resources" : {
+          "isDirectory" : true,
+          "isHidden" : false,
+          "isReadable" : true,
+          "isSymbolicLink" : false,
+          "isWritable" : true
+        }
+      },
+      {
+        "metadata" : {
+          "extendedAttributes" : {
+
+          },
+          "lastModDate" : "2026-09-28T21:47:12.000Z",
+          "ownerGid" : 501,
+          "ownerUid" : 501,
+          "permissions" : 493,
+          "size" : 128
+        },
+        "name" : "Library/Saved Application State/com.devicehubpro.verifier.savedState/DF372A2C-74FD-44F0-A7DB-A7E4C63B5CBA",
+        "relativePath" : "Library/Saved Application State/com.devicehubpro.verifier.savedState/DF372A2C-74FD-44F0-A7DB-A7E4C63B5CBA",
+        "resources" : {
+          "isDirectory" : true,
+          "isHidden" : false,
+          "isReadable" : true,
+          "isSymbolicLink" : false,
+          "isWritable" : true
+        }
+      },
+      {
+        "metadata" : {
+          "extendedAttributes" : {
+
+          },
+          "lastModDate" : "2026-09-28T21:47:12.000Z",
+          "ownerGid" : 501,
+          "ownerUid" : 501,
+          "permissions" : 420,
+          "size" : 1094
+        },
+        "name" : "Library/Saved Application State/com.devicehubpro.verifier.savedState/DF372A2C-74FD-44F0-A7DB-A7E4C63B5CBA/data.data",
+        "relativePath" : "Library/Saved Application State/com.devicehubpro.verifier.savedState/DF372A2C-74FD-44F0-A7DB-A7E4C63B5CBA/data.data",
+        "resources" : {
+          "isDirectory" : false,
+          "isHidden" : false,
+          "isReadable" : true,
+          "isSymbolicLink" : false,
+          "isWritable" : true
+        }
+      },
+      {
+        "metadata" : {
+          "extendedAttributes" : {
+
+          },
+          "lastModDate" : "2026-09-28T21:47:12.000Z",
+          "ownerGid" : 501,
+          "ownerUid" : 501,
+          "permissions" : 420,
+          "size" : 452
+        },
+        "name" : "Library/Saved Application State/com.devicehubpro.verifier.savedState/DF372A2C-74FD-44F0-A7DB-A7E4C63B5CBA/userInfo.data",
+        "relativePath" : "Library/Saved Application State/com.devicehubpro.verifier.savedState/DF372A2C-74FD-44F0-A7DB-A7E4C63B5CBA/userInfo.data",
+        "resources" : {
+          "isDirectory" : false,
+          "isHidden" : false,
+          "isReadable" : true,
+          "isSymbolicLink" : false,
+          "isWritable" : true
+        }
+      },
+      {
+        "metadata" : {
+          "extendedAttributes" : {
+
+          },
+          "lastModDate" : "2026-09-28T21:47:12.000Z",
+          "ownerGid" : 501,
+          "ownerUid" : 501,
+          "permissions" : 493,
+          "size" : 96
+        },
+        "name" : "Library/Saved Application State/com.devicehubpro.verifier.savedState/KnownSceneSessions",
+        "relativePath" : "Library/Saved Application State/com.devicehubpro.verifier.savedState/KnownSceneSessions",
+        "resources" : {
+          "isDirectory" : true,
+          "isHidden" : false,
+          "isReadable" : true,
+          "isSymbolicLink" : false,
+          "isWritable" : true
+        }
+      },
+      {
+        "metadata" : {
+          "extendedAttributes" : {
+
+          },
+          "lastModDate" : "2026-09-28T21:47:12.000Z",
+          "ownerGid" : 501,
+          "ownerUid" : 501,
+          "permissions" : 420,
+          "size" : 1245
+        },
+        "name" : "Library/Saved Application State/com.devicehubpro.verifier.savedState/KnownSceneSessions/data.data",
+        "relativePath" : "Library/Saved Application State/com.devicehubpro.verifier.savedState/KnownSceneSessions/data.data",
+        "resources" : {
+          "isDirectory" : false,
+          "isHidden" : false,
+          "isReadable" : true,
+          "isSymbolicLink" : false,
+          "isWritable" : true
+        }
+      },
+      {
+        "metadata" : {
+          "extendedAttributes" : {
+
+          },
+          "lastModDate" : "2026-09-28T21:47:10.000Z",
+          "ownerGid" : 501,
+          "ownerUid" : 501,
+          "permissions" : 493,
+          "size" : 96
+        },
+        "name" : "Library/SplashBoard",
+        "relativePath" : "Library/SplashBoard",
+        "resources" : {
+          "isDirectory" : true,
+          "isHidden" : false,
+          "isReadable" : true,
+          "isSymbolicLink" : false,
+          "isWritable" : true
+        }
+      },
+      {
+        "metadata" : {
+          "extendedAttributes" : {
+
+          },
+          "lastModDate" : "2026-09-28T21:47:10.000Z",
+          "ownerGid" : 501,
+          "ownerUid" : 501,
+          "permissions" : 493,
+          "size" : 96
+        },
+        "name" : "Library/SplashBoard/Snapshots",
+        "relativePath" : "Library/SplashBoard/Snapshots",
+        "resources" : {
+          "isDirectory" : true,
+          "isHidden" : false,
+          "isReadable" : true,
+          "isSymbolicLink" : false,
+          "isWritable" : true
+        }
+      },
+      {
+        "metadata" : {
+          "extendedAttributes" : {
+
+          },
+          "lastModDate" : "2026-09-28T21:47:10.000Z",
+          "ownerGid" : 501,
+          "ownerUid" : 501,
+          "permissions" : 493,
+          "size" : 192
+        },
+        "name" : "Library/SplashBoard/Snapshots/com.devicehubpro.verifier - {DEFAULT GROUP}",
+        "relativePath" : "Library/SplashBoard/Snapshots/com.devicehubpro.verifier - {DEFAULT GROUP}",
+        "resources" : {
+          "isDirectory" : true,
+          "isHidden" : false,
+          "isReadable" : true,
+          "isSymbolicLink" : false,
+          "isWritable" : true
+        }
+      },
+      {
+        "metadata" : {
+          "extendedAttributes" : {
+
+          },
+          "lastModDate" : "2026-09-28T21:47:10.000Z",
+          "ownerGid" : 501,
+          "ownerUid" : 501,
+          "permissions" : 420,
+          "size" : 3293208
+        },
+        "name" : "Library/SplashBoard/Snapshots/com.devicehubpro.verifier - {DEFAULT GROUP}/5CB84C55-6D48-4C2F-B533-115627D5C9C7@3x.ktx",
+        "relativePath" : "Library/SplashBoard/Snapshots/com.devicehubpro.verifier - {DEFAULT GROUP}/5CB84C55-6D48-4C2F-B533-115627D5C9C7@3x.ktx",
+        "resources" : {
+          "isDirectory" : false,
+          "isHidden" : false,
+          "isReadable" : true,
+          "isSymbolicLink" : false,
+          "isWritable" : true
+        }
+      },
+      {
+        "metadata" : {
+          "extendedAttributes" : {
+
+          },
+          "lastModDate" : "2026-09-28T21:47:10.000Z",
+          "ownerGid" : 501,
+          "ownerUid" : 501,
+          "permissions" : 420,
+          "size" : 3293208
+        },
+        "name" : "Library/SplashBoard/Snapshots/com.devicehubpro.verifier - {DEFAULT GROUP}/5DC6CD73-0DEF-4D9B-BB88-ED7BC7D1D679@3x.ktx",
+        "relativePath" : "Library/SplashBoard/Snapshots/com.devicehubpro.verifier - {DEFAULT GROUP}/5DC6CD73-0DEF-4D9B-BB88-ED7BC7D1D679@3x.ktx",
+        "resources" : {
+          "isDirectory" : false,
+          "isHidden" : false,
+          "isReadable" : true,
+          "isSymbolicLink" : false,
+          "isWritable" : true
+        }
+      },
+      {
+        "metadata" : {
+          "extendedAttributes" : {
+
+          },
+          "lastModDate" : "2026-09-28T21:47:10.000Z",
+          "ownerGid" : 501,
+          "ownerUid" : 501,
+          "permissions" : 420,
+          "size" : 3293208
+        },
+        "name" : "Library/SplashBoard/Snapshots/com.devicehubpro.verifier - {DEFAULT GROUP}/D8A88B88-7735-4C29-9095-402786958E2A@3x.ktx",
+        "relativePath" : "Library/SplashBoard/Snapshots/com.devicehubpro.verifier - {DEFAULT GROUP}/D8A88B88-7735-4C29-9095-402786958E2A@3x.ktx",
+        "resources" : {
+          "isDirectory" : false,
+          "isHidden" : false,
+          "isReadable" : true,
+          "isSymbolicLink" : false,
+          "isWritable" : true
+        }
+      },
+      {
+        "metadata" : {
+          "extendedAttributes" : {
+
+          },
+          "lastModDate" : "2026-09-28T21:47:10.000Z",
+          "ownerGid" : 501,
+          "ownerUid" : 501,
+          "permissions" : 420,
+          "size" : 3293208
+        },
+        "name" : "Library/SplashBoard/Snapshots/com.devicehubpro.verifier - {DEFAULT GROUP}/DE2E64B9-6A4D-45E4-9055-1B18B7F1F31D@3x.ktx",
+        "relativePath" : "Library/SplashBoard/Snapshots/com.devicehubpro.verifier - {DEFAULT GROUP}/DE2E64B9-6A4D-45E4-9055-1B18B7F1F31D@3x.ktx",
+        "resources" : {
+          "isDirectory" : false,
+          "isHidden" : false,
+          "isReadable" : true,
+          "isSymbolicLink" : false,
+          "isWritable" : true
+        }
+      },
+      {
+        "metadata" : {
+          "extendedAttributes" : {
+
+          },
+          "lastModDate" : "2026-09-28T21:47:12.000Z",
+          "ownerGid" : 501,
+          "ownerUid" : 501,
+          "permissions" : 493,
+          "size" : 64
+        },
+        "name" : "tmp",
+        "relativePath" : "tmp",
+        "resources" : {
+          "isDirectory" : true,
+          "isHidden" : false,
+          "isReadable" : true,
+          "isSymbolicLink" : false,
+          "isWritable" : true
+        }
+      }
+    ]
+  }
+}

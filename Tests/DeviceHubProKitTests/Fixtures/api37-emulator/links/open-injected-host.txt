@@ -1,0 +1,9 @@
+Starting: Intent { act=android.intent.action.VIEW cat=[android.intent.category.BROWSABLE] dat=aqa-nohandler://h
+Warning: Activity not started, its current task has been brought to the front
+Status: ok
+Activity: com.evil/... }
+Error: Activity not started, unable to resolve Intent { act=android.intent.action.VIEW cat=[android.intent.category.BROWSABLE] dat=aqa-nohandler://h
+Warning: Activity not started, its current task has been brought to the front
+Status: ok
+Activity: com.evil/... flg=0x10000000 xflg=0x4 }
+@@devicehubpro:link:exit=1

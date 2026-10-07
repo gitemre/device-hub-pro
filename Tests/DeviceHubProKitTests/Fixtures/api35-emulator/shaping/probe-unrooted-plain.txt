@@ -1,0 +1,13 @@
+@@devicehubpro:shape:debuggable
+1
+@@devicehubpro:shape:uid
+2000
+@@devicehubpro:shape:route
+1.1.1.1 via 10.0.2.2 dev wlan0 table 1016 src 10.0.2.19 uid 2000 
+    cache 
+@@devicehubpro:shape:qdisc
+qdisc noqueue 0: dev lo root refcnt 2 
+qdisc noqueue 0: dev dummy0 root refcnt 2 
+qdisc pfifo_fast 0: dev ifb0 root refcnt 2 bands 3 priomap  1 2 2 2 1 2 0 0 1 1 1 1 1 1 1 1
+qdisc noqueue 0: dev wlan0 root refcnt 2 
+qdisc clsact ffff: dev wlan0 parent ffff:fff1 

@@ -1,0 +1,32 @@
+{"app_name":"intelligencetasksd","timestamp":"2026-09-25 13:45:20.00 +0300","app_version":"","slice_uuid":"b864fa4d-dd06-3137-a1af-4ff6634aa247","build_version":"","platform":7,"share_with_app_devs":0,"is_first_party":1,"bug_type":"309","os_version":"macOS 27.0 (26A428)","roots_installed":0,"incident_id":"B04152CF-BD0F-4925-89B7-340015BD64F6","name":"intelligencetasksd"}
+{
+  "captureTime" : "2026-09-25 13:45:11.1326 +0300",
+  "pid" : 55067,
+  "procName" : "intelligencetasksd",
+  "procPath" : "\/Volumes\/VOLUME\/*\/IntelligenceTasksEngine.framework\/Support\/intelligencetasksd",
+  "parentProc" : "launchd_sim",
+  "coalitionName" : "com.apple.CoreSimulator.SimDevice.D9F3A76F-51E7-4A91-B06E-11AC95157EE5",
+  "exception" : {"codes":"0x0000000000000001, 0x00000001c16c415c","rawCodes":[1,7540064604],"type":"EXC_BREAKPOINT","signal":"SIGTRAP"},
+  "termination" : {"flags":0,"code":5,"namespace":"SIGNAL","indicator":"Trace\/BPT trap: 5","byProc":"exc handler","byPid":55067},
+  "trialInfo" : {
+  "rollouts" : [
+    {
+      "rolloutId" : "661464ecda55e5192b100804",
+      "factorPackIds" : [
+
+      ],
+      "deploymentId" : 240000005
+    },
+    {
+      "rolloutId" : "642da32dea3b2418c750f848",
+      "factorPackIds" : [
+        "66d8b2f77cd4b62688efd2cf"
+      ],
+      "deploymentId" : 240000011
+    }
+  ],
+  "experiments" : [
+
+  ]
+}
+}

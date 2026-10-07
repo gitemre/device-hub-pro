@@ -1,0 +1,30 @@
+{
+  "info" : {
+    "arguments" : [
+      "devicectl",
+      "device",
+      "orientation",
+      "set",
+      "landscapeLeft",
+      "--device",
+      "5B59FD8E-4FE5-41B6-9B4F-0892086D6781",
+      "-j",
+      "-",
+      "-t",
+      "30"
+    ],
+    "commandType" : "devicectl.device.orientation.set",
+    "environment" : {
+
+    },
+    "jsonVersion" : 5,
+    "outcome" : "success",
+    "version" : "642.16"
+  },
+  "result" : {
+    "deviceIdentifier" : "5B59FD8E-4FE5-41B6-9B4F-0892086D6781",
+    "deviceIsOrientationLocked" : false,
+    "deviceOrientation" : "landscapeLeft",
+    "deviceOrientationNonFlat" : "landscapeLeft"
+  }
+}

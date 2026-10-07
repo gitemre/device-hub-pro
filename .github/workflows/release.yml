@@ -1,0 +1,207 @@
+# Builds Device Hub Pro.app and its disk image for a version tag (vX.Y.Z) and
+# uploads them as a workflow artifact. Without secrets the build is ad-hoc
+# signed ("unsigned" for Gatekeeper). With the secrets below it is signed
+# with Developer ID, and with the notary secrets too it is notarized and
+# stapled. With the Sparkle settings below as well, it runs Scripts/release.sh
+# (the same script as a release from a maintainer's Mac), which also signs the
+# disk image for in-app updates and writes appcast.xml. It never creates or
+# edits the GitHub release: attach the files yourself with the gh command the
+# job log prints (docs/distribution.md, "First release checklist").
+#
+# Secrets (Settings > Secrets and variables > Actions):
+#   MACOS_DEVELOPER_ID_P12_BASE64   base64 of the exported "Developer ID Application" certificate + key (.p12)
+#   MACOS_DEVELOPER_ID_P12_PASSWORD the .p12 export password
+#   MACOS_DEVELOPER_ID_IDENTITY     e.g. "Developer ID Application: Jane Doe (ABCDE12345)"
+#   MACOS_NOTARY_APPLE_ID           Apple ID email used for notarization
+#   MACOS_NOTARY_TEAM_ID            10-character Team ID
+#   MACOS_NOTARY_PASSWORD           app-specific password for that Apple ID
+#   SPARKLE_PRIVATE_KEY             the EdDSA private key (`generate_keys -x <file>`, file contents)
+# Repository variables (Settings > Secrets and variables > Actions > Variables):
+#   DHP_APPCAST_URL            the feed, e.g. https://github.com/OWNER/REPO/releases/latest/download/appcast.xml
+#   DHP_SPARKLE_PUBLIC_KEY     the public key generate_keys printed (not secret)
+name: Release
+
+on:
+  push:
+    tags: ["v*.*.*"]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  package:
+    name: Package Device Hub Pro.app
+    runs-on: ${{ vars.MACOS_RUNNER || 'macos-26' }}
+    timeout-minutes: 90
+    env:
+      HAS_SIGNING: ${{ secrets.MACOS_DEVELOPER_ID_P12_BASE64 != '' && secrets.MACOS_DEVELOPER_ID_P12_PASSWORD != '' && secrets.MACOS_DEVELOPER_ID_IDENTITY != '' }}
+      HAS_NOTARY: ${{ secrets.MACOS_NOTARY_APPLE_ID != '' && secrets.MACOS_NOTARY_TEAM_ID != '' && secrets.MACOS_NOTARY_PASSWORD != '' }}
+      HAS_SPARKLE: ${{ vars.DHP_APPCAST_URL != '' && vars.DHP_SPARKLE_PUBLIC_KEY != '' && secrets.SPARKLE_PRIVATE_KEY != '' }}
+      DHP_APPCAST_URL: ${{ vars.DHP_APPCAST_URL }}
+      DHP_SPARKLE_PUBLIC_KEY: ${{ vars.DHP_SPARKLE_PUBLIC_KEY }}
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+        with:
+          # CFBundleVersion is the commit count, so the full history is needed.
+          fetch-depth: 0
+
+      - name: Select the newest Xcode on the runner
+        run: |
+          set -euo pipefail
+          best=""
+          best_version="0"
+          for app in /Applications/Xcode*.app; do
+            [ -d "$app" ] || continue
+            version="$(plutil -extract CFBundleShortVersionString raw -o - "$app/Contents/Info.plist" 2>/dev/null)" || continue
+            if awk -v a="$version" -v b="$best_version" 'BEGIN { n = split(a, x, "."); split(b, y, "."); for (i = 1; i <= 3; i++) { if (x[i] + 0 != y[i] + 0) exit !(x[i] + 0 > y[i] + 0) } exit 1 }'; then
+              best="$app"
+              best_version="$version"
+            fi
+          done
+          if [ -z "$best" ]; then
+            echo "::error title=No Xcode::No Xcode found in /Applications on this runner."
+            exit 1
+          fi
+          echo "DEVELOPER_DIR=$best/Contents/Developer" >> "$GITHUB_ENV"
+          echo "Selected $best (Xcode $best_version)"
+
+      # See ci.yml: the SDK number in Package.swift's -platform_version must
+      # be available, or the app would claim an SDK it was not built with.
+      - name: Check the toolchain against Package.swift
+        run: |
+          set -euo pipefail
+          xcodebuild -version
+          swift --version
+          minimum="$(awk '/"-platform_version"/ { found = 1 } found && match($0, /"[0-9]+\.[0-9]+"/) { print substr($0, RSTART + 1, RLENGTH - 2); exit }' Package.swift)"
+          claimed="$(awk '/"-platform_version"/ { found = 1 } found && match($0, /"[0-9]+\.[0-9]+"/) { n++; if (n == 2) { print substr($0, RSTART + 1, RLENGTH - 2); exit } }' Package.swift)"
+          sdk="$(xcrun --sdk macosx --show-sdk-version)"
+          if [ -z "$claimed" ] || ! awk -v a="$sdk" -v b="$claimed" 'BEGIN { split(a, x, "."); split(b, y, "."); exit !((x[1] + 0 > y[1] + 0) || (x[1] + 0 == y[1] + 0 && x[2] + 0 >= y[2] + 0)) }'; then
+            echo "::error title=Toolchain too old::Package.swift links Device Hub Pro with -platform_version macos ${minimum:-?} ${claimed:-?}, but the newest Xcode on this runner ships the macOS $sdk SDK."
+            exit 1
+          fi
+
+      - name: Check that the tag matches VERSION
+        if: startsWith(github.ref, 'refs/tags/v')
+        run: |
+          set -euo pipefail
+          version="$(tr -d '[:space:]' < VERSION)"
+          if [ "${GITHUB_REF_NAME#v}" != "$version" ]; then
+            echo "::error title=Version mismatch::Tag $GITHUB_REF_NAME does not match VERSION ($version)."
+            exit 1
+          fi
+          echo "VERSION=$version" >> "$GITHUB_ENV"
+
+      - name: Read VERSION
+        if: ${{ !startsWith(github.ref, 'refs/tags/v') }}
+        run: echo "VERSION=$(tr -d '[:space:]' < VERSION)" >> "$GITHUB_ENV"
+
+      - name: Import the Developer ID certificate
+        if: env.HAS_SIGNING == 'true'
+        env:
+          P12_BASE64: ${{ secrets.MACOS_DEVELOPER_ID_P12_BASE64 }}
+          P12_PASSWORD: ${{ secrets.MACOS_DEVELOPER_ID_P12_PASSWORD }}
+        run: |
+          set -euo pipefail
+          keychain="$RUNNER_TEMP/devicehubpro-signing.keychain-db"
+          keychain_password="$(openssl rand -base64 24)"
+          security create-keychain -p "$keychain_password" "$keychain"
+          security set-keychain-settings -lut 21600 "$keychain"
+          security unlock-keychain -p "$keychain_password" "$keychain"
+          printf '%s' "$P12_BASE64" | base64 --decode > "$RUNNER_TEMP/developer-id.p12"
+          security import "$RUNNER_TEMP/developer-id.p12" -k "$keychain" -P "$P12_PASSWORD" -T /usr/bin/codesign
+          rm -f "$RUNNER_TEMP/developer-id.p12"
+          security set-key-partition-list -S apple-tool:,apple: -k "$keychain_password" "$keychain" > /dev/null
+          # Put the temporary keychain first in the search list.
+          existing="$(security list-keychains -d user | tr -d '"' | xargs)"
+          # shellcheck disable=SC2086 # the list is deliberately split
+          security list-keychains -d user -s "$keychain" $existing
+          echo "SIGNING_KEYCHAIN=$keychain" >> "$GITHUB_ENV"
+
+      # --require-licenses: an artifact goes to other people, so it must
+      # carry BoringSSL's LICENSE (packaging/licenses). A real --sign identity
+      # implies it; the ad-hoc step asks for it explicitly.
+      # An ad-hoc build gets no updater: it could not install a signed update.
+      - name: Package (ad-hoc signed)
+        if: env.HAS_SIGNING != 'true'
+        env:
+          DHP_APPCAST_URL: ""
+          DHP_SPARKLE_PUBLIC_KEY: ""
+        run: Scripts/package-app.sh --require-licenses --dmg
+
+      # Signed, but not the full release: no updater (the feed variables are
+      # blanked), and notarized only when the notary secrets exist.
+      - name: Package (Developer ID)
+        if: env.HAS_SIGNING == 'true' && !(env.HAS_NOTARY == 'true' && env.HAS_SPARKLE == 'true')
+        env:
+          IDENTITY: ${{ secrets.MACOS_DEVELOPER_ID_IDENTITY }}
+          DHP_APPCAST_URL: ""
+          DHP_SPARKLE_PUBLIC_KEY: ""
+        run: Scripts/package-app.sh --require-licenses --sign "$IDENTITY" --dmg
+
+      - name: Notarize and staple the disk image
+        if: env.HAS_SIGNING == 'true' && env.HAS_NOTARY == 'true' && env.HAS_SPARKLE != 'true'
+        env:
+          APPLE_ID: ${{ secrets.MACOS_NOTARY_APPLE_ID }}
+          TEAM_ID: ${{ secrets.MACOS_NOTARY_TEAM_ID }}
+          NOTARY_PASSWORD: ${{ secrets.MACOS_NOTARY_PASSWORD }}
+        run: |
+          set -euo pipefail
+          xcrun notarytool store-credentials devicehubpro-notary-ci \
+            --apple-id "$APPLE_ID" --team-id "$TEAM_ID" --password "$NOTARY_PASSWORD" \
+            --keychain "$SIGNING_KEYCHAIN"
+          NOTARY_PROFILE=devicehubpro-notary-ci NOTARY_KEYCHAIN="$SIGNING_KEYCHAIN" \
+            Scripts/notarize.sh "dist/DeviceHubPro-$VERSION.dmg"
+
+      # The whole release: build, sign, notarize and staple the app and the
+      # disk image, sign the image for Sparkle, write appcast.xml. Needs the
+      # tag at HEAD (release.sh checks it), so run it from a tag push.
+      - name: Release (Developer ID, notarized, Sparkle)
+        if: env.HAS_SIGNING == 'true' && env.HAS_NOTARY == 'true' && env.HAS_SPARKLE == 'true'
+        env:
+          DHP_SIGN_IDENTITY: ${{ secrets.MACOS_DEVELOPER_ID_IDENTITY }}
+          APPLE_ID: ${{ secrets.MACOS_NOTARY_APPLE_ID }}
+          TEAM_ID: ${{ secrets.MACOS_NOTARY_TEAM_ID }}
+          NOTARY_PASSWORD: ${{ secrets.MACOS_NOTARY_PASSWORD }}
+          SPARKLE_PRIVATE_KEY: ${{ secrets.SPARKLE_PRIVATE_KEY }}
+        run: |
+          set -euo pipefail
+          xcrun notarytool store-credentials devicehubpro-notary-ci \
+            --apple-id "$APPLE_ID" --team-id "$TEAM_ID" --password "$NOTARY_PASSWORD" \
+            --keychain "$SIGNING_KEYCHAIN"
+          NOTARY_PROFILE=devicehubpro-notary-ci NOTARY_KEYCHAIN="$SIGNING_KEYCHAIN" \
+            Scripts/release.sh
+
+      - name: Name the artifact
+        run: |
+          set -euo pipefail
+          if [ "$HAS_SIGNING" = "true" ] && [ "$HAS_NOTARY" = "true" ] && [ "$HAS_SPARKLE" = "true" ]; then
+            kind="release"
+          elif [ "$HAS_SIGNING" = "true" ] && [ "$HAS_NOTARY" = "true" ]; then
+            kind="notarized"
+          elif [ "$HAS_SIGNING" = "true" ]; then
+            kind="signed-not-notarized"
+          else
+            kind="unsigned"
+          fi
+          echo "ARTIFACT_NAME=DeviceHubPro-$VERSION-$kind" >> "$GITHUB_ENV"
+          if [ -d "dist/DeviceHubPro-$VERSION.dSYM" ]; then
+            (cd dist && ditto -c -k --keepParent "DeviceHubPro-$VERSION.dSYM" "DeviceHubPro-$VERSION.dSYM.zip")
+          fi
+          shasum -a 256 "dist/DeviceHubPro-$VERSION.dmg" | tee "dist/DeviceHubPro-$VERSION.dmg.sha256"
+
+      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
+        with:
+          name: ${{ env.ARTIFACT_NAME }}
+          path: |
+            dist/DeviceHubPro-${{ env.VERSION }}.dmg
+            dist/DeviceHubPro-${{ env.VERSION }}.dmg.sha256
+            dist/DeviceHubPro-${{ env.VERSION }}.dSYM.zip
+            dist/appcast.xml
+            dist/release-notes-${{ env.VERSION }}.md
+          if-no-files-found: warn
+          retention-days: 30
+
+      - name: Remove the temporary keychain
+        if: always() && env.SIGNING_KEYCHAIN != ''
+        run: security delete-keychain "$SIGNING_KEYCHAIN" || true

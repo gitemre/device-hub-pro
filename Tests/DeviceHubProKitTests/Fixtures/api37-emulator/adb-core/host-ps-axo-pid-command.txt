@@ -1,0 +1,9 @@
+    1 /sbin/launchd
+  337 /usr/libexec/logd
+  339 /usr/libexec/smd
+ 1265 /System/Library/CoreServices/Keychain Circle Notification.app/Contents/MacOS/Keychain Circle Notification
+ 6272 adb -L tcp:5037 fork-server server --reply-fd 4
+71617 /Users/testeruser/Library/Android/sdk/platform-tools/adb track-devices -l
+71988 /Users/testeruser/device-hub-pro/spike/mirror-grpc/.sdk-canary/emulator/qemu/darwin-aarch64/qemu-system-aarch64 -avd Pixel_9_Pro_Fold -grpc 8554 -gpu host -qt-hide-window -no-boot-anim
+71996 /Users/testeruser/device-hub-pro/spike/mirror-grpc/.sdk-canary/emulator/crashpad_handler --no-rate-limit --monitor-pid=71988 --database=/tmp/android-testeruser/emu-crash-37.2.8.db --url=https://clients2.google.com/cr/report --annotation=prod=AndroidEmulator --annotation=ver=37.2.8-16259959 --handshake-fd=4
+71997 /Users/testeruser/device-hub-pro/spike/mirror-grpc/.sdk-canary/emulator/netsimd --host-dns=192.168.1.1

@@ -1,0 +1,157 @@
+Display 4619827259835644672 (physical, "EMU_display_0")
+   Composition Display State:
+   isEnabled=true isSecure=true usesDeviceComposition=true 
+   usesClientComposition=false flipClientTarget=false reusedClientComposition=false 
+   layerFilter={layerStack=0 toInternalDisplay=true skipScreenshot=false }
+   transform (ROT_0) (IDENTITY)
+   layerStackSpace=ProjectionSpace{bounds=Rect(0, 0, 1280, 2856), content=Rect(0, 0, 1280, 2856), orientation=ROTATION_0} 
+   framebufferSpace=ProjectionSpace{bounds=Rect(0, 0, 1280, 2856), content=Rect(0, 0, 1280, 2856), orientation=ROTATION_0} 
+   orientedDisplaySpace=ProjectionSpace{bounds=Rect(0, 0, 1280, 2856), content=Rect(0, 0, 1280, 2856), orientation=ROTATION_0} 
+   displaySpace=ProjectionSpace{bounds=Rect(0, 0, 1280, 2856), content=Rect(0, 0, 1280, 2856), orientation=ROTATION_0} 
+   needsFiltering=false 
+   colorMode=NATIVE (0) renderIntent=COLORIMETRIC (0) dataspace=UNKNOWN (0) 
+   colorTransformMatrix=[[1.000,-0.806,0.806,0.000][0.000,0.379,0.621,0.000][-0.000,0.105,0.895,0.000][0.000,0.000,0.000,1.000]] 
+   displayBrightnessNits=-1.000000 sdrWhitePointNits=-1.000000 clientTargetBrightness=1.000000 displayBrightness=nullopt 
+   compositionStrategyPredictionState=DISABLED 
+   
+   treat170mAsSrgb=false 
+
+   Composition Display Color State:
+   HWC Support: wideColorGamut=false hdr10plus=false hdr10=false hlg=false dv=false metadata=0 
+   Hdr Luminance Info:desiredMinLuminance=0.000000 desiredMaxLuminance=500.000000 desiredMaxAverageLuminance=500.000000 
+
+   Composition RenderSurface State:
+   size=[1280 2856] ANativeWindow=0xb40075d6ea026840 (format 1) 
+   FramebufferSurface
+      mDataspace=Default (0)
+mAbandoned=0
+- BufferQueue mMaxAcquiredBufferCount=1 mMaxDequeuedBufferCount=1
+  mDequeueBufferCannotBlock=0 mAsyncMode=0
+  mQueueBufferCanDrop=0 mLegacyBufferDrop=1
+  default-size=[1280x2856] default-format=1   transform-hint=00 frame-counter=249
+  mTransformHintInUse=00 mAutoPrerotation=0
+  mProducerThrottlingEnabled=false
+FIFO(0):
+(mConsumerName=FramebufferSurface, mConnectedApi=1, mConsumerUsageBits=6656, mPresentMode=1
+mId=1ed00000000, producer=[493:/system/bin/surfaceflinger], consumer=[493:/system/bin/surfaceflinger])
+Slots:
+ >[01:0xb40075d79a034150] state=ACQUIRED 0xb40075d6fa053250 frame=249 [1280x2856:   0,  1]
+  [00:0xb40075d79a037180] state=FREE     0xb40075d6fa053a30 frame=248 [1280x2856:   0,  1]
+
+   6 Layers
+  - Output Layer 0xb40075d6ea051900(Wallpaper BBQ wrapper#60)
+        Region visibleRegion (this=0xb40075d6ea051918, count=1)
+    [-64, -143, 2765, 2999]
+        Region visibleNonTransparentRegion (this=0xb40075d6ea051980, count=1)
+    [-64, -143, 2765, 2999]
+        Region coveredRegion (this=0xb40075d6ea0519e8, count=1)
+    [  0,   0, 1280, 2856]
+        Region output visibleRegion (this=0xb40075d6ea051ac0, count=1)
+    [  0,   0, 1280, 2856]
+        Region shadowRegion (this=0xb40075d6ea051b28, count=1)
+    [  0,   0,   0,   0]
+        Region outputSpaceBlockingRegionHint (this=0xb40075d6ea051bc0, count=1)
+    [  0,   0,   0,   0]
+      forceClientComposition=false clearClientTarget=false displayFrame=[0 0 1280 2856] sourceCrop=[21.000000 47.000000 438.000000 978.000000] bufferTransform=0 (0) dataspace=V0_SRGB (142671872) whitePointNits=-1.000000 dimmingRatio=1.000000 override buffer=0x0 override acquire fence=0x0 override display frame=[0 0 -1 -1] override dataspace=UNKNOWN (0) override display space=ProjectionSpace{bounds=Rect(0, 0, -1, -1), content=Rect(0, 0, -1, -1), orientation=ROTATION_0} override damage region=  Region  (this=0xb40075d6ea051c80, count=1)
+    [  0,   0,  -1,  -1]
+ override visible region=  Region  (this=0xb40075d6ea051ce8, count=1)
+    [  0,   0,   0,   0]
+ override peekThroughLayer=0x0 override disableBackgroundBlur=false 
+      hwc: layer=0x0817 composition=DEVICE (2) 
+  - Output Layer 0xb40075d6ea050c20(VRI-com.google.android.apps.nexuslauncher/com.google.android.apps.nexuslauncher.NexusLauncherActivity#100)
+        Region visibleRegion (this=0xb40075d6ea050c38, count=1)
+    [  0,   0, 1280, 2856]
+        Region visibleNonTransparentRegion (this=0xb40075d6ea050ca0, count=1)
+    [  0,   0, 1280, 2856]
+        Region coveredRegion (this=0xb40075d6ea050d08, count=2)
+    [  0,   0, 1280, 233]
+    [  0, 2623, 1280, 2856]
+        Region output visibleRegion (this=0xb40075d6ea050de0, count=1)
+    [  0,   0, 1280, 2856]
+        Region shadowRegion (this=0xb40075d6ea050e48, count=1)
+    [  0,   0,   0,   0]
+        Region outputSpaceBlockingRegionHint (this=0xb40075d6ea050ee0, count=1)
+    [  0,   0,   0,   0]
+      forceClientComposition=false clearClientTarget=false displayFrame=[0 0 1280 2856] sourceCrop=[0.000000 0.000000 1280.000000 2856.000000] bufferTransform=0 (0) dataspace=V0_SRGB (142671872) whitePointNits=-1.000000 dimmingRatio=1.000000 override buffer=0x0 override acquire fence=0x0 override display frame=[0 0 -1 -1] override dataspace=UNKNOWN (0) override display space=ProjectionSpace{bounds=Rect(0, 0, -1, -1), content=Rect(0, 0, -1, -1), orientation=ROTATION_0} override damage region=  Region  (this=0xb40075d6ea050fa0, count=1)
+    [  0,   0,  -1,  -1]
+ override visible region=  Region  (this=0xb40075d6ea051008, count=1)
+    [  0,   0,   0,   0]
+ override peekThroughLayer=0x0 override disableBackgroundBlur=false 
+      hwc: layer=0x0816 composition=DEVICE (2) 
+  - Output Layer 0xb40075d6ea0525e0(VRI-StatusBar#79)
+        Region visibleRegion (this=0xb40075d6ea0525f8, count=1)
+    [  0,   0, 1280, 156]
+        Region visibleNonTransparentRegion (this=0xb40075d6ea052660, count=1)
+    [  0,   0, 1280, 156]
+        Region coveredRegion (this=0xb40075d6ea0526c8, count=1)
+    [  0,   0, 1280, 156]
+        Region output visibleRegion (this=0xb40075d6ea0527a0, count=1)
+    [  0,   0, 1280, 156]
+        Region shadowRegion (this=0xb40075d6ea052808, count=1)
+    [  0,   0,   0,   0]
+        Region outputSpaceBlockingRegionHint (this=0xb40075d6ea0528a0, count=1)
+    [  0,   0,   0,   0]
+      forceClientComposition=false clearClientTarget=false displayFrame=[0 0 1280 156] sourceCrop=[0.000000 0.000000 1280.000000 156.000000] bufferTransform=0 (0) dataspace=UNKNOWN (0) whitePointNits=-1.000000 dimmingRatio=1.000000 override buffer=0x0 override acquire fence=0x0 override display frame=[0 0 -1 -1] override dataspace=UNKNOWN (0) override display space=ProjectionSpace{bounds=Rect(0, 0, -1, -1), content=Rect(0, 0, -1, -1), orientation=ROTATION_0} override damage region=  Region  (this=0xb40075d6ea052960, count=1)
+    [  0,   0,  -1,  -1]
+ override visible region=  Region  (this=0xb40075d6ea0529c8, count=1)
+    [  0,   0,   0,   0]
+ override peekThroughLayer=0x0 override disableBackgroundBlur=false 
+      hwc: layer=0x0815 composition=DEVICE (2) 
+  - Output Layer 0xb40075d6ea04a520(VRI-Taskbar#67)
+        Region visibleRegion (this=0xb40075d6ea04a538, count=1)
+    [  0, 2784, 1280, 2856]
+        Region visibleNonTransparentRegion (this=0xb40075d6ea04a5a0, count=1)
+    [  0, 2784, 1280, 2856]
+        Region coveredRegion (this=0xb40075d6ea04a608, count=1)
+    [  0, 2784, 1280, 2856]
+        Region output visibleRegion (this=0xb40075d6ea04a6e0, count=1)
+    [  0, 2784, 1280, 2856]
+        Region shadowRegion (this=0xb40075d6ea04a748, count=1)
+    [  0,   0,   0,   0]
+        Region outputSpaceBlockingRegionHint (this=0xb40075d6ea04a7e0, count=1)
+    [  0,   0,   0,   0]
+      forceClientComposition=false clearClientTarget=false displayFrame=[0 2784 1280 2856] sourceCrop=[0.000000 0.000000 1280.000000 72.000000] bufferTransform=0 (0) dataspace=V0_SRGB (142671872) whitePointNits=-1.000000 dimmingRatio=1.000000 override buffer=0x0 override acquire fence=0x0 override display frame=[0 0 -1 -1] override dataspace=UNKNOWN (0) override display space=ProjectionSpace{bounds=Rect(0, 0, -1, -1), content=Rect(0, 0, -1, -1), orientation=ROTATION_0} override damage region=  Region  (this=0xb40075d6ea04a8a0, count=1)
+    [  0,   0,  -1,  -1]
+ override visible region=  Region  (this=0xb40075d6ea04a908, count=1)
+    [  0,   0,   0,   0]
+ override peekThroughLayer=0x0 override disableBackgroundBlur=false 
+      hwc: layer=0x0814 composition=DEVICE (2) 
+  - Output Layer 0xb40075d6ea041110(VRI-ScreenDecorOverlay#62)
+        Region visibleRegion (this=0xb40075d6ea041128, count=1)
+    [  0,   0, 1280, 233]
+        Region visibleNonTransparentRegion (this=0xb40075d6ea041190, count=1)
+    [  0,   0, 1280, 233]
+        Region coveredRegion (this=0xb40075d6ea0411f8, count=1)
+    [  0,   0,   0,   0]
+        Region output visibleRegion (this=0xb40075d6ea0412d0, count=1)
+    [  0,   0, 1280, 233]
+        Region shadowRegion (this=0xb40075d6ea041338, count=1)
+    [  0,   0,   0,   0]
+        Region outputSpaceBlockingRegionHint (this=0xb40075d6ea0413d0, count=1)
+    [  0,   0,   0,   0]
+      forceClientComposition=false clearClientTarget=false displayFrame=[0 0 1280 233] sourceCrop=[0.000000 0.000000 1280.000000 233.000000] bufferTransform=0 (0) dataspace=UNKNOWN (0) whitePointNits=-1.000000 dimmingRatio=1.000000 override buffer=0x0 override acquire fence=0x0 override display frame=[0 0 -1 -1] override dataspace=UNKNOWN (0) override display space=ProjectionSpace{bounds=Rect(0, 0, -1, -1), content=Rect(0, 0, -1, -1), orientation=ROTATION_0} override damage region=  Region  (this=0xb40075d6ea041490, count=1)
+    [  0,   0,  -1,  -1]
+ override visible region=  Region  (this=0xb40075d6ea0414f8, count=1)
+    [  0,   0,   0,   0]
+ override peekThroughLayer=0x0 override disableBackgroundBlur=false 
+      hwc: layer=0x083 composition=DEVICE (2) 
+  - Output Layer 0xb40075d6ea04cbc0(VRI-ScreenDecorOverlayBottom#66)
+        Region visibleRegion (this=0xb40075d6ea04cbd8, count=1)
+    [  0, 2623, 1280, 2856]
+        Region visibleNonTransparentRegion (this=0xb40075d6ea04cc40, count=1)
+    [  0, 2623, 1280, 2856]
+        Region coveredRegion (this=0xb40075d6ea04cca8, count=1)
+    [  0,   0,   0,   0]
+        Region output visibleRegion (this=0xb40075d6ea04cd80, count=1)
+    [  0, 2623, 1280, 2856]
+        Region shadowRegion (this=0xb40075d6ea04cde8, count=1)
+    [  0,   0,   0,   0]
+        Region outputSpaceBlockingRegionHint (this=0xb40075d6ea04ce80, count=1)
+    [  0,   0,   0,   0]
+      forceClientComposition=false clearClientTarget=false displayFrame=[0 2623 1280 2856] sourceCrop=[0.000000 0.000000 1280.000000 233.000000] bufferTransform=0 (0) dataspace=UNKNOWN (0) whitePointNits=-1.000000 dimmingRatio=1.000000 override buffer=0x0 override acquire fence=0x0 override display frame=[0 0 -1 -1] override dataspace=UNKNOWN (0) override display space=ProjectionSpace{bounds=Rect(0, 0, -1, -1), content=Rect(0, 0, -1, -1), orientation=ROTATION_0} override damage region=  Region  (this=0xb40075d6ea04cf40, count=1)
+    [  0,   0,  -1,  -1]
+ override visible region=  Region  (this=0xb40075d6ea04cfa8, count=1)
+    [  0,   0,   0,   0]
+ override peekThroughLayer=0x0 override disableBackgroundBlur=false 
+      hwc: layer=0x085 composition=DEVICE (2) 
+

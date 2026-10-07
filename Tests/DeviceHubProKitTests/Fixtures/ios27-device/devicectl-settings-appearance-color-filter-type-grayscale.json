@@ -1,0 +1,34 @@
+{
+  "info" : {
+    "arguments" : [
+      "devicectl",
+      "device",
+      "settings",
+      "appearance",
+      "--color-filter-type",
+      "grayscale",
+      "--device",
+      "00000000-0000000000000000",
+      "--json-output",
+      "raw/settings-appearance-color-filter-type-grayscale.json",
+      "-q"
+    ],
+    "commandType" : "devicectl.device.settings.appearance",
+    "environment" : {
+
+    },
+    "jsonVersion" : 5,
+    "outcome" : "success",
+    "version" : "642.16"
+  },
+  "result" : {
+    "colorFilter" : {
+      "enabled" : true,
+      "filterType" : {
+        "name" : "Grayscale"
+      }
+    },
+    "deviceIdentifier" : "00000000-0000-4000-8000-000000000001",
+    "userInterfaceStyle" : "light"
+  }
+}

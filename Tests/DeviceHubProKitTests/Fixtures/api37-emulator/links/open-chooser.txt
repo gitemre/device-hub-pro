@@ -1,0 +1,8 @@
+Starting: Intent { act=android.intent.action.VIEW cat=[android.intent.category.BROWSABLE] dat=content://com.aqa.none/... }
+Status: ok
+LaunchState: COLD
+Activity: android/com.android.internal.app.ResolverActivity
+TotalTime: 110
+WaitTime: 115
+Complete
+@@devicehubpro:link:exit=0

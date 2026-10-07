@@ -1,0 +1,15 @@
+@@devicehubpro-cf:enabled
+1
+@@devicehubpro-cf:mode
+0
+@@devicehubpro-cf:level
+null
+@@devicehubpro-cf:inversion
+null
+@@devicehubpro-cf:display
+Display 4619827259835644672 (physical, "EMU_display_0")
+   isEnabled=true isSecure=true usesDeviceComposition=true 
+   colorTransformMatrix=[[0.213,0.715,0.072,0.000][0.213,0.715,0.072,0.000][0.213,0.715,0.072,0.000][0.000,0.000,0.000,1.000]] 
+Display 11529215046140086845 (virtual, "ScreenRecorder")
+   isEnabled=true isSecure=false usesDeviceComposition=false 
+   colorTransformMatrix=[[0.213,0.715,0.072,0.000][0.213,0.715,0.072,0.000][0.213,0.715,0.072,0.000][0.000,0.000,0.000,1.000]] 

@@ -1,0 +1,1 @@
+echo @@devicehubpro:shape:debuggable; getprop ro.debuggable; echo @@devicehubpro:shape:uid; id -u; echo @@devicehubpro:shape:route; ip route get 1.1.1.1 2>&1; echo @@devicehubpro:shape:qdisc; tc qdisc show 2>&1; true

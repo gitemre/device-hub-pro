@@ -1,0 +1,35 @@
+{
+  "info" : {
+    "arguments" : [
+      "devicectl",
+      "device",
+      "settings",
+      "biometrics",
+      "--enable",
+      "--device",
+      "B3ECBA42-7A43-4A8C-924D-C13CC6658BA4",
+      "-j",
+      "-",
+      "-t",
+      "30"
+    ],
+    "commandType" : "devicectl.device.settings.biometrics",
+    "environment" : {
+
+    },
+    "jsonVersion" : 5,
+    "outcome" : "success",
+    "version" : "642.16"
+  },
+  "result" : {
+    "biometrics" : [
+      {
+        "enabled" : true,
+        "type" : "Face ID"
+      }
+    ],
+    "deviceIdentifier" : "B3ECBA42-7A43-4A8C-924D-C13CC6658BA4",
+    "enabled" : true,
+    "operation" : "enable"
+  }
+}

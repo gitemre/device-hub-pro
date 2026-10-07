@@ -1,0 +1,29 @@
+{
+  "info" : {
+    "arguments" : [
+      "devicectl",
+      "device",
+      "settings",
+      "appearance",
+      "--text-size",
+      "small",
+      "--device",
+      "00000000-0000000000000000",
+      "--json-output",
+      "raw/settings-appearance-text-size-small.json",
+      "-q"
+    ],
+    "commandType" : "devicectl.device.settings.appearance",
+    "environment" : {
+
+    },
+    "jsonVersion" : 5,
+    "outcome" : "success",
+    "version" : "642.16"
+  },
+  "result" : {
+    "deviceIdentifier" : "00000000-0000-4000-8000-000000000001",
+    "textSize" : "Small",
+    "userInterfaceStyle" : "light"
+  }
+}

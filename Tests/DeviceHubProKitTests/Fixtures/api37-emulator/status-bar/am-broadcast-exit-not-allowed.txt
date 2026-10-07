@@ -1,0 +1,2 @@
+Broadcasting: Intent { act=com.android.systemui.demo flg=0x400000 (has extras) }
+Broadcast completed: result=0

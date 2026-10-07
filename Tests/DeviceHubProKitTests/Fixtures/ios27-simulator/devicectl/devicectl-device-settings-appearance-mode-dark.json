@@ -1,0 +1,29 @@
+{
+  "info" : {
+    "arguments" : [
+      "devicectl",
+      "device",
+      "settings",
+      "appearance",
+      "--mode",
+      "dark",
+      "--device",
+      "A89AEB35-14AC-4482-BA79-2DEB4D80A4B6",
+      "-j",
+      "-",
+      "-t",
+      "30"
+    ],
+    "commandType" : "devicectl.device.settings.appearance",
+    "environment" : {
+
+    },
+    "jsonVersion" : 5,
+    "outcome" : "success",
+    "version" : "642.16"
+  },
+  "result" : {
+    "deviceIdentifier" : "A89AEB35-14AC-4482-BA79-2DEB4D80A4B6",
+    "userInterfaceStyle" : "dark"
+  }
+}

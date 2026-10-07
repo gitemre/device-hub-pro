@@ -1,0 +1,1 @@
+am to-uri -a android.intent.action.VIEW -d 'https://example.com/a b?q=1&r=2#frag'

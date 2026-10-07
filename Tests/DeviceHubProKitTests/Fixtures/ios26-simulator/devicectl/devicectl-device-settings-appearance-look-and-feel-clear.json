@@ -1,0 +1,35 @@
+{
+  "info" : {
+    "arguments" : [
+      "devicectl",
+      "device",
+      "settings",
+      "appearance",
+      "--device",
+      "046F4CC5-D53E-4780-9B1B-BB1AEAB9D89F",
+      "--look-and-feel",
+      "clear",
+      "-j",
+      "-",
+      "-q",
+      "-t",
+      "30"
+    ],
+    "commandType" : "devicectl.device.settings.appearance",
+    "environment" : {
+
+    },
+    "jsonVersion" : 5,
+    "outcome" : "success",
+    "version" : "642.16"
+  },
+  "result" : {
+    "deviceIdentifier" : "046F4CC5-D53E-4780-9B1B-BB1AEAB9D89F",
+    "lookAndFeel" : "Clear Liquid Glass",
+    "supportedLooksAndFeels" : [
+      "Clear Liquid Glass",
+      "Tinted Liquid Glass"
+    ],
+    "userInterfaceStyle" : "light"
+  }
+}

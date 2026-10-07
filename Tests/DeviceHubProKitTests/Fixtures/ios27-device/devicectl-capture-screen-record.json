@@ -1,0 +1,44 @@
+{
+  "error" : {
+    "code" : 1001,
+    "domain" : "com.apple.dt.CoreDeviceError",
+    "userInfo" : {
+      "CapabilityFeatureIdentifier" : {
+        "string" : "com.apple.coredevice.feature.screenrecording"
+      },
+      "CapabilityName" : {
+        "string" : "Screen Recording"
+      },
+      "DeviceIdentifier" : {
+        "string" : "00000000-0000-4000-8000-000000000001"
+      },
+      "NSLocalizedDescription" : {
+        "string" : "The capability “Screen Recording” is not supported by this device."
+      }
+    }
+  },
+  "info" : {
+    "arguments" : [
+      "devicectl",
+      "device",
+      "capture",
+      "screen-record",
+      "--device",
+      "00000000-0000000000000000",
+      "--destination",
+      "raw-write/rec.mp4",
+      "--duration",
+      "3",
+      "--json-output",
+      "raw-write/capture-screen-record.json",
+      "-q"
+    ],
+    "commandType" : "devicectl.device.capture.screen-record",
+    "environment" : {
+
+    },
+    "jsonVersion" : 5,
+    "outcome" : "failed",
+    "version" : "642.16"
+  }
+}

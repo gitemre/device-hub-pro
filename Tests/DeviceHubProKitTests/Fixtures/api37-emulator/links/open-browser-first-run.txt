@@ -1,0 +1,8 @@
+Starting: Intent { act=android.intent.action.VIEW cat=[android.intent.category.BROWSABLE] dat=https://example.com/... }
+Status: ok
+LaunchState: WARM
+Activity: com.example.browser/com.example.browser.engine.firstrun.FirstRunActivity
+TotalTime: 148
+WaitTime: 157
+Complete
+@@devicehubpro:link:exit=0

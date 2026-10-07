@@ -1,0 +1,2 @@
+package:com.devicehubpro.verifier
+package:com.example.testing.companion

@@ -1,0 +1,13 @@
+@@devicehubpro:shape:debuggable
+1
+@@devicehubpro:shape:uid
+0
+@@devicehubpro:shape:route
+1.1.1.1 via 10.0.2.2 dev wlan0 table wlan0 src 10.0.2.19 uid 0 
+    cache 
+@@devicehubpro:shape:qdisc
+qdisc noqueue 0: dev lo root refcnt 2 
+qdisc noqueue 0: dev dummy0 root refcnt 2 
+qdisc netem 800b: dev ifb0 root refcnt 2 limit 5 rate 57600bit
+qdisc netem 800a: dev wlan0 root refcnt 2 limit 5 rate 28800bit
+qdisc clsact ffff: dev wlan0 parent ffff:fff1 

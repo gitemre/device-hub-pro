@@ -1,0 +1,40 @@
+{
+  "error" : {
+    "code" : 1001,
+    "domain" : "com.apple.dt.CoreDeviceError",
+    "userInfo" : {
+      "CapabilityFeatureIdentifier" : {
+        "string" : "com.apple.coredevice.feature.audiooutput"
+      },
+      "CapabilityName" : {
+        "string" : "Audio Output Device Selection"
+      },
+      "DeviceIdentifier" : {
+        "string" : "00000000-0000-4000-8000-000000000001"
+      },
+      "NSLocalizedDescription" : {
+        "string" : "The capability “Audio Output Device Selection” is not supported by this device."
+      }
+    }
+  },
+  "info" : {
+    "arguments" : [
+      "devicectl",
+      "device",
+      "info",
+      "audio",
+      "--device",
+      "00000000-0000000000000000",
+      "--json-output",
+      "raw/info-audio.json",
+      "-q"
+    ],
+    "commandType" : "devicectl.device.info.audio",
+    "environment" : {
+
+    },
+    "jsonVersion" : 5,
+    "outcome" : "failed",
+    "version" : "642.16"
+  }
+}

@@ -1,0 +1,1 @@
+am broadcast -a com.android.systemui.demo -e command battery -e level 100 -e plugged false; am broadcast -a com.android.systemui.demo -e command exit; settings put global sysui_tuner_demo_on 0; settings put global sysui_demo_allowed 0; true

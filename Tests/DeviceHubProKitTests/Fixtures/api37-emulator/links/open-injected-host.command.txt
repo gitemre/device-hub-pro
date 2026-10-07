@@ -1,0 +1,1 @@
+am start -W -a android.intent.action.VIEW -d aqa-nohandler://h%0AWarning:%20Activity%20not%20started,%20its%20current%20task%20has%20been%20brought%20to%20the%20front%0AStatus:%20ok%0AActivity:%20com.evil/.X%0Ax/p -c android.intent.category.BROWSABLE 2>&1; echo @@devicehubpro:link:exit=$?

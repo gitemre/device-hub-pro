@@ -1,0 +1,28 @@
+@@devicehubpro:sb:api
+37
+@@devicehubpro:sb:allowed
+0
+@@devicehubpro:sb:tuner-on
+0
+@@devicehubpro:sb:real-battery
+  AC powered: false
+  USB powered: false
+  Wireless powered: false
+  Dock powered: false
+  level: 100
+  scale: 100
+@@devicehubpro:sb:controller
+      isInDemoMode=false
+      isDemoModeAllowed=false
+        bars : [StatusBarDemoMode]
+        battery : [BatteryControllerImplGoogle]
+        clock : [StatusBarDemoMode]
+        network : [MobileContextProvider, DemoModeController$demoFlowForCommand$1$callback$1, DemoModeController$demoFlowForCommand$1$callback$1, DemoModeController$demoFlowForCommand$1$callback$1]
+        notifications : []
+        operator : [StatusBarDemoMode]
+        status : [StatusBarIconControllerImpl]
+        volume : [VolumeDialogComponent]
+@@devicehubpro:sb:battery
+      mLevel=5
+      mPluggedIn=false
+      mPowerSave=false

@@ -1,0 +1,171 @@
+{
+  "bundle" : "com.devicehubpro.verifier",
+  "launchedAt" : "2026-09-28T21:47:11.517Z",
+  "rows" : {
+    "accessibility.colorFilter" : {
+      "changes" : 0,
+      "observes" : "effect",
+      "raw" : "none",
+      "title" : "Color Filter",
+      "value" : "No grayscale filter"
+    },
+    "accessibility.increaseContrast" : {
+      "changes" : 0,
+      "observes" : "effect",
+      "raw" : "off",
+      "title" : "Increase Contrast",
+      "value" : "Off"
+    },
+    "accessibility.voiceOver" : {
+      "changes" : 0,
+      "observes" : "effect",
+      "raw" : "off",
+      "title" : "VoiceOver",
+      "value" : "Off"
+    },
+    "advanced.biometrics" : {
+      "changes" : 0,
+      "observes" : "effect",
+      "raw" : "faceID:enrolled",
+      "title" : "Biometrics",
+      "value" : "Face ID · enrolled"
+    },
+    "appConditions.memoryWarning" : {
+      "changes" : 0,
+      "observes" : "effect",
+      "raw" : "0",
+      "title" : "Memory warning",
+      "value" : "None since launch"
+    },
+    "appConditions.permissions" : {
+      "changes" : 0,
+      "observes" : "effect",
+      "raw" : "location=notDetermined,photos=notDetermined,contacts=notDetermined,calendar=notDetermined,reminders=notDetermined,microphone=notDetermined,camera=notDetermined,motion=notDetermined,mediaLibrary=notDetermined",
+      "title" : "Permissions",
+      "value" : "location: notDetermined\nphotos: notDetermined\ncontacts: notDetermined\ncalendar: notDetermined\nreminders: notDetermined\nmicrophone: notDetermined\ncamera: notDetermined\nmotion: notDetermined\nmediaLibrary: notDetermined"
+    },
+    "appConditions.push" : {
+      "changes" : 0,
+      "observes" : "effect",
+      "raw" : "none",
+      "title" : "Push notification",
+      "value" : "None since launch"
+    },
+    "clipboard.pasteboard" : {
+      "changes" : 0,
+      "observes" : "effect",
+      "raw" : "8",
+      "title" : "Clipboard",
+      "value" : "Change 8 · text"
+    },
+    "display.appearance" : {
+      "changes" : 0,
+      "observes" : "effect",
+      "raw" : "light",
+      "title" : "Appearance",
+      "value" : "Light"
+    },
+    "display.liquidGlass" : {
+      "changes" : 0,
+      "observes" : "note",
+      "raw" : "unreadable",
+      "title" : "Liquid Glass",
+      "value" : "Not readable by apps · watch the glass header"
+    },
+    "display.reduceMotion" : {
+      "changes" : 0,
+      "observes" : "effect",
+      "raw" : "off",
+      "title" : "Reduce Motion",
+      "value" : "Off"
+    },
+    "display.reduceTransparency" : {
+      "changes" : 0,
+      "observes" : "effect",
+      "raw" : "off",
+      "title" : "Reduce Transparency",
+      "value" : "Off"
+    },
+    "display.showBorders" : {
+      "changes" : 0,
+      "observes" : "effect",
+      "raw" : "off",
+      "title" : "Show Borders",
+      "value" : "Off"
+    },
+    "display.sound" : {
+      "changes" : 0,
+      "observes" : "effect",
+      "raw" : "70",
+      "title" : "Sound",
+      "value" : "70 %"
+    },
+    "display.textSize" : {
+      "changes" : 0,
+      "observes" : "effect",
+      "raw" : "large",
+      "title" : "Text Size",
+      "value" : "Large (default) · 4 of 12"
+    },
+    "languageTime.language" : {
+      "changes" : 0,
+      "observes" : "effect",
+      "raw" : "en-TR",
+      "title" : "Language",
+      "value" : "en-TR (+5 more) · region en_TR · LTR"
+    },
+    "languageTime.timeFormat24" : {
+      "changes" : 0,
+      "observes" : "effect",
+      "raw" : "24",
+      "title" : "24-hour time",
+      "value" : "24-hour (HH)"
+    },
+    "languageTime.timeZone" : {
+      "changes" : 0,
+      "observes" : "effect",
+      "raw" : "Europe/Istanbul",
+      "title" : "Time zone",
+      "value" : "Europe/Istanbul · GMT+03:00"
+    },
+    "links.lastLink" : {
+      "changes" : 0,
+      "observes" : "effect",
+      "raw" : "none",
+      "title" : "Last link",
+      "value" : "None since launch"
+    },
+    "location.lastFix" : {
+      "changes" : 0,
+      "observes" : "effect",
+      "raw" : "none",
+      "title" : "Location",
+      "value" : "Permission required · tap Allow"
+    },
+    "sensors.orientation" : {
+      "changedAt" : "2026-09-28T21:47:11.857Z",
+      "changes" : 1,
+      "observes" : "effect",
+      "raw" : "portrait",
+      "title" : "Orientation",
+      "value" : "Portrait"
+    },
+    "statusBar.batteryLevel" : {
+      "changes" : 0,
+      "observes" : "note",
+      "raw" : "100",
+      "title" : "Battery level",
+      "value" : "100 %"
+    },
+    "statusBar.batteryState" : {
+      "changes" : 0,
+      "observes" : "note",
+      "raw" : "full",
+      "title" : "Battery state",
+      "value" : "Full"
+    }
+  },
+  "schema" : 1,
+  "system" : "iOS 27.0 · iPhone",
+  "writtenAt" : "2026-09-28T21:47:12.126Z"
+}

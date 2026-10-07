@@ -1,0 +1,4 @@
+Failed to import '/private/tmp/dhp-fix-01/-Users-aqauser001-device-hub-pro/a64f1e67-f0bc-4f7f-afd7-cc0fab96fc38/fixtures00/send/notes.txt', error [NSPOSIXErrorDomain] 22: The operation couldn’t be completed. File type unsupported.
+
+An error was encountered processing the command (domain=com.apple.CoreSimulator.LaunchdSimError, code=133):
+Multiple errors were returned; see stderr

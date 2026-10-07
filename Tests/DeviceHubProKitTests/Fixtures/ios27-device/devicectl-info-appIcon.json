@@ -1,0 +1,55 @@
+{
+  "info" : {
+    "arguments" : [
+      "devicectl",
+      "device",
+      "info",
+      "appIcon",
+      "--device",
+      "00000000-0000000000000000",
+      "--app-bundle-id",
+      "com.apple.calculator",
+      "--width",
+      "64",
+      "--height",
+      "64",
+      "--destination",
+      "raw/icon-calculator.png",
+      "--json-output",
+      "raw/info-appIcon.json",
+      "-q",
+      "-t",
+      "30"
+    ],
+    "commandType" : "devicectl.device.info.appIcon",
+    "environment" : {
+
+    },
+    "jsonVersion" : 5,
+    "outcome" : "success",
+    "version" : "642.16"
+  },
+  "result" : {
+    "destination" : "file:///Users/aqauser001/DeviceHubPro-private/phase9f/raw/icon-calculator.png",
+    "deviceIdentifier" : "00000000-0000-4000-8000-000000000001",
+    "icon" : {
+      "pixelSize" : {
+        "height" : 64,
+        "width" : 64
+      },
+      "placeholder" : false,
+      "scale" : 1,
+      "size" : {
+        "height" : 64,
+        "width" : 64
+      }
+    },
+    "searchParameters" : {
+      "allowPlaceholderIcons" : false,
+      "bundleIdentifier" : "com.apple.calculator",
+      "iconHeight" : 64,
+      "iconScale" : 1,
+      "iconWidth" : 64
+    }
+  }
+}

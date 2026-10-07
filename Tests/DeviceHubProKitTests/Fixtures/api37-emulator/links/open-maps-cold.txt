@@ -1,0 +1,8 @@
+Starting: Intent { act=android.intent.action.VIEW cat=[android.intent.category.BROWSABLE] dat=geo: }
+Status: ok
+LaunchState: COLD
+Activity: com.example.maps/com.example.maps.MapsActivity
+TotalTime: 331
+WaitTime: 333
+Complete
+@@devicehubpro:link:exit=0

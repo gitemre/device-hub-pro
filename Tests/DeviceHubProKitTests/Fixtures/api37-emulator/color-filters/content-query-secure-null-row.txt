@@ -1,0 +1,1 @@
+Row: 0 _id=240, name=accessibility_display_inversion_enabled, value=NULL, is_preserved_in_restore=false

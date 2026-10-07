@@ -1,0 +1,66 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+	<key>CFBundleDevelopmentRegion</key>
+	<string>en</string>
+	<key>CFBundleDisplayName</key>
+	<string>Device Hub Pro</string>
+	<key>CFBundleExecutable</key>
+	<string>DeviceHubPro</string>
+	<key>CFBundleIconFile</key>
+	<string>AppIcon</string>
+	<key>CFBundleIdentifier</key>
+	<string>io.github.gitemre.devicehubpro</string>
+	<key>CFBundleInfoDictionaryVersion</key>
+	<string>6.0</string>
+	<key>CFBundleName</key>
+	<string>Device Hub Pro</string>
+	<key>CFBundlePackageType</key>
+	<string>APPL</string>
+	<key>CFBundleShortVersionString</key>
+	<string>0.0.0</string>
+	<key>CFBundleSupportedPlatforms</key>
+	<array>
+		<string>MacOSX</string>
+	</array>
+	<key>CFBundleVersion</key>
+	<string>0</string>
+	<key>DeviceHubProHelpURL</key>
+	<string></string>
+	<key>LSApplicationCategoryType</key>
+	<string>public.app-category.developer-tools</string>
+	<key>LSMinimumSystemVersion</key>
+	<string>26.0</string>
+	<key>NSBonjourServices</key>
+	<array>
+		<string>_adb-tls-connect._tcp</string>
+		<string>_adb-tls-pairing._tcp</string>
+		<string>_adb._tcp</string>
+	</array>
+	<key>NSCameraUsageDescription</key>
+	<string>Device Hub Pro shows a connected iPhone's screen.</string>
+	<key>NSDesktopFolderUsageDescription</key>
+	<string>Device Hub Pro saves screenshots and screen recordings to your Desktop unless you choose another folder.</string>
+	<key>NSDocumentsFolderUsageDescription</key>
+	<string>Device Hub Pro reads APKs and saves captures in folders you choose inside Documents.</string>
+	<key>NSDownloadsFolderUsageDescription</key>
+	<string>Device Hub Pro reopens APKs you installed recently from your Downloads folder.</string>
+	<key>NSHighResolutionCapable</key>
+	<true/>
+	<key>NSHumanReadableCopyright</key>
+	<string>Copyright © 2026 Emre Özturk and contributors. MIT License.</string>
+	<key>NSLocalNetworkUsageDescription</key>
+	<string>Device Hub Pro connects to Android devices on your local network for wireless debugging.</string>
+	<key>NSMicrophoneUsageDescription</key>
+	<string>Device Hub Pro plays a connected iPhone's audio while you watch its screen.</string>
+	<key>NSPrincipalClass</key>
+	<string>NSApplication</string>
+	<key>SUEnableAutomaticChecks</key>
+	<true/>
+	<key>SUFeedURL</key>
+	<string></string>
+	<key>SUPublicEDKey</key>
+	<string></string>
+</dict>
+</plist>

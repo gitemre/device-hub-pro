@@ -1,0 +1,1 @@
+am to-uri -a android.intent.action.VIEW -d '--es evil 1'

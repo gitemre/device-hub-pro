@@ -1,0 +1,1 @@
+am start -W -a android.intent.action.VIEW -d 'geo:41.0082,28.9784?q=Istanbul' -c android.intent.category.BROWSABLE 2>&1; echo @@devicehubpro:link:exit=$?

@@ -1,0 +1,2 @@
+/Users/testeruser/.android/avd/Pixel_9_Pro_Fold.avd
+OK

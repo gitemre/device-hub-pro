@@ -1,0 +1,4 @@
+current tr-TR
+applied en-US-u-mu-celsius,tr-TR
+current en-US-u-mu-celsius,tr-TR
+applied en-US-u-mu-celsius

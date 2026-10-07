@@ -1,0 +1,183 @@
+{
+  "comment": "Device Hub Pro Controls inspector (Device Hub's device-settings panel) pixel-parity reference, top-of-panel state. Values are audited against a saved 2x capture (DH 27.0, 2x, window inactive; key-state colours derived through the audited relative deltas) and documented in ParityMetrics.swift CT-01…CT-09 and Sources/DeviceHubProApp/ParityMetrics.swift. Coordinates are window points from the capture's top-left. PREREQUISITE: the app runs with DHP_CONTROLS_EXPAND_ALL=1, the Controls inspector is open (toolbar sliders button) on a device whose first card is Network with Wi-Fi / Bluetooth / Airplane mode / Mobile data / Data Saver / Wi-Fi verbose logging / Mobile data always active (e.g. the Pixel 9 Pro Fold emulator on Android 17; images that still offer Wi-Fi scan throttling add an eighth row and move ct-group-card-gap down 43 pt), the panel is at the top of its scroll, and no sheet is up. The value-popup and slider rows now live in the collapsed-by-default Display & sound group; their geometry is checked separately against a saved 2x capture with Scripts/parity-reference-controls-display.json. The seeded parity-reference.json assumes the Apps tab, so the files are run separately.",
+  "window": {
+    "width": 1920,
+    "height": 983
+  },
+  "checks": [
+    {
+      "name": "ct-card-top",
+      "description": "First settings card top edge: 8 pt below the 52 pt toolbar band plus the Network heading (13 pt) and its 7 pt gap (CT-01; DH's first card 60 pt, which has no heading). (2026-09-28: the group title is a heading above the card, so the card starts 20 pt lower and its first row is Wi-Fi.)",
+      "kind": "edge-y",
+      "appearance": "any",
+      "col": 1750,
+      "from": 60,
+      "to": 140,
+      "delta": 6,
+      "expected": 80,
+      "tolerance": 2
+    },
+    {
+      "name": "ct-card-left",
+      "description": "Card left edge 10 pt inside the panel (CT-01; DH card x = panel + 10). Shifted +20 pt for the 280 pt inspector (2026-09-28). (2026-09-28: the group title is a heading above the card, so the card starts 20 pt lower and its first row is Wi-Fi.)",
+      "kind": "edge-x",
+      "appearance": "any",
+      "row": 100,
+      "from": 1640.5,
+      "to": 1700,
+      "delta": 6,
+      "expected": 1650,
+      "tolerance": 2
+    },
+    {
+      "name": "ct-card-right",
+      "description": "Card right edge 10 pt inside the panel's trailing edge (CT-01), measured on the Network header row. (2026-09-28: the group title is a heading above the card, so the card starts 20 pt lower and its first row is Wi-Fi.)",
+      "kind": "edge-x",
+      "appearance": "any",
+      "row": 100,
+      "from": 1919,
+      "to": 1860,
+      "delta": 6,
+      "expected": 1910,
+      "tolerance": 2
+    },
+    {
+      "name": "ct-hairline-first",
+      "description": "First row divider, below Wi-Fi: card top 80 + 42 pt row (CT-02). (2026-09-28: the group title is a heading above the card, so the card starts 20 pt lower and its first row is Wi-Fi.)",
+      "kind": "edge-y",
+      "appearance": "any",
+      "col": 1750,
+      "from": 110,
+      "to": 135,
+      "delta": 3,
+      "expected": 122,
+      "tolerance": 1.5
+    },
+    {
+      "name": "ct-row-pitch",
+      "description": "Second row divider, below Bluetooth, at 165 pt — with the first, a 43 pt row pitch (CT-02). (2026-09-28: the group title is a heading above the card, so the card starts 20 pt lower and its first row is Wi-Fi.)",
+      "kind": "edge-y",
+      "appearance": "any",
+      "col": 1750,
+      "from": 138,
+      "to": 180,
+      "delta": 3,
+      "expected": 165,
+      "tolerance": 1.5
+    },
+    {
+      "name": "ct-hairline-inset",
+      "description": "First divider starts 10 pt inside the card (CT-02), measured on the divider below Wi-Fi. (2026-09-28: the group title is a heading above the card, so the card starts 20 pt lower and its first row is Wi-Fi.)",
+      "kind": "edge-x",
+      "appearance": "any",
+      "row": 122,
+      "from": 1650.5,
+      "to": 1700,
+      "delta": 3,
+      "expected": 1660,
+      "tolerance": 1.5
+    },
+    {
+      "name": "ct-group-heading-ink",
+      "description": "Group heading text (DH's \"Paired Simulators\" style, 11 pt semibold secondary) starts 10 pt into the card column, above the card (2026-09-28: the heading moved out of the card; it replaced the in-card header row and its chevron, which now shows only on hover).",
+      "kind": "edge-x",
+      "appearance": "any",
+      "row": 66,
+      "from": 1650.5,
+      "to": 1680,
+      "delta": 6,
+      "expected": 1660.5,
+      "tolerance": 1.5
+    },
+    {
+      "name": "ct-glyph-ink",
+      "description": "Bluetooth glyph ink starts ≈13.5 pt into the card (CT-03; 16 pt glyph frame 12 pt in). (2026-09-28: the group title is a heading above the card, so the card starts 20 pt lower and its first row is Wi-Fi.)",
+      "kind": "edge-x",
+      "appearance": "any",
+      "row": 144,
+      "from": 1652,
+      "to": 1680,
+      "delta": 10,
+      "expected": 1663.5,
+      "tolerance": 1.5
+    },
+    {
+      "name": "ct-label-ink",
+      "description": "Bluetooth label ink starts at card + 39.5 pt (CT-03). (2026-09-28: the group title is a heading above the card, so the card starts 20 pt lower and its first row is Wi-Fi.)",
+      "kind": "edge-x",
+      "appearance": "any",
+      "row": 144,
+      "from": 1680,
+      "to": 1710,
+      "delta": 40,
+      "expected": 1689.5,
+      "tolerance": 1.5
+    },
+    {
+      "name": "ct-toggle-right",
+      "description": "Switch right edge 10.5 pt before the card edge (CT-04), on the Wi-Fi verbose logging row. (2026-09-28: the group title is a heading above the card, so the card starts 20 pt lower and its first row is Wi-Fi.)",
+      "kind": "edge-x",
+      "appearance": "any",
+      "row": 316,
+      "from": 1908,
+      "to": 1860,
+      "delta": 6,
+      "expected": 1899.5,
+      "tolerance": 1.5
+    },
+    {
+      "name": "ct-switch-height",
+      "description": "Switch track 16 pt tall (CT-04), Wi-Fi verbose logging row. (2026-09-28: the group title is a heading above the card, so the card starts 20 pt lower and its first row is Wi-Fi.)",
+      "kind": "band-height",
+      "appearance": "any",
+      "col": 1890,
+      "from": 306,
+      "to": 326,
+      "delta": 4,
+      "expected": 16,
+      "tolerance": 1.5
+    },
+    {
+      "name": "ct-card-fill",
+      "description": "Card fill (CT-01), inside the Wi-Fi row. (2026-09-28: the group title is a heading above the card, so the card starts 20 pt lower and its first row is Wi-Fi.)",
+      "kind": "pixel-color-at-point",
+      "appearance": "light",
+      "x": 1750,
+      "y": 100,
+      "color": "#e5e5e6",
+      "tolerance": 3
+    },
+    {
+      "name": "ct-hairline-fill",
+      "description": "Row divider fill (CT-02), the divider below Wi-Fi. (2026-09-28: the group title is a heading above the card, so the card starts 20 pt lower and its first row is Wi-Fi.)",
+      "kind": "pixel-color-at-point",
+      "appearance": "light",
+      "x": 1750,
+      "y": 122.25,
+      "color": "#dbdbdc",
+      "tolerance": 3
+    },
+    {
+      "name": "ct-switch-track-fill",
+      "description": "Off switch track fill (CT-04), Wi-Fi verbose logging row. (2026-09-28: the group title is a heading above the card, so the card starts 20 pt lower and its first row is Wi-Fi.)",
+      "kind": "pixel-color-at-point",
+      "appearance": "light",
+      "x": 1895,
+      "y": 316,
+      "color": "#cfcfd0",
+      "tolerance": 3
+    },
+    {
+      "name": "ct-group-card-gap",
+      "description": "Network conditions card top: the Network card's seven rows end at 380 pt, then 10 pt, the 13 pt heading and 7 pt — a 30 pt gap between the cards, DH's \"Paired Simulators\" spacing. The scan starts below the heading's ink. (2026-09-28: the group title is a heading above the card; measured on the Pixel 9 Pro Fold and Pixel 9 Pro, Android 17.)",
+      "kind": "edge-y",
+      "appearance": "any",
+      "col": 1750,
+      "from": 404,
+      "to": 425,
+      "delta": 6,
+      "expected": 410,
+      "tolerance": 1.5
+    }
+  ]
+}

@@ -1,0 +1,5 @@
+SERVICE com.android.systemui/.SystemUIService c36fb9 pid=1026 user=0
+  Client:
+    Dump starting: 09-25 20:31:25.219
+
+    Dump took 9ms

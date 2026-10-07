@@ -1,0 +1,25 @@
+{
+  "devices" : {
+    "com.apple.CoreSimulator.SimRuntime.iOS-27-0" : [
+      {
+        "dataPath" : "\/private\/tmp\/aqa-tmp-01\/aqa-project-placeholder-01\/aqa-session-placeholder-000000000000\/fixtures00\/trackA\/simset\/95D9676B-3317-4BA5-8CF6-3CDD0488CACA\/data",
+        "dataPathSize" : 18337792,
+        "logPath" : "\/Users\/aqauser001\/Library\/Logs\/CoreSimulator\/95D9676B-3317-4BA5-8CF6-3CDD0488CACA",
+        "udid" : "95D9676B-3317-4BA5-8CF6-3CDD0488CACA",
+        "isAvailable" : true,
+        "deviceTypeIdentifier" : "com.apple.CoreSimulator.SimDeviceType.iPhone-17-Pro",
+        "state" : "Shutdown",
+        "name" : "DeviceHubPro-A-fixtures"
+      }
+    ],
+    "com.apple.CoreSimulator.SimRuntime.tvOS-27-0" : [
+
+    ],
+    "com.apple.CoreSimulator.SimRuntime.tvOS-26-5" : [
+
+    ],
+    "com.apple.CoreSimulator.SimRuntime.iOS-26-5" : [
+
+    ]
+  }
+}

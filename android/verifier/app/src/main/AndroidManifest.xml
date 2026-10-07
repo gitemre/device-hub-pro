@@ -1,0 +1,76 @@
+<?xml version="1.0" encoding="utf-8"?>
+<manifest xmlns:android="http://schemas.android.com/apk/res/android">
+
+    <uses-permission android:name="android.permission.ACCESS_FINE_LOCATION" />
+    <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE" />
+    <uses-permission android:name="android.permission.ACCESS_WIFI_STATE" />
+    <uses-permission android:name="android.permission.READ_PHONE_STATE" />
+    <uses-permission android:name="android.permission.READ_PHONE_NUMBERS" />
+    <uses-permission android:name="android.permission.READ_CALL_LOG" />
+    <uses-permission android:name="android.permission.RECEIVE_SMS" />
+    <uses-permission android:name="android.permission.BLUETOOTH_CONNECT" />
+    <uses-permission android:name="android.permission.BODY_SENSORS" />
+    <!-- Network conditions ▸ Connection latency: TCP connects to 8.8.8.8:53. -->
+    <uses-permission android:name="android.permission.INTERNET" />
+
+    <uses-feature android:name="android.hardware.telephony" android:required="false" />
+    <uses-feature android:name="android.hardware.location.gps" android:required="false" />
+
+    <queries>
+        <package android:name="com.google.android.marvin.talkback" />
+    </queries>
+
+    <application
+        android:name=".VerifierApplication"
+        android:icon="@mipmap/ic_launcher"
+        android:label="@string/app_name"
+        android:supportsRtl="true"
+        android:theme="@style/Theme.Verifier">
+
+        <!-- singleTop: a link opened while the verifier is on top (or its task is in the
+             background) arrives in onNewIntent (Links ▸ Last link). -->
+        <activity
+            android:name=".MainActivity"
+            android:exported="true"
+            android:launchMode="singleTop">
+            <intent-filter>
+                <action android:name="android.intent.action.MAIN" />
+                <category android:name="android.intent.category.LAUNCHER" />
+            </intent-filter>
+            <intent-filter>
+                <action android:name="android.intent.action.VIEW" />
+                <category android:name="android.intent.category.DEFAULT" />
+                <category android:name="android.intent.category.BROWSABLE" />
+                <data android:scheme="devicehubpro-verifier" android:host="link" />
+            </intent-filter>
+            <!-- No BROWSABLE: reachable only with Device Hub Pro's Browsable switch off. -->
+            <intent-filter>
+                <action android:name="android.intent.action.VIEW" />
+                <category android:name="android.intent.category.DEFAULT" />
+                <data android:scheme="devicehubpro-verifier" android:host="internal" />
+            </intent-filter>
+            <!-- An App Link that can never verify (.test is reserved, RFC 6761). -->
+            <intent-filter android:autoVerify="true">
+                <action android:name="android.intent.action.VIEW" />
+                <category android:name="android.intent.category.DEFAULT" />
+                <category android:name="android.intent.category.BROWSABLE" />
+                <data android:scheme="https" android:host="verifier.devicehubpro.test" />
+            </intent-filter>
+            <!-- No DEFAULT: query-activities lists it (isDefault=false), but am start and
+                 other apps' startActivity never reach it (Device Hub Pro's URL caption says so). -->
+            <intent-filter>
+                <action android:name="android.intent.action.VIEW" />
+                <category android:name="android.intent.category.BROWSABLE" />
+                <data android:scheme="devicehubpro-verifier" android:host="nodefault" />
+            </intent-filter>
+            <!-- A single-label web host: not a domain name, so App Links never applies to it
+                 and get-app-links lists it under "Invalid autoVerify domains". -->
+            <intent-filter android:autoVerify="true">
+                <action android:name="android.intent.action.VIEW" />
+                <category android:name="android.intent.category.DEFAULT" />
+                <category android:name="android.intent.category.BROWSABLE" />
+                <data android:scheme="https" android:host="devicehubpro-verifier" />
+            </intent-filter>
+        </activity>
+    </application>
+</manifest>

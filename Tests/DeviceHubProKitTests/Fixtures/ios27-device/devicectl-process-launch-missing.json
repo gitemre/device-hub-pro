@@ -1,0 +1,58 @@
+{
+  "error" : {
+    "code" : 10002,
+    "domain" : "com.apple.dt.CoreDeviceError",
+    "userInfo" : {
+      "BundleIdentifier" : {
+        "string" : "com.example.notinstalled"
+      },
+      "NSLocalizedDescription" : {
+        "string" : "The application failed to launch."
+      },
+      "NSLocalizedFailureReason" : {
+        "string" : "The requested application com.example.notinstalled is not installed."
+      },
+      "NSLocalizedRecoverySuggestion" : {
+        "string" : "Provide a valid bundle identifier."
+      },
+      "NSUnderlyingError" : {
+        "error" : {
+          "code" : -10814,
+          "domain" : "NSOSStatusErrorDomain",
+          "userInfo" : {
+            "_LSFile" : {
+              "string" : "LSBindingEvaluator.mm"
+            },
+            "_LSFunction" : {
+              "string" : "runEvaluator"
+            },
+            "_LSLine" : {
+              "int" : 1975
+            }
+          }
+        }
+      }
+    }
+  },
+  "info" : {
+    "arguments" : [
+      "devicectl",
+      "device",
+      "process",
+      "launch",
+      "--device",
+      "00000000-0000000000000000",
+      "com.example.notinstalled",
+      "--json-output",
+      "raw-write/process-launch-missing.json",
+      "-q"
+    ],
+    "commandType" : "devicectl.device.process.launch",
+    "environment" : {
+
+    },
+    "jsonVersion" : 5,
+    "outcome" : "failed",
+    "version" : "642.16"
+  }
+}

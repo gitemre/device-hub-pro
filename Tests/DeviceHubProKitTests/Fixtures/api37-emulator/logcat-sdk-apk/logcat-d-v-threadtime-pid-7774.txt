@@ -1,0 +1,90 @@
+--------- beginning of main
+09-24 23:08:36.368  7774  7774 I libprocessgroup: Created cgroup /sys/fs/cgroup/apps/uid_10149/pid_7774
+09-24 23:08:36.390  7774  7774 I Zygote  : Process 7774 created for com.example.messages:rcs
+09-24 23:08:36.390  7774  7774 I s.messaging:rcs: Using generational CollectorTypeCMC GC.
+09-24 23:08:36.391  7774  7774 D nativeloader: Load libframework-connectivity-tiramisu-jni.so using APEX ns com_android_tethering for caller /apex/com.android.tethering/javalib/framework-connectivity-t.jar: ok
+09-24 23:08:36.394  7774  7774 D CompatChangeReporter: Compat change id reported: 333566037; UID 10149; state: ENABLED
+09-24 23:08:36.395  7774  7774 D ApplicationLoaders: Returning zygote-cached class loader: /system/framework/org.apache.http.legacy.jar
+09-24 23:08:36.395  7774  7774 D nativeloader: Configuring clns-9 for other apk /system_ext/framework/SatelliteClient.jar. target_sdk_version=37, uses_libraries=ALL, library_path=/data/app/~~pMByn72eSYPTDF4gJMnkrw==/com.example.messages-7UAVD6zWqKSWXySwID89lw==/lib/arm64:/data/app/~~pMByn72eSYPTDF4gJMnkrw==/com.example.messages-7UAVD6zWqKSWXySwID89lw==/base.apk!/lib/arm64-v8a:/data/app/~~pMByn72eSYPTDF4gJMnkrw==/com.example.messages-7UAVD6zWqKSWXySwID89lw==/split_config.arm64_v8a.apk!/lib/arm64-v8a:/data/app/~~pMByn72eSYPTDF4gJMnkrw==/com.example.messages-7UAVD6zWqKSWXySwID89lw==/split_config.en.apk!/lib/arm64-v8a:/data/app/~~pMByn72eSYPTDF4gJMnkrw==/com.example.messages-7UAVD6zWqKSWXySwID89lw==/split_config.xxhdpi.apk!/lib/arm64-v8a, permitted_path=/data:/mnt/expand:/data/user/0/com.example.messages
+09-24 23:08:36.395  7774  7774 D ApplicationLoaders: Returning zygote-cached class loader: /system_ext/framework/androidx.window.extensions.jar
+09-24 23:08:36.395  7774  7774 D ApplicationLoaders: Returning zygote-cached class loader: /system_ext/framework/androidx.window.sidecar.jar
+09-24 23:08:36.404  7774  7774 W s.messaging:rcs: Failed to find entry 'classes.dex': Entry not found
+09-24 23:08:36.404  7774  7774 W s.messaging:rcs: Failed to find entry 'classes.dex': Entry not found
+09-24 23:08:36.404  7774  7774 W s.messaging:rcs: Failed to find entry 'classes.dex': Entry not found
+09-24 23:08:36.404  7774  7774 D nativeloader: Configuring clns-10 for other apk /data/app/~~pMByn72eSYPTDF4gJMnkrw==/com.example.messages-7UAVD6zWqKSWXySwID89lw==/base.apk:/data/app/~~pMByn72eSYPTDF4gJMnkrw==/com.example.messages-7UAVD6zWqKSWXySwID89lw==/split_config.arm64_v8a.apk:/data/app/~~pMByn72eSYPTDF4gJMnkrw==/com.example.messages-7UAVD6zWqKSWXySwID89lw==/split_config.en.apk:/data/app/~~pMByn72eSYPTDF4gJMnkrw==/com.example.messages-7UAVD6zWqKSWXySwID89lw==/split_config.xxhdpi.apk. target_sdk_version=37, uses_libraries=, library_path=/data/app/~~pMByn72eSYPTDF4gJMnkrw==/com.example.messages-7UAVD6zWqKSWXySwID89lw==/lib/arm64:/data/app/~~pMByn72eSYPTDF4gJMnkrw==/com.example.messages-7UAVD6zWqKSWXySwID89lw==/base.apk!/lib/arm64-v8a:/data/app/~~pMByn72eSYPTDF4gJMnkrw==/com.example.messages-7UAVD6zWqKSWXySwID89lw==/split_config.arm64_v8a.apk!/lib/arm64-v8a:/data/app/~~pMByn72eSYPTDF4gJMnkrw==/com.example.messages-7UAVD6zWqKSWXySwID89lw==/split_confi
+--------- beginning of system
+09-24 23:08:36.405  7774  7774 D ActivityThread: Set OS env TMPDIR to /data/user/0/com.example.messages/cache
+09-24 23:08:36.406  7774  7774 V GraphicsEnvironment: Currently set values for:
+09-24 23:08:36.406  7774  7774 V GraphicsEnvironment:   angle_gl_driver_selection_pkgs=[]
+09-24 23:08:36.406  7774  7774 V GraphicsEnvironment:   angle_gl_driver_selection_values=[]
+09-24 23:08:36.406  7774  7774 V GraphicsEnvironment: com.example.messages is not listed in per-application setting
+09-24 23:08:36.406  7774  7774 V GraphicsEnvironment: No special selections for ANGLE, returning default driver choice
+09-24 23:08:36.406  7774  7774 V GraphicsEnvironment: Neither updatable production driver nor prerelease driver is supported.
+09-24 23:08:36.407  7774  7774 D CompatChangeReporter: Compat change id reported: 407952621; UID 10149; state: ENABLED
+09-24 23:08:36.407  7774  7774 D CompatChangeReporter: Compat change id reported: 419020719; UID 10149; state: ENABLED
+09-24 23:08:36.408  7774  7799 D CompatChangeReporter: Compat change id reported: 458413887; UID 10149; state: ENABLED
+09-24 23:08:36.409  7774  7774 D CompatChangeReporter: Compat change id reported: 418924588; UID 10149; state: ENABLED
+09-24 23:08:36.409  7774  7774 D PrimesLoggerHolder: Primes instant initialization
+09-24 23:08:36.410  7774  7774 I feml    : SslGuard completed installation.
+09-24 23:08:36.414  7774  7802 D nativeloader: Load /data/app/~~pMByn72eSYPTDF4gJMnkrw==/com.example.messages-7UAVD6zWqKSWXySwID89lw==/split_config.arm64_v8a.apk!/lib/arm64-v8a/libnative_crash_handler_jni.so using class loader ns clns-10 (caller=/data/app/~~pMByn72eSYPTDF4gJMnkrw==/com.example.messages-7UAVD6zWqKSWXySwID89lw==/base.apk!classes3.dex): ok
+09-24 23:08:36.414  7774  7813 I stetho  : Listening on @stetho_com.example.messages:rcs_devtools_remote
+09-24 23:08:36.414  7774  7774 I Bugle   : BugleApplicationBase: Bugle version: messages.android_20260903_04_rc04.phone_dynamic , Bugle version code: 322660063
+09-24 23:08:36.415  7774  7774 I CarrierServices: SystemBindingService onCreate
+09-24 23:08:36.422  7774  7820 I CarrierServices: SystemBindingService: Starting JibeService
+09-24 23:08:36.425  7774  7838 I CarrierServices: Creating JibeServiceComponent [CONTEXT thread_id=65 ]
+09-24 23:08:36.426  7774  7820 I CarrierServices: Broadcasting provisioning intent rcs.intent.action.rcsSystemBinding to Bugle with extras redacted-pii:[null] from source SYSTEM_BINDING_SERVICE [CONTEXT log_prefix="EngineBroadcaster" thread_id=61 ]
+09-24 23:08:36.426  7774  7838 I CarrierServices: Initializing Carrier Services Library. [CONTEXT thread_id=65 ]
+09-24 23:08:36.427  7774  7838 I CarrierServices: Initializing Carrier Services Logging. [CONTEXT thread_id=65 ]
+09-24 23:08:36.430  7774  7838 I LogSaver: LogSaver new instance with filename: carrier_services
+09-24 23:08:36.431  7774  7838 I BugleRcsEngine: Initializing RCS Engine for Bugle host. [CONTEXT log_prefix="RcsEngineProxyImpl:[2bdece8e-35f4]" thread_id=65 ]
+09-24 23:08:36.432  7774  7838 I BugleRcsEngine: enableRcsEngineInitializationByBugle is disabled, directly initializing new DUAL_REG RcsEngine [CONTEXT log_prefix="RcsEngineProxyImpl:[2bdece8e-35f4]" thread_id=65 ]
+09-24 23:08:36.432  7774  7838 W System.err: SLF4J(W): No SLF4J providers were found.
+09-24 23:08:36.432  7774  7838 W System.err: SLF4J(W): Defaulting to no-operation (NOP) logger implementation
+09-24 23:08:36.432  7774  7838 W System.err: SLF4J(W): See https://www.slf4j.org/codes.html#noProviders for further details.
+09-24 23:08:36.432  7774  7838 I BugleRcsEngine: Initializing Carrier Services Logging. [CONTEXT thread_id=65 ]
+09-24 23:08:36.432  7774  7838 D BugleRcsEngine: log_saver already enabled
+09-24 23:08:36.432  7774  7838 I BugleRcsEngine: instantiated in package: com.example.messages [CONTEXT log_prefix="RcsEngineImpl[DUAL_REG]:[ec274122-00eb]" thread_id=65 ]
+09-24 23:08:36.433  7774  7838 I BugleRcsEngine: setting active RCS Engine to DUAL_REG instance [CONTEXT log_prefix="RcsEngineProxyImpl:[2bdece8e-35f4]" thread_id=65 ]
+09-24 23:08:36.433  7774  7838 I BugleRcsEngine: Initializing RcsEngine. [CONTEXT log_prefix="RcsEngineImpl[DUAL_REG]:[ec274122-00eb]" thread_id=65 ]
+09-24 23:08:36.433  7774  7838 I BugleRcsEngine: Initializing RBM resource permissions. [CONTEXT log_prefix="RcsEngineImpl[DUAL_REG]:[ec274122-00eb]" thread_id=65 ]
+09-24 23:08:36.434  7774  7830 I BugleRcsEngine: Connected state: [1], networkType: [WIFI] [CONTEXT thread_id=63 ]
+09-24 23:08:36.434  7774  7840 I BugleRcsEngine: handleMessage processing message:[NOTIFY_UPTIME_IGNORE_STATE_CHANGED] with [non-null]:RcsEngineImpl reference [CONTEXT log_prefix="RcsEngineImpl[DUAL_REG]:[ec274122-00eb]>Handler" thread_id=67 ]
+09-24 23:08:36.435  7774  7830 I BugleRcsEngine: Connected state: [1], networkType: [WIFI] [CONTEXT thread_id=63 ]
+09-24 23:08:36.435  7774  7838 D BugleRcsEngine: log_saver already enabled
+09-24 23:08:36.438  7774  7840 I BugleRcsEngine: No RCS Configuration was found in Bugle for simID: redacted-pii:sim_id[chars:20,last3:897] [CONTEXT log_prefix="ProvisioningEngineDataRetriever" thread_id=67 ]
+09-24 23:08:36.438  7774  7840 I BugleRcsEngine: handleMessage processing message:[NOTIFY_UPTIME_IGNORE_STATE_CHANGED] with [non-null]:RcsEngineImpl reference [CONTEXT log_prefix="RcsEngineImpl[DUAL_REG]:[ec274122-00eb]>Handler" thread_id=67 ]
+09-24 23:08:36.439  7774  7840 I BugleRcsEngine: No RCS Configuration was found in Bugle for simID: redacted-pii:sim_id[chars:20,last3:897] [CONTEXT log_prefix="ProvisioningEngineDataRetriever" thread_id=67 ]
+09-24 23:08:43.417  7774  7808 I Bugle   : TelephonyManagerFactory: Returning per-subscription TelephonyManager (>= N) subscription{id:1}
+09-24 23:08:43.420  7774  7808 I Bugle   : pSIM transferStatus is 0 [CONTEXT sub_id=1 ]
+09-24 23:08:43.421  7774  7808 I RcsAvailabilityCache: Cached availability not found for simId: redacted-pii:sim_id[chars:20,last3:897]
+09-24 23:08:43.428  7774  7817 V ClearcutMetricXmitter: Transmission is done.
+09-24 23:08:58.039  7774  7830 I BugleRcsEngine: Connected state: [1], networkType: [WIFI] [CONTEXT thread_id=63 ]
+09-24 23:08:58.039  7774  7840 I BugleRcsEngine: handleMessage processing message:[NOTIFY_UPTIME_IGNORE_STATE_CHANGED] with [non-null]:RcsEngineImpl reference [CONTEXT log_prefix="RcsEngineImpl[DUAL_REG]:[ec274122-00eb]>Handler" thread_id=67 ]
+09-24 23:08:58.047  7774  7840 I BugleRcsEngine: No RCS Configuration was found in Bugle for simID: redacted-pii:sim_id[chars:20,last3:897] [CONTEXT log_prefix="ProvisioningEngineDataRetriever" thread_id=67 ]
+09-24 23:09:31.103  7774  7830 I BugleRcsEngine: Connected state: [1], networkType: [WIFI] [CONTEXT thread_id=63 ]
+09-24 23:09:31.104  7774  7840 I BugleRcsEngine: handleMessage processing message:[NOTIFY_UPTIME_IGNORE_STATE_CHANGED] with [non-null]:RcsEngineImpl reference [CONTEXT log_prefix="RcsEngineImpl[DUAL_REG]:[ec274122-00eb]>Handler" thread_id=67 ]
+09-24 23:09:31.105  7774  7840 I BugleRcsEngine: No RCS Configuration was found in Bugle for simID: redacted-pii:sim_id[chars:20,last3:897] [CONTEXT log_prefix="ProvisioningEngineDataRetriever" thread_id=67 ]
+09-24 23:10:01.182  7774  7830 I BugleRcsEngine: Connected state: [1], networkType: [WIFI] [CONTEXT thread_id=63 ]
+09-24 23:10:01.182  7774  7840 I BugleRcsEngine: handleMessage processing message:[NOTIFY_UPTIME_IGNORE_STATE_CHANGED] with [non-null]:RcsEngineImpl reference [CONTEXT log_prefix="RcsEngineImpl[DUAL_REG]:[ec274122-00eb]>Handler" thread_id=67 ]
+09-24 23:10:01.187  7774  7840 I BugleRcsEngine: No RCS Configuration was found in Bugle for simID: redacted-pii:sim_id[chars:20,last3:897] [CONTEXT log_prefix="ProvisioningEngineDataRetriever" thread_id=67 ]
+09-24 23:10:04.187  7774  7830 I BugleRcsEngine: Connected state: [1], networkType: [WIFI] [CONTEXT thread_id=63 ]
+09-24 23:10:04.187  7774  7840 I BugleRcsEngine: handleMessage processing message:[NOTIFY_UPTIME_IGNORE_STATE_CHANGED] with [non-null]:RcsEngineImpl reference [CONTEXT log_prefix="RcsEngineImpl[DUAL_REG]:[ec274122-00eb]>Handler" thread_id=67 ]
+09-24 23:10:04.189  7774  7840 I BugleRcsEngine: No RCS Configuration was found in Bugle for simID: redacted-pii:sim_id[chars:20,last3:897] [CONTEXT log_prefix="ProvisioningEngineDataRetriever" thread_id=67 ]
+09-24 23:11:40.393  7774  7840 I BugleRcsEngine: handleMessage processing message:[NOTIFY_UPTIME_IGNORE_STATE_CHANGED] with [non-null]:RcsEngineImpl reference [CONTEXT log_prefix="RcsEngineImpl[DUAL_REG]:[ec274122-00eb]>Handler" thread_id=67 ]
+09-24 23:11:40.393  7774  7830 I BugleRcsEngine: Connected state: [1], networkType: [WIFI] [CONTEXT thread_id=63 ]
+09-24 23:11:40.411  7774  7840 I BugleRcsEngine: No RCS Configuration was found in Bugle for simID: redacted-pii:sim_id[chars:20,last3:897] [CONTEXT log_prefix="ProvisioningEngineDataRetriever" thread_id=67 ]
+09-24 23:12:25.488  7774  7830 I BugleRcsEngine: Connected state: [1], networkType: [WIFI] [CONTEXT thread_id=63 ]
+09-24 23:12:25.488  7774  7840 I BugleRcsEngine: handleMessage processing message:[NOTIFY_UPTIME_IGNORE_STATE_CHANGED] with [non-null]:RcsEngineImpl reference [CONTEXT log_prefix="RcsEngineImpl[DUAL_REG]:[ec274122-00eb]>Handler" thread_id=67 ]
+09-24 23:12:25.502  7774  7840 I BugleRcsEngine: No RCS Configuration was found in Bugle for simID: redacted-pii:sim_id[chars:20,last3:897] [CONTEXT log_prefix="ProvisioningEngineDataRetriever" thread_id=67 ]
+09-24 23:12:46.537  7774  7830 I BugleRcsEngine: Connected state: [1], networkType: [WIFI] [CONTEXT thread_id=63 ]
+09-24 23:12:46.537  7774  7840 I BugleRcsEngine: handleMessage processing message:[NOTIFY_UPTIME_IGNORE_STATE_CHANGED] with [non-null]:RcsEngineImpl reference [CONTEXT log_prefix="RcsEngineImpl[DUAL_REG]:[ec274122-00eb]>Handler" thread_id=67 ]
+09-24 23:12:46.541  7774  7840 I BugleRcsEngine: No RCS Configuration was found in Bugle for simID: redacted-pii:sim_id[chars:20,last3:897] [CONTEXT log_prefix="ProvisioningEngineDataRetriever" thread_id=67 ]
+09-24 23:13:16.612  7774  7830 I BugleRcsEngine: Connected state: [1], networkType: [WIFI] [CONTEXT thread_id=63 ]
+09-24 23:13:16.612  7774  7840 I BugleRcsEngine: handleMessage processing message:[NOTIFY_UPTIME_IGNORE_STATE_CHANGED] with [non-null]:RcsEngineImpl reference [CONTEXT log_prefix="RcsEngineImpl[DUAL_REG]:[ec274122-00eb]>Handler" thread_id=67 ]
+09-24 23:13:16.616  7774  7840 I BugleRcsEngine: No RCS Configuration was found in Bugle for simID: redacted-pii:sim_id[chars:20,last3:897] [CONTEXT log_prefix="ProvisioningEngineDataRetriever" thread_id=67 ]
+09-24 23:13:46.683  7774  7830 I BugleRcsEngine: Connected state: [1], networkType: [WIFI] [CONTEXT thread_id=63 ]
+09-24 23:13:46.683  7774  7840 I BugleRcsEngine: handleMessage processing message:[NOTIFY_UPTIME_IGNORE_STATE_CHANGED] with [non-null]:RcsEngineImpl reference [CONTEXT log_prefix="RcsEngineImpl[DUAL_REG]:[ec274122-00eb]>Handler" thread_id=67 ]
+09-24 23:13:46.687  7774  7840 I BugleRcsEngine: No RCS Configuration was found in Bugle for simID: redacted-pii:sim_id[chars:20,last3:897] [CONTEXT log_prefix="ProvisioningEngineDataRetriever" thread_id=67 ]
+09-24 23:14:19.754  7774  7830 I BugleRcsEngine: Connected state: [1], networkType: [WIFI] [CONTEXT thread_id=63 ]
+09-24 23:14:19.754  7774  7840 I BugleRcsEngine: handleMessage processing message:[NOTIFY_UPTIME_IGNORE_STATE_CHANGED] with [non-null]:RcsEngineImpl reference [CONTEXT log_prefix="RcsEngineImpl[DUAL_REG]:[ec274122-00eb]>Handler" thread_id=67 ]
+09-24 23:14:19.757  7774  7840 I BugleRcsEngine: No RCS Configuration was found in Bugle for simID: redacted-pii:sim_id[chars:20,last3:897] [CONTEXT log_prefix="ProvisioningEngineDataRetriever" thread_id=67 ]

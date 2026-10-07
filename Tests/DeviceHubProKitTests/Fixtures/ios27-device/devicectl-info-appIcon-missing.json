@@ -1,0 +1,47 @@
+{
+  "error" : {
+    "code" : 6003,
+    "domain" : "com.apple.dt.CoreDeviceError",
+    "userInfo" : {
+      "NSLocalizedDescription" : {
+        "string" : "LaunchServices was unable to find the specified app."
+      },
+      "app URL" : {
+        "string" : "nil"
+      },
+      "app bundle identifier" : {
+        "string" : "com.example.notinstalled"
+      }
+    }
+  },
+  "info" : {
+    "arguments" : [
+      "devicectl",
+      "device",
+      "info",
+      "appIcon",
+      "--device",
+      "00000000-0000000000000000",
+      "--app-bundle-id",
+      "com.example.notinstalled",
+      "--width",
+      "64",
+      "--height",
+      "64",
+      "--destination",
+      "raw/icon-missing.png",
+      "--json-output",
+      "raw/info-appIcon-missing.json",
+      "-q",
+      "-t",
+      "30"
+    ],
+    "commandType" : "devicectl.device.info.appIcon",
+    "environment" : {
+
+    },
+    "jsonVersion" : 5,
+    "outcome" : "failed",
+    "version" : "642.16"
+  }
+}

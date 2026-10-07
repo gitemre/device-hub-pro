@@ -1,0 +1,8 @@
+Must specify at least two waypoints
+Parsed 0 waypoints
+An error was encountered processing the command (domain=NSPOSIXErrorDomain, code=22):
+Simulator device failed to complete the requested operation.
+Invalid argument
+Underlying error (domain=NSPOSIXErrorDomain, code=22):
+	Invalid waypoints
+	Invalid argument

@@ -1,0 +1,1 @@
+myapp://ü/;echo INJECTED;$(id)`id`'q'"d"\b ${HOME}&x=1#f

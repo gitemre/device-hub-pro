@@ -1,0 +1,142 @@
+--------- beginning of system
+09-24 22:56:40.918   495   495 I audioserver_main: main: starting
+09-24 22:56:40.930   495   495 I audioserver_main: main: AudioFlinger created
+09-24 22:56:42.536   495   495 I audioserver_main: main: AudioPolicy created
+09-24 22:56:42.536   495   495 I audioserver_main: main: AudioSystem ready
+09-24 22:56:42.537   495   495 I audioserver_main: main: Do not init aaudio service, status 0, policy info size 1
+09-24 22:56:42.537   495   495 I audioserver_main: main: initialization done in 1619.283 ms, joining thread pool
+--------- beginning of main
+09-24 22:56:44.522   495   507 D AudioFlinger: onStateChanged: pid:906  uid:10189  state:unfrozen - no freeze activity
+09-24 22:56:44.527   495   726 W AudioFlinger: createTrack_l(): mismatch between requested flags (00000004) and output flags (00000002)
+09-24 22:56:44.528   495   726 I AF::AfPlaybackCommon: AfPlaybackCommon: creating track with enforcement level 0 reason PRIVILEGED_APP shouldHarden 1
+09-24 22:56:44.536   495   507 I AF::TrackHandle: opChanged OP_PLAY_AUDIO callback received for 
+09-24 22:56:44.765   495   523 D AudioFlinger: mixer(0xb400726feecd7790) throttle end: throttle time(66)
+09-24 22:56:45.082   495   514 I APM_AudioPolicyManager: getNewOutputDevices io 13 recent device override {AUDIO_DEVICE_OUT_SPEAKER, @:}
+09-24 22:56:45.581   495   726 D AudioFlinger: onStateChanged: pid:2247  uid:10180  state:unfrozen - no freeze activity
+09-24 22:56:47.624   495  1958 D AudioFlinger: onStateChanged: pid:3080  uid:10183  state:unfrozen - no freeze activity
+09-24 22:56:48.428   495  3243 D AudioFlinger: onStateChanged: pid:3418  uid:10169  state:unfrozen - no freeze activity
+09-24 22:57:15.986   495  2090 D AudioFlinger: onStateChanged: pid:2247  uid:10180  state:frozen - no freeze activity
+09-24 22:57:18.539   495  2090 D AudioFlinger: onStateChanged: pid:3418  uid:10169  state:frozen - no freeze activity
+09-24 22:57:19.750   495  2090 D AudioFlinger: onStateChanged: pid:3080  uid:10183  state:frozen - no freeze activity
+09-24 23:06:48.884   495  2090 D AudioFlinger: onStateChanged: pid:3080  uid:10183  state:unfrozen - no freeze activity
+09-24 23:07:00.059   495  2090 D AudioFlinger: onStateChanged: pid:3080  uid:10183  state:frozen - no freeze activity
+09-24 23:07:02.416   495  3243 W AudioFlinger: createTrack_l(): mismatch between requested flags (00000004) and output flags (00000002)
+09-24 23:07:02.416   495  3243 D AudioFlinger: Client defaulted notificationFrames to 960 for frameCount 4360
+09-24 23:07:02.417   495  3243 I AF::AfPlaybackCommon: AfPlaybackCommon: creating track with enforcement level 0 reason PRIVILEGED_APP shouldHarden 1
+09-24 23:07:02.426   495  2090 I AudioPolicyInterfaceImpl: setDeviceAbsoluteVolumeEnabled: deviceAidl AudioDevice{type: AudioDeviceDescription{type: OUT_HEARING_AID, connection: wireless}, address: AudioDeviceAddress{id: }}, enabled 1, streamToDriveAbsAidl 0
+09-24 23:07:02.426   495  2090 I APM_AudioPolicyManager: setDeviceAbsoluteVolumeEnabled: deviceType 0x8000000, enabled 1, streamToDriveAbs 0
+09-24 23:07:02.427   495  2090 I AudioPolicyInterfaceImpl: setDeviceAbsoluteVolumeEnabled: deviceAidl AudioDevice{type: AudioDeviceDescription{type: OUT_HEADSET, connection: bt-le}, address: AudioDeviceAddress{id: }}, enabled 1, streamToDriveAbsAidl 0
+09-24 23:07:02.427   495  2090 I APM_AudioPolicyManager: setDeviceAbsoluteVolumeEnabled: deviceType 0x20000000, enabled 1, streamToDriveAbs 0
+09-24 23:07:02.427   495  2090 I AudioPolicyInterfaceImpl: setDeviceAbsoluteVolumeEnabled: deviceAidl AudioDevice{type: AudioDeviceDescription{type: OUT_SPEAKER, connection: bt-le}, address: AudioDeviceAddress{id: }}, enabled 1, streamToDriveAbsAidl 0
+09-24 23:07:02.427   495  2090 I APM_AudioPolicyManager: setDeviceAbsoluteVolumeEnabled: deviceType 0x20000001, enabled 1, streamToDriveAbs 0
+09-24 23:07:02.427   495  2090 I AudioPolicyInterfaceImpl: setDeviceAbsoluteVolumeEnabled: deviceAidl AudioDevice{type: AudioDeviceDescription{type: OUT_BROADCAST, connection: bt-le}, address: AudioDeviceAddress{id: }}, enabled 1, streamToDriveAbsAidl 0
+09-24 23:07:02.427   495  2090 I APM_AudioPolicyManager: setDeviceAbsoluteVolumeEnabled: deviceType 0x20000002, enabled 1, streamToDriveAbs 0
+09-24 23:07:02.427   495  2090 I AudioPolicyInterfaceImpl: setDeviceAbsoluteVolumeEnabled: deviceAidl AudioDevice{type: AudioDeviceDescription{type: OUT_HEARING_AID, connection: bt-le}, address: AudioDeviceAddress{id: }}, enabled 1, streamToDriveAbsAidl 0
+09-24 23:07:02.427   495  2090 I APM_AudioPolicyManager: setDeviceAbsoluteVolumeEnabled: deviceType 0x20000004, enabled 1, streamToDriveAbs 0
+09-24 23:07:02.490   495  3243 D AudioFlinger: onStateChanged: pid:565  uid:1013  state:unfrozen - no freeze activity
+09-24 23:07:02.492   495   506 D AudioFlinger: Client defaulted notificationFrames to 11488 for frameCount 22977
+09-24 23:07:02.492   495   506 I AF::AfPlaybackCommon: AfPlaybackCommon: creating track with enforcement level 0 reason PRIVILEGED_APP shouldHarden 1
+09-24 23:07:02.599   495   523 D AudioFlinger: mixer(0xb400726feecd7790) throttle end: throttle time(33)
+09-24 23:07:02.736   495   523 W AudioTrackShared: releaseBuffer: dropped wake
+09-24 23:07:05.348   495   514 W libbinder.IPCThreadState: Sending oneway calls to frozen process.
+09-24 23:07:05.348   495   514 W libbinder.IPCThreadState: Sending oneway calls to frozen process.
+09-24 23:07:05.351   495  5406 I AudioPolicyInterfaceImpl: setDeviceAbsoluteVolumeEnabled: deviceAidl AudioDevice{type: AudioDeviceDescription{type: OUT_HEARING_AID, connection: wireless}, address: AudioDeviceAddress{id: }}, enabled 1, streamToDriveAbsAidl 3
+09-24 23:07:05.351   495  5406 I APM_AudioPolicyManager: setDeviceAbsoluteVolumeEnabled: deviceType 0x8000000, enabled 1, streamToDriveAbs 3
+09-24 23:07:05.352   495  5406 I AudioPolicyInterfaceImpl: setDeviceAbsoluteVolumeEnabled: deviceAidl AudioDevice{type: AudioDeviceDescription{type: OUT_HEADSET, connection: bt-le}, address: AudioDeviceAddress{id: }}, enabled 1, streamToDriveAbsAidl 3
+09-24 23:07:05.352   495  5406 I APM_AudioPolicyManager: setDeviceAbsoluteVolumeEnabled: deviceType 0x20000000, enabled 1, streamToDriveAbs 3
+09-24 23:07:05.352   495  5406 I AudioPolicyInterfaceImpl: setDeviceAbsoluteVolumeEnabled: deviceAidl AudioDevice{type: AudioDeviceDescription{type: OUT_SPEAKER, connection: bt-le}, address: AudioDeviceAddress{id: }}, enabled 1, streamToDriveAbsAidl 3
+09-24 23:07:05.352   495  5406 I APM_AudioPolicyManager: setDeviceAbsoluteVolumeEnabled: deviceType 0x20000001, enabled 1, streamToDriveAbs 3
+09-24 23:07:05.352   495  5406 I AudioPolicyInterfaceImpl: setDeviceAbsoluteVolumeEnabled: deviceAidl AudioDevice{type: AudioDeviceDescription{type: OUT_BROADCAST, connection: bt-le}, address: AudioDeviceAddress{id: }}, enabled 1, streamToDriveAbsAidl 3
+09-24 23:07:05.352   495  5406 I APM_AudioPolicyManager: setDeviceAbsoluteVolumeEnabled: deviceType 0x20000002, enabled 1, streamToDriveAbs 3
+09-24 23:07:05.352   495  5406 I AudioPolicyInterfaceImpl: setDeviceAbsoluteVolumeEnabled: deviceAidl AudioDevice{type: AudioDeviceDescription{type: OUT_HEARING_AID, connection: bt-le}, address: AudioDeviceAddress{id: }}, enabled 1, streamToDriveAbsAidl 3
+09-24 23:07:05.352   495  5406 I APM_AudioPolicyManager: setDeviceAbsoluteVolumeEnabled: deviceType 0x20000004, enabled 1, streamToDriveAbs 3
+09-24 23:07:05.503   495   514 I APM_AudioPolicyManager: getNewOutputDevices io 13 recent device override {AUDIO_DEVICE_OUT_SPEAKER, @:}
+09-24 23:07:05.504   495  2090 I APM_AudioPolicyManager: getNewOutputDevices io 13 recent device override {AUDIO_DEVICE_OUT_SPEAKER, @:}
+09-24 23:07:05.504   495   514 W libbinder.IPCThreadState: Sending oneway calls to frozen process.
+09-24 23:07:05.504   495   514 W libbinder.IPCThreadState: Sending oneway calls to frozen process.
+09-24 23:07:05.504   495  2090 I APM_AudioPolicyManager: getNewOutputDevices io 13 recent device override {AUDIO_DEVICE_OUT_SPEAKER, @:}
+09-24 23:07:05.550   495   514 W libbinder.IPCThreadState: Sending oneway calls to frozen process.
+09-24 23:07:05.550   495   514 W libbinder.IPCThreadState: Sending oneway calls to frozen process.
+09-24 23:07:05.571   495   506 D AudioFlinger: Client defaulted notificationFrames to 12512 for frameCount 25024
+09-24 23:07:05.571   495   506 I AF::AfPlaybackCommon: AfPlaybackCommon: creating track with enforcement level 0 reason PRIVILEGED_APP shouldHarden 1
+09-24 23:07:06.362   495   523 W AudioTrackShared: releaseBuffer: dropped wake
+09-24 23:07:08.473   495   514 I APM_AudioPolicyManager: getNewOutputDevices io 13 recent device override {AUDIO_DEVICE_OUT_SPEAKER, @:}
+09-24 23:07:14.946   495  1958 D AudioFlinger: Client defaulted notificationFrames to 12512 for frameCount 25024
+09-24 23:07:14.946   495  1958 I AF::AfPlaybackCommon: AfPlaybackCommon: creating track with enforcement level 0 reason PRIVILEGED_APP shouldHarden 1
+09-24 23:07:15.018   495   523 D AudioFlinger: mixer(0xb400726feecd7790) throttle end: throttle time(33)
+09-24 23:07:15.156   495   523 W AudioTrackShared: releaseBuffer: dropped wake
+09-24 23:07:16.810   495   514 I APM_AudioPolicyManager: getNewOutputDevices io 13 recent device override {AUDIO_DEVICE_OUT_SPEAKER, @:}
+09-24 23:07:34.811   495  1958 D AudioFlinger: Client defaulted notificationFrames to 12512 for frameCount 25024
+09-24 23:07:34.811   495  1958 I AF::AfPlaybackCommon: AfPlaybackCommon: creating track with enforcement level 0 reason PRIVILEGED_APP shouldHarden 1
+09-24 23:07:34.905   495   523 D AudioFlinger: mixer(0xb400726feecd7790) throttle end: throttle time(38)
+09-24 23:07:35.019   495   523 W AudioTrackShared: releaseBuffer: dropped wake
+09-24 23:07:36.338   495  1958 W AudioFlinger: createTrack_l(): mismatch between requested flags (00000004) and output flags (00000002)
+09-24 23:07:36.338   495  1958 I AF::AfPlaybackCommon: AfPlaybackCommon: creating track with enforcement level 0 reason PRIVILEGED_APP shouldHarden 1
+09-24 23:07:36.629   495   514 I APM_AudioPolicyManager: getNewOutputDevices io 13 recent device override {AUDIO_DEVICE_OUT_SPEAKER, @:}
+09-24 23:07:39.158   495  1958 D AudioFlinger: onStateChanged: pid:2247  uid:10180  state:unfrozen - no freeze activity
+09-24 23:07:39.357   495  1958 W libbinder.IPCThreadState: Sending oneway calls to frozen process.
+09-24 23:07:39.357   495  1958 W libbinder.IPCThreadState: Sending oneway calls to frozen process.
+09-24 23:07:39.357   495  6522 I AudioFlinger: AudioFlinger's thread 0xb400726fed17da38 tid=6522 ready to run
+09-24 23:07:39.358   495   514 W libbinder.IPCThreadState: Sending oneway calls to frozen process.
+09-24 23:07:39.358   495   514 W libbinder.IPCThreadState: Sending oneway calls to frozen process.
+09-24 23:07:39.391   495  6522 W libbinder.IPCThreadState: Sending oneway calls to frozen process.
+09-24 23:07:39.391   495  6522 W libbinder.IPCThreadState: Sending oneway calls to frozen process.
+09-24 23:07:39.392   495   514 W libbinder.IPCThreadState: Sending oneway calls to frozen process.
+09-24 23:07:39.394   495   514 W libbinder.IPCThreadState: Sending oneway calls to frozen process.
+09-24 23:07:39.433   495   514 W libbinder.IPCThreadState: Sending oneway calls to frozen process.
+09-24 23:07:39.433   495   514 W libbinder.IPCThreadState: Sending oneway calls to frozen process.
+09-24 23:07:39.448   495  5406 D AudioFlinger: Client defaulted notificationFrames to 2156 for frameCount 4313
+09-24 23:07:39.448   495  5406 I AF::AfPlaybackCommon: AfPlaybackCommon: creating track with enforcement level 0 reason TARGET_SDK shouldHarden 1
+09-24 23:07:39.454   495  2090 W libbinder.IPCThreadState: Sending oneway calls to frozen process.
+09-24 23:07:39.454   495  2090 W libbinder.IPCThreadState: Sending oneway calls to frozen process.
+09-24 23:07:39.461   495   514 W libbinder.IPCThreadState: Sending oneway calls to frozen process.
+09-24 23:07:39.461   495   514 W libbinder.IPCThreadState: Sending oneway calls to frozen process.
+09-24 23:07:39.574   495   523 W AudioTrackShared: releaseBuffer: dropped wake
+09-24 23:07:39.752   495  5406 D AudioFlinger: Client defaulted notificationFrames to 4000 for frameCount 8000
+09-24 23:07:39.752   495  5406 I AF::AfPlaybackCommon: AfPlaybackCommon: creating track with enforcement level 0 reason TARGET_SDK shouldHarden 1
+09-24 23:07:40.029   495   523 W AudioTrackShared: releaseBuffer: dropped wake
+09-24 23:07:40.415   495   514 I APM_AudioPolicyManager: getNewOutputDevices io 13 recent device override {AUDIO_DEVICE_OUT_SPEAKER, @:}
+09-24 23:07:42.759   495  6698 D AudioFlinger: Client defaulted notificationFrames to 12512 for frameCount 25024
+09-24 23:07:42.759   495  6698 I AF::AfPlaybackCommon: AfPlaybackCommon: creating track with enforcement level 0 reason PRIVILEGED_APP shouldHarden 1
+09-24 23:07:43.020   495   523 W AudioTrackShared: releaseBuffer: dropped wake
+09-24 23:07:44.630   495   514 I APM_AudioPolicyManager: getNewOutputDevices io 13 recent device override {AUDIO_DEVICE_OUT_SPEAKER, @:}
+09-24 23:07:51.296   495   514 I APM_AudioPolicyManager: getNewOutputDevices io 13 recent device override {AUDIO_DEVICE_OUT_SPEAKER, @:}
+09-24 23:07:54.206   495   726 D AudioFlinger: onStateChanged: pid:2247  uid:10180  state:frozen - no freeze activity
+09-24 23:07:54.289   495   726 D AudioFlinger: onStateChanged: pid:2247  uid:10180  state:unfrozen - no freeze activity
+09-24 23:07:54.464   495   507 W libbinder.IPCThreadState: Sending oneway calls to frozen process.
+09-24 23:07:54.464   495   507 W libbinder.IPCThreadState: Sending oneway calls to frozen process.
+09-24 23:07:54.465   495  7243 I AudioFlinger: AudioFlinger's thread 0xb400726fed17da38 tid=7243 ready to run
+09-24 23:07:54.466   495   514 W libbinder.IPCThreadState: Sending oneway calls to frozen process.
+09-24 23:07:54.466   495   514 W libbinder.IPCThreadState: Sending oneway calls to frozen process.
+09-24 23:07:54.466   495   514 W libbinder.IPCThreadState: Sending oneway calls to frozen process.
+09-24 23:07:54.466   495   514 W libbinder.IPCThreadState: Sending oneway calls to frozen process.
+09-24 23:07:54.472   495  7243 W libbinder.IPCThreadState: Sending oneway calls to frozen process.
+09-24 23:07:54.472   495  7243 W libbinder.IPCThreadState: Sending oneway calls to frozen process.
+09-24 23:07:54.472   495   514 W libbinder.IPCThreadState: Sending oneway calls to frozen process.
+09-24 23:07:54.472   495   514 W libbinder.IPCThreadState: Sending oneway calls to frozen process.
+09-24 23:07:54.472   495   514 W libbinder.IPCThreadState: Sending oneway calls to frozen process.
+09-24 23:07:54.472   495   514 W libbinder.IPCThreadState: Sending oneway calls to frozen process.
+09-24 23:07:54.478   495  3243 D AudioFlinger: Client defaulted notificationFrames to 2156 for frameCount 4313
+09-24 23:07:54.478   495  3243 I AF::AfPlaybackCommon: AfPlaybackCommon: creating track with enforcement level 0 reason TARGET_SDK shouldHarden 1
+09-24 23:07:54.489   495   523 D AudioFlinger: mixer(0xb400726feecd7790) throttle end: throttle time(34)
+09-24 23:07:54.527   495   514 W libbinder.IPCThreadState: Sending oneway calls to frozen process.
+09-24 23:07:54.527   495   514 W libbinder.IPCThreadState: Sending oneway calls to frozen process.
+09-24 23:07:54.527   495   514 W libbinder.IPCThreadState: Sending oneway calls to frozen process.
+09-24 23:07:54.527   495   514 W libbinder.IPCThreadState: Sending oneway calls to frozen process.
+09-24 23:07:54.529   495   507 W libbinder.IPCThreadState: Sending oneway calls to frozen process.
+09-24 23:07:54.529   495   507 W libbinder.IPCThreadState: Sending oneway calls to frozen process.
+09-24 23:07:54.534   495   523 D AudioFlinger: mixer(0xb400726feecd7790) throttle end: throttle time(32)
+09-24 23:07:54.534   495   523 W AudioTrackShared: releaseBuffer: dropped wake
+09-24 23:07:54.536   495   514 W libbinder.IPCThreadState: Sending oneway calls to frozen process.
+09-24 23:07:54.536   495   514 W libbinder.IPCThreadState: Sending oneway calls to frozen process.
+09-24 23:07:54.536   495   514 W libbinder.IPCThreadState: Sending oneway calls to frozen process.
+09-24 23:07:54.536   495   514 W libbinder.IPCThreadState: Sending oneway calls to frozen process.
+09-24 23:07:54.715   495  3243 D AudioFlinger: Client defaulted notificationFrames to 4000 for frameCount 8000
+09-24 23:07:54.715   495  3243 I AF::AfPlaybackCommon: AfPlaybackCommon: creating track with enforcement level 0 reason TARGET_SDK shouldHarden 1
+09-24 23:07:54.966   495   523 W AudioTrackShared: releaseBuffer: dropped wake
+09-24 23:07:55.351   495   514 I APM_AudioPolicyManager: getNewOutputDevices io 13 recent device override {AUDIO_DEVICE_OUT_SPEAKER, @:}
+09-24 23:07:57.586   495  7295 D AudioFlinger: Client defaulted notificationFrames to 12512 for frameCount 25024
+09-24 23:07:57.586   495  7295 I AF::AfPlaybackCommon: AfPlaybackCommon: creating track with enforcement level 0 reason PRIVILEGED_APP shouldHarden 1
+09-24 23:07:57.844   495   523 W AudioTrackShared: releaseBuffer: dropped wake
+09-24 23:07:59.454   495   514 I APM_AudioPolicyManager: getNewOutputDevices io 13 recent device override {AUDIO_DEVICE_OUT_SPEAKER, @:}
+09-24 23:08:06.398   495  7295 D AudioFlinger: onStateChanged: pid:2247  uid:10180  state:frozen - no freeze activity

@@ -1,0 +1,9 @@
+Starting: Intent { act=android.intent.action.VIEW cat=[android.intent.category.BROWSABLE] dat=geo: }
+Warning: Activity not started, intent has been delivered to currently running top-most instance.
+Status: ok
+LaunchState: UNKNOWN (0)
+Activity: com.example.maps/com.example.maps.MapsActivity
+TotalTime: 0
+WaitTime: 17
+Complete
+@@devicehubpro:link:exit=0

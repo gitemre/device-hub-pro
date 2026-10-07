@@ -1,0 +1,8 @@
+Current Status Bar Overrides:
+=============================
+Time: 09:41
+DataNetworkType: 8
+WiFi Mode: 2, WiFi Bars: 0
+Cell Mode: 3, Cell Bars: 2
+Operator Name: Device Hub Pro
+Battery State: 0, Battery Level: 7, Not Charging: 0

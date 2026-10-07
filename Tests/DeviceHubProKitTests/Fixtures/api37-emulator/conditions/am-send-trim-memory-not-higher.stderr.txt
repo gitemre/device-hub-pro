@@ -1,0 +1,15 @@
+
+Exception occurred while executing 'send-trim-memory':
+java.lang.IllegalArgumentException: Unable to set a higher trim level than current level
+	at com.android.server.am.ActivityManagerService.setProcessMemoryTrimLevel(ActivityManagerService.java:3975)
+	at com.android.server.am.ActivityManagerShellCommand.runSendTrimMemory(ActivityManagerShellCommand.java:3896)
+	at com.android.server.am.ActivityManagerShellCommand.onCommand(ActivityManagerShellCommand.java:401)
+	at com.android.modules.utils.BasicShellCommandHandler.exec(BasicShellCommandHandler.java:97)
+	at android.os.ShellCommand.exec(ShellCommand.java:40)
+	at com.android.server.am.ActivityManagerService.onShellCommand(ActivityManagerService.java:11448)
+	at android.os.Binder.shellCommand(Binder.java:1054)
+	at android.os.Binder.onTransact(Binder.java:914)
+	at android.app.IActivityManager$Stub.onTransact(IActivityManager.java:5888)
+	at com.android.server.am.ActivityManagerService.onTransact(ActivityManagerService.java:3513)
+	at android.os.Binder.execTransactInternal(Binder.java:1328)
+	at android.os.Binder.execTransact(Binder.java:1282)

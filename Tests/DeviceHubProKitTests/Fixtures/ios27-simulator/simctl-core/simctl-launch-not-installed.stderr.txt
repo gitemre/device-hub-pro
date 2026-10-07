@@ -1,0 +1,4 @@
+An error was encountered processing the command (domain=FBSOpenApplicationServiceErrorDomain, code=4):
+Simulator device failed to launch dev.devicehubpro.fixture.apps.
+Underlying error (domain=FBSOpenApplicationServiceErrorDomain, code=4):
+	The request to open "dev.devicehubpro.fixture.apps" failed.

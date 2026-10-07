@@ -1,0 +1,409 @@
+Available devices definitions:
+id: 0 or "ai_glasses_displayless"
+    Name: Audio Glasses
+    OEM : Google
+    Tag : ai-glasses
+---------
+id: 1 or "automotive_1024p_landscape"
+    Name: Automotive (1024p landscape)
+    OEM : Google
+    Tag : android-automotive-playstore
+---------
+id: 2 or "automotive_1080p_landscape"
+    Name: Automotive (1080p landscape)
+    OEM : Google
+    Tag : android-automotive
+---------
+id: 3 or "automotive_1408p_landscape_with_google_apis"
+    Name: Automotive (1408p landscape)
+    OEM : Google
+    Tag : android-automotive
+---------
+id: 4 or "automotive_1408p_landscape_with_play"
+    Name: Automotive (1408p landscape) with Google Play
+    OEM : Google
+    Tag : android-automotive
+---------
+id: 5 or "automotive_distant_display"
+    Name: Automotive Distant Display
+    OEM : Google
+    Tag : android-automotive-distantdisplay
+---------
+id: 6 or "automotive_distant_display_with_play"
+    Name: Automotive Distant Display with Google Play
+    OEM : Google
+    Tag : android-automotive-distantdisplay
+---------
+id: 7 or "automotive_large_portrait"
+    Name: Automotive Large Portrait
+    OEM : Google
+    Tag : android-automotive
+---------
+id: 8 or "automotive_portrait"
+    Name: Automotive Portrait
+    OEM : Google
+    Tag : android-automotive
+---------
+id: 9 or "automotive_ultrawide"
+    Name: Automotive Ultrawide
+    OEM : Google
+    Tag : android-automotive
+---------
+id: 10 or "desktop_api37"
+    Name: Desktop (Preview)
+    OEM : Google
+    Tag : android-desktop
+---------
+id: 11 or "ai_glasses_device"
+    Name: Display Glasses
+    OEM : Google
+    Tag : ai-glasses
+---------
+id: 12 or "Galaxy Nexus"
+    Name: Galaxy Nexus
+    OEM : Google
+---------
+id: 13 or "desktop_large"
+    Name: Large Desktop
+    OEM : Google
+    Tag : android-desktop
+---------
+id: 14 or "desktop_medium"
+    Name: Medium Desktop
+    OEM : Google
+    Tag : android-desktop
+---------
+id: 15 or "medium_phone"
+    Name: Medium Phone
+    OEM : Generic
+---------
+id: 16 or "medium_tablet"
+    Name: Medium Tablet
+    OEM : Generic
+---------
+id: 17 or "Nexus 10"
+    Name: Nexus 10
+    OEM : Google
+---------
+id: 18 or "Nexus 4"
+    Name: Nexus 4
+    OEM : Google
+---------
+id: 19 or "Nexus 5"
+    Name: Nexus 5
+    OEM : Google
+---------
+id: 20 or "Nexus 5X"
+    Name: Nexus 5X
+    OEM : Google
+---------
+id: 21 or "Nexus 6"
+    Name: Nexus 6
+    OEM : Google
+---------
+id: 22 or "Nexus 6P"
+    Name: Nexus 6P
+    OEM : Google
+---------
+id: 23 or "Nexus 7 2013"
+    Name: Nexus 7
+    OEM : Google
+---------
+id: 24 or "Nexus 7"
+    Name: Nexus 7 (2012)
+    OEM : Google
+---------
+id: 25 or "Nexus 9"
+    Name: Nexus 9
+    OEM : Google
+---------
+id: 26 or "Nexus One"
+    Name: Nexus One
+    OEM : Google
+---------
+id: 27 or "Nexus S"
+    Name: Nexus S
+    OEM : Google
+---------
+id: 28 or "pixel"
+    Name: Pixel
+    OEM : Google
+---------
+id: 29 or "pixel_10"
+    Name: Pixel 10
+    OEM : Google
+---------
+id: 30 or "pixel_10_pro"
+    Name: Pixel 10 Pro
+    OEM : Google
+---------
+id: 31 or "pixel_10_pro_fold"
+    Name: Pixel 10 Pro Fold
+    OEM : Google
+---------
+id: 32 or "pixel_10_pro_xl"
+    Name: Pixel 10 Pro XL
+    OEM : Google
+---------
+id: 33 or "pixel_10a"
+    Name: Pixel 10a
+    OEM : Google
+---------
+id: 34 or "pixel_2"
+    Name: Pixel 2
+    OEM : Google
+---------
+id: 35 or "pixel_2_xl"
+    Name: Pixel 2 XL
+    OEM : Google
+---------
+id: 36 or "pixel_3"
+    Name: Pixel 3
+    OEM : Google
+---------
+id: 37 or "pixel_3_xl"
+    Name: Pixel 3 XL
+    OEM : Google
+---------
+id: 38 or "pixel_3a"
+    Name: Pixel 3a
+    OEM : Google
+---------
+id: 39 or "pixel_3a_xl"
+    Name: Pixel 3a XL
+    OEM : Google
+---------
+id: 40 or "pixel_4"
+    Name: Pixel 4
+    OEM : Google
+---------
+id: 41 or "pixel_4_xl"
+    Name: Pixel 4 XL
+    OEM : Google
+---------
+id: 42 or "pixel_4a"
+    Name: Pixel 4a
+    OEM : Google
+---------
+id: 43 or "pixel_5"
+    Name: Pixel 5
+    OEM : Google
+---------
+id: 44 or "pixel_6"
+    Name: Pixel 6
+    OEM : Google
+---------
+id: 45 or "pixel_6_pro"
+    Name: Pixel 6 Pro
+    OEM : Google
+---------
+id: 46 or "pixel_6a"
+    Name: Pixel 6a
+    OEM : Google
+---------
+id: 47 or "pixel_7"
+    Name: Pixel 7
+    OEM : Google
+---------
+id: 48 or "pixel_7_pro"
+    Name: Pixel 7 Pro
+    OEM : Google
+---------
+id: 49 or "pixel_7a"
+    Name: Pixel 7a
+    OEM : Google
+---------
+id: 50 or "pixel_8"
+    Name: Pixel 8
+    OEM : Google
+---------
+id: 51 or "pixel_8_pro"
+    Name: Pixel 8 Pro
+    OEM : Google
+---------
+id: 52 or "pixel_8a"
+    Name: Pixel 8a
+    OEM : Google
+---------
+id: 53 or "pixel_9"
+    Name: Pixel 9
+    OEM : Google
+---------
+id: 54 or "pixel_9_pro"
+    Name: Pixel 9 Pro
+    OEM : Google
+---------
+id: 55 or "pixel_9_pro_fold"
+    Name: Pixel 9 Pro Fold
+    OEM : Google
+---------
+id: 56 or "pixel_9_pro_xl"
+    Name: Pixel 9 Pro XL
+    OEM : Google
+---------
+id: 57 or "pixel_9a"
+    Name: Pixel 9a
+    OEM : Google
+---------
+id: 58 or "pixel_c"
+    Name: Pixel C
+    OEM : Google
+---------
+id: 59 or "pixel_fold"
+    Name: Pixel Fold
+    OEM : Google
+---------
+id: 60 or "pixel_tablet"
+    Name: Pixel Tablet
+    OEM : Google
+---------
+id: 61 or "pixel_xl"
+    Name: Pixel XL
+    OEM : Google
+---------
+id: 62 or "resizable"
+    Name: Resizable (Experimental)
+    OEM : Generic
+---------
+id: 63 or "desktop_small"
+    Name: Small Desktop
+    OEM : Google
+    Tag : android-desktop
+---------
+id: 64 or "small_phone"
+    Name: Small Phone
+    OEM : Generic
+---------
+id: 65 or "small_tablet"
+    Name: Small Tablet
+    OEM : Generic
+---------
+id: 66 or "tv_1080p"
+    Name: Television (1080p)
+    OEM : Google
+    Tag : android-tv
+---------
+id: 67 or "tv_4k"
+    Name: Television (4K)
+    OEM : Google
+    Tag : android-tv
+---------
+id: 68 or "tv_720p"
+    Name: Television (720p)
+    OEM : Google
+    Tag : android-tv
+---------
+id: 69 or "wearos_large_round"
+    Name: Wear OS Large Round
+    OEM : Google
+    Tag : android-wear
+---------
+id: 70 or "wearos_rect"
+    Name: Wear OS Rectangular
+    OEM : Google
+    Tag : android-wear
+---------
+id: 71 or "wearos_small_round"
+    Name: Wear OS Small Round
+    OEM : Google
+    Tag : android-wear
+---------
+id: 72 or "wearos_square"
+    Name: Wear OS Square
+    OEM : Google
+    Tag : android-wear
+---------
+id: 73 or "wearos_xl_round"
+    Name: Wear OS XL Round
+    OEM : Google
+    Tag : android-wear
+---------
+id: 74 or "xr_glasses_device"
+    Name: XR Glasses
+    OEM : Google
+    Tag : android-xr
+---------
+id: 75 or "xr_headset_device"
+    Name: XR Headset
+    OEM : Google
+    Tag : android-xr
+---------
+id: 76 or "2.7in QVGA"
+    Name: 2.7" QVGA
+    OEM : Generic
+---------
+id: 77 or "2.7in QVGA slider"
+    Name: 2.7" QVGA slider
+    OEM : Generic
+---------
+id: 78 or "3.2in HVGA slider (ADP1)"
+    Name: 3.2" HVGA slider (ADP1)
+    OEM : Generic
+---------
+id: 79 or "3.2in QVGA (ADP2)"
+    Name: 3.2" QVGA (ADP2)
+    OEM : Generic
+---------
+id: 80 or "3.3in WQVGA"
+    Name: 3.3" WQVGA
+    OEM : Generic
+---------
+id: 81 or "3.4in WQVGA"
+    Name: 3.4" WQVGA
+    OEM : Generic
+---------
+id: 82 or "3.7 FWVGA slider"
+    Name: 3.7" FWVGA slider
+    OEM : Generic
+---------
+id: 83 or "3.7in WVGA (Nexus One)"
+    Name: 3.7" WVGA (Nexus One)
+    OEM : Generic
+---------
+id: 84 or "4in WVGA (Nexus S)"
+    Name: 4" WVGA (Nexus S)
+    OEM : Generic
+---------
+id: 85 or "4.65in 720p (Galaxy Nexus)"
+    Name: 4.65" 720p (Galaxy Nexus)
+    OEM : Generic
+---------
+id: 86 or "4.7in WXGA"
+    Name: 4.7" WXGA
+    OEM : Generic
+---------
+id: 87 or "5.1in WVGA"
+    Name: 5.1" WVGA
+    OEM : Generic
+---------
+id: 88 or "5.4in FWVGA"
+    Name: 5.4" FWVGA
+    OEM : Generic
+---------
+id: 89 or "6.7in Foldable"
+    Name: 6.7" Horizontal Fold-in
+    OEM : Generic
+---------
+id: 90 or "7in WSVGA (Tablet)"
+    Name: 7" WSVGA (Tablet)
+    OEM : Generic
+---------
+id: 91 or "7.4in Rollable"
+    Name: 7.4" Rollable
+    OEM : Generic
+---------
+id: 92 or "7.6in Foldable"
+    Name: 7.6" Fold-in with outer display
+    OEM : Generic
+---------
+id: 93 or "8in Foldable"
+    Name: 8" Fold-out
+    OEM : Generic
+---------
+id: 94 or "10.1in WXGA (Tablet)"
+    Name: 10.1" WXGA (Tablet)
+    OEM : Generic
+---------
+id: 95 or "13.5in Freeform"
+    Name: 13.5" Freeform
+    OEM : Generic

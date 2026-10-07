@@ -1,0 +1,2 @@
+An error was encountered processing the command (domain=com.apple.CoreSimulator.LaunchdSimError, code=133):
+Multiple errors were returned; see stderr

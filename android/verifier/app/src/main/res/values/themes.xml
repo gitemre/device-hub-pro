@@ -1,0 +1,3 @@
+<resources>
+    <style name="Theme.Verifier" parent="Theme.AppCompat.DayNight.NoActionBar" />
+</resources>

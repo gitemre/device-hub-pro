@@ -1,0 +1,15 @@
+Monitoring boot status for DeviceHubPro-Spike-Ctl-Renamed (84B08C4E-3502-4517-A6F3-49057EC6DA9D).
+[2026-09-25 10:43:05 +0000] Status=2, isTerminal=NO, Elapsed=00:01.
+	Waiting on Data Migration
+		Reason:(null)
+		Migration Elapsed:00:00 seconds
+
+[2026-09-25 10:43:06 +0000] Status=4, isTerminal=NO, Elapsed=00:02.
+	Waiting on System App
+
+[2026-09-25 10:43:06 +0000] Status=4, isTerminal=NO, Elapsed=00:02.
+	Waiting on System App
+
+[2026-09-25 10:43:07 +0000] Status=4294967295, isTerminal=YES, Elapsed=00:03.
+	Finished
+

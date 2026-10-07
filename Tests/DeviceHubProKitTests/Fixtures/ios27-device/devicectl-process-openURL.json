@@ -1,0 +1,41 @@
+{
+  "info" : {
+    "arguments" : [
+      "devicectl",
+      "device",
+      "process",
+      "openURL",
+      "--device",
+      "00000000-0000000000000000",
+      "https://example.com",
+      "--json-output",
+      "raw-write/process-openURL.json",
+      "-q"
+    ],
+    "commandType" : "devicectl.device.process.openURL",
+    "environment" : {
+
+    },
+    "jsonVersion" : 5,
+    "outcome" : "success",
+    "version" : "642.16"
+  },
+  "result" : {
+    "deviceIdentifier" : "00000000-0000-4000-8000-000000000001",
+    "process" : {
+      "auditToken" : [
+        4294967295,
+        501,
+        501,
+        501,
+        501,
+        4925,
+        0,
+        13390
+      ],
+      "executable" : "file:///private/var/containers/Bundle/Application/3E163394-5480-4381-BCA0-829D809FCA39/stable.app/Chrome",
+      "processIdentifier" : 4925
+    },
+    "url" : "https://example.com"
+  }
+}

@@ -1,0 +1,82 @@
+{
+  "info" : {
+    "arguments" : [
+      "devicectl",
+      "device",
+      "info",
+      "ddiServices",
+      "--device",
+      "00000000-0000000000000000",
+      "--json-output",
+      "raw/info-ddiServices.json",
+      "-q"
+    ],
+    "commandType" : "devicectl.device.info.ddiServices",
+    "environment" : {
+
+    },
+    "jsonVersion" : 5,
+    "outcome" : "success",
+    "version" : "642.16"
+  },
+  "result" : {
+    "ddiMetadata" : {
+      "buildUpdate" : "27A266a",
+      "contentIsCompatible" : true,
+      "coreDeviceVersionChecksIncludeDevelopmentRevision" : true,
+      "developmentRevision" : 0,
+      "enforcingCoreDeviceVersionChecks" : true,
+      "isCryptexDDI" : true,
+      "isUsable" : true,
+      "platform" : "iOS",
+      "projectMetadata" : [
+        {
+          "name" : "Citrine",
+          "version" : "2084"
+        },
+        {
+          "name" : "CoreDevice",
+          "version" : "642.16"
+        },
+        {
+          "name" : "DTDeveloperDiskImageSupport",
+          "version" : "14.0.0"
+        },
+        {
+          "name" : "DTOCMock",
+          "version" : "23002"
+        },
+        {
+          "name" : "GPUToolsDevice_DDI",
+          "version" : "2027.0.5"
+        },
+        {
+          "name" : "JetsamProperties",
+          "version" : "2999"
+        },
+        {
+          "name" : "LiveExecutionResultsLogger",
+          "version" : "20101"
+        },
+        {
+          "name" : "Mercury",
+          "version" : "78"
+        },
+        {
+          "name" : "Playgrounds",
+          "version" : "103"
+        },
+        {
+          "name" : "XCResultKitBNI",
+          "version" : "25115"
+        },
+        {
+          "name" : "XCTest",
+          "version" : "25228"
+        }
+      ],
+      "variant" : "external"
+    },
+    "deviceIdentifier" : "00000000-0000-4000-8000-000000000001"
+  }
+}

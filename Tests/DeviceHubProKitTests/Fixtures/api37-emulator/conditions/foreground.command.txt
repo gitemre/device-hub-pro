@@ -1,0 +1,1 @@
+dumpsys activity activities 2>/dev/null | grep -E 'topResumedActivity=|mResumedActivity' | head -n 2; true

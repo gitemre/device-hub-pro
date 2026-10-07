@@ -1,0 +1,4 @@
+@@devicehubpro:app:api
+37
+@@devicehubpro:app:memory-factor
+LOW

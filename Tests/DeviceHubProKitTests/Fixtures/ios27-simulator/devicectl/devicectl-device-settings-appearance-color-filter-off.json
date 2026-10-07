@@ -1,0 +1,32 @@
+{
+  "info" : {
+    "arguments" : [
+      "devicectl",
+      "device",
+      "settings",
+      "appearance",
+      "--color-filter",
+      "off",
+      "--device",
+      "B3ECBA42-7A43-4A8C-924D-C13CC6658BA4",
+      "-j",
+      "-",
+      "-t",
+      "30"
+    ],
+    "commandType" : "devicectl.device.settings.appearance",
+    "environment" : {
+
+    },
+    "jsonVersion" : 5,
+    "outcome" : "success",
+    "version" : "642.16"
+  },
+  "result" : {
+    "colorFilter" : {
+      "enabled" : false
+    },
+    "deviceIdentifier" : "B3ECBA42-7A43-4A8C-924D-C13CC6658BA4",
+    "userInterfaceStyle" : "light"
+  }
+}

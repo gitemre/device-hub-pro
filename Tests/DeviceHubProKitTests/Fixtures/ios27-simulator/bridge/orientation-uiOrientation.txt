@@ -1,0 +1,5 @@
+request	gs_event	ui_orientation	screenshot	published
+landscapeLeft	3	4	2622x1206	2622x1206
+landscapeRight	4	3	2622x1206	2622x1206
+portraitUpsideDown	2	3	2622x1206	2622x1206
+portrait	1	1	1206x2622	1206x2622

@@ -1,0 +1,1 @@
+echo @@devicehubpro:app:api; api=$(getprop ro.build.version.sdk); echo $api; echo @@devicehubpro:app:memory-factor; if [ "$api" -ge 31 ]; then am memory-factor show 2>&1; fi; true

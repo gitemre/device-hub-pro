@@ -1,0 +1,63 @@
+--------- beginning of main
+09-24 23:05:44.036  4628  4628 I libprocessgroup: Created cgroup /sys/fs/cgroup/apps/uid_10105/pid_4628
+09-24 23:05:44.037  4628  4628 I Zygote  : Process 4628 created for android.process.acore
+09-24 23:05:44.037  4628  4628 I d.process.acore: Using generational CollectorTypeCMC GC.
+09-24 23:05:44.039  4628  4628 D nativeloader: Load libframework-connectivity-tiramisu-jni.so using APEX ns com_android_tethering for caller /apex/com.android.tethering/javalib/framework-connectivity-t.jar: ok
+09-24 23:05:44.043  4628  4628 D CompatChangeReporter: Compat change id reported: 333566037; UID 10105; state: ENABLED
+09-24 23:05:44.045  4628  4628 D nativeloader: Configuring clns-shared-9 for other apk /system/priv-app/ContactsProvider/ContactsProvider.apk. target_sdk_version=37, uses_libraries=, library_path=/system/priv-app/ContactsProvider/lib/arm64:/system/lib64:/system_ext/lib64, permitted_path=/data:/mnt/expand:/data/user/0/com.android.providers.contacts:/system/priv-app/ContactsProvider:/system/lib64:/system_ext/lib64
+--------- beginning of system
+09-24 23:05:44.046  4628  4628 D ActivityThread: Set OS env TMPDIR to /data/user/0/com.android.providers.contacts/cache
+09-24 23:05:44.046  4628  4628 V GraphicsEnvironment: Currently set values for:
+09-24 23:05:44.046  4628  4628 V GraphicsEnvironment:   angle_gl_driver_selection_pkgs=[]
+09-24 23:05:44.046  4628  4628 V GraphicsEnvironment:   angle_gl_driver_selection_values=[]
+09-24 23:05:44.046  4628  4628 V GraphicsEnvironment: com.android.providers.contacts is not listed in per-application setting
+09-24 23:05:44.046  4628  4628 V GraphicsEnvironment: No special selections for ANGLE, returning default driver choice
+09-24 23:05:44.046  4628  4628 V GraphicsEnvironment: Neither updatable production driver nor prerelease driver is supported.
+09-24 23:05:44.047  4628  4628 D CompatChangeReporter: Compat change id reported: 407952621; UID 10105; state: ENABLED
+09-24 23:05:44.047  4628  4628 D CompatChangeReporter: Compat change id reported: 419020719; UID 10105; state: ENABLED
+09-24 23:05:44.048  4628  4628 D nativeloader: Configuring clns-shared-10 for other apk /system/priv-app/UserDictionaryProvider/UserDictionaryProvider.apk. target_sdk_version=37, uses_libraries=, library_path=/system/priv-app/UserDictionaryProvider/lib/arm64:/system/lib64:/system_ext/lib64, permitted_path=/data:/mnt/expand:/data/user/0/com.android.providers.userdictionary:/system/priv-app/UserDictionaryProvider:/system/lib64:/system_ext/lib64
+09-24 23:05:44.050  4628  4628 D nativeloader: Configuring clns-shared-11 for other apk /system/priv-app/BlockedNumberProvider/BlockedNumberProvider.apk. target_sdk_version=37, uses_libraries=, library_path=/system/priv-app/BlockedNumberProvider/lib/arm64:/system/lib64:/system_ext/lib64, permitted_path=/data:/mnt/expand:/data/user_de/0/com.android.providers.blockednumber:/system/priv-app/BlockedNumberProvider:/system/lib64:/system_ext/lib64
+09-24 23:05:44.051  4628  4628 I ContactsPerf: VoicemailContentProvider.onCreate start
+09-24 23:05:44.051  4628  4628 D CompatChangeReporter: Compat change id reported: 418924588; UID 10105; state: ENABLED
+09-24 23:05:44.052  4628  4641 D CompatChangeReporter: Compat change id reported: 458413887; UID 10105; state: ENABLED
+09-24 23:05:44.052  4628  4628 I ContactsPerf: VoicemailContentProvider.onCreate finish
+09-24 23:05:44.054  4628  4628 D nativeloader: Configuring clns-shared-12 for other apk /system/priv-app/E2eeContactKeysProvider/E2eeContactKeysProvider.apk. target_sdk_version=37, uses_libraries=, library_path=/system/priv-app/E2eeContactKeysProvider/lib/arm64:/system/lib64:/system_ext/lib64, permitted_path=/data:/mnt/expand:/data/user/0/com.android.providers.contactkeys:/system/priv-app/E2eeContactKeysProvider:/system/lib64:/system_ext/lib64
+09-24 23:05:44.056  4628  4643 I PhoneAccountHandleMigrationUtils_CallLogDatabaseHelper: updatePhoneAccountHandleMigrationPendingStatus false
+09-24 23:05:44.056  4628  4644 I PhoneAccountHandleMigrationUtils_CallLogDatabaseHelper: updatePhoneAccountHandleMigrationPendingStatus false
+09-24 23:05:44.059  4628  4628 I ContactsDatabaseHelper: updateUseStrictPhoneNumberComparison: US
+09-24 23:05:44.059  4628  4643 I CallLogProvider: syncEntriesFrom: fromUserId=0, srcIsShadow=true, forAllUsers=false; previousTimeStamp=0, newTimeStamp=0, entries=0
+09-24 23:05:44.061  4628  4643 I CallLogProvider: delete uid/pid=10105/4628, uri=content://call_log_shadow/calls, numChanged=0
+09-24 23:05:44.061  4628  4628 I ContactsDatabaseHelper: updateUseStrictPhoneNumberComparison: US
+09-24 23:05:44.061  4628  4643 I CallLogProvider: Syncing call composer pics -- source user=0, isShadow=true, forAllUser=false
+09-24 23:05:44.061  4628  4643 I CallLogProvider: Fetching list of Uris to sync
+09-24 23:05:44.062  4628  4643 I CallLogProvider: Will sync following Uris:[]
+09-24 23:05:44.062  4628  4643 I CallLogProvider: Syncing call composer pics -- got []
+09-24 23:05:44.063  4628  4646 D ContactsDatabaseHelper: WAL enabled for contacts2.db: true
+09-24 23:05:44.065  4628  4646 I PhoneAccountHandleMigrationUtils_ContactsDatabaseHelper: updatePhoneAccountHandleMigrationPendingStatus false
+09-24 23:05:44.069  4628  4646 I ContactLocale: AddressBook Labels [[en_US]]: […, A, B, C, D, E, F, G, H, I, J, K, L, M, N, O, P, Q, R, S, T, U, V, W, X, Y, Z, Α, Β, Γ, Δ, Ε, Ζ, Η, Θ, Ι, Κ, Λ, Μ, Ν, Ξ, Ο, Π, Ρ, Σ, Τ, Υ, Φ, Χ, Ψ, Ω, …, А, Б, В, Г, Д, Ђ, Е, Є, Ж, З, И, І, Й, Ј, К, Л, Љ, М, Н, Њ, О, П, Р, С, Т, Ћ, У, Ф, Х, Ц, Ч, Џ, Ш, Щ, Ю, Я, …, א, ב, ג, ד, ה, ו, ז, ח, ט, י, כ, ל, מ, נ, ס, ע, פ, צ, ק, ר, ש, ת, …, ا, ب, ت, ث, ج, ح, خ, د, ذ, ر, ز, س, ش, ص, ض, ط, ظ, ع, غ, ف, ق, ك, ل, م, ن, ه, و, ي, …, ก, ข, ฃ, ค, ฅ, ฆ, ง, จ, ฉ, ช, ซ, ฌ, ญ, ฎ, ฏ, ฐ, ฑ, ฒ, ณ, ด, ต, ถ, ท, ธ, น, บ, ป, ผ, ฝ, พ, ฟ, ภ, ม, ย, ร, ฤ, ล, ฦ, ว, ศ, ษ, ส, ห, ฬ, อ, ฮ, …, ㄱ, ㄴ, ㄷ, ㄹ, ㅁ, ㅂ, ㅅ, ㅇ, ㅈ, ㅊ, ㅋ, ㅌ, ㅍ, ㅎ, …, あ, か, さ, た, な, は, ま, や, ら, わ, #, …]
+09-24 23:05:44.071  4628  4646 D ContactsDatabaseHelper: WAL enabled for profile.db: false
+09-24 23:05:44.078  4628  4646 V ContactsProvider: 0 Dangling Contacts have been cleaned up.
+09-24 23:05:45.580  4628  4638 I libbinder.IPCThreadState: oneway function results for code 1599295570 on binder at 0xb4007237d203fea0 will be dropped but finished with status UNKNOWN_TRANSACTION
+09-24 23:05:45.629  4628  4638 I libbinder.IPCThreadState: oneway function results for code 1599295570 on binder at 0xb4007237d203fea0 will be dropped but finished with status UNKNOWN_TRANSACTION
+09-24 23:05:45.678  4628  4638 I libbinder.IPCThreadState: oneway function results for code 1599295570 on binder at 0xb4007237d203fea0 will be dropped but finished with status UNKNOWN_TRANSACTION
+09-24 23:05:57.842  4628  4638 I libbinder.IPCThreadState: oneway function results for code 1599295570 on binder at 0xb4007237d203fea0 will be dropped but finished with status UNKNOWN_TRANSACTION
+09-24 23:05:57.891  4628  4638 I libbinder.IPCThreadState: oneway function results for code 1599295570 on binder at 0xb4007237d203fea0 will be dropped but finished with status UNKNOWN_TRANSACTION
+09-24 23:05:57.939  4628  4638 I libbinder.IPCThreadState: oneway function results for code 1599295570 on binder at 0xb4007237d203fea0 will be dropped but finished with status UNKNOWN_TRANSACTION
+09-24 23:07:02.252  4628  4636 I libbinder.IPCThreadState: oneway function results for code 1599295570 on binder at 0xb4007237d203fea0 will be dropped but finished with status UNKNOWN_TRANSACTION
+09-24 23:07:02.252  4628  4636 I libbinder.IPCThreadState: oneway function results for code 1599295570 on binder at 0xb4007237d203fea0 will be dropped but finished with status UNKNOWN_TRANSACTION
+09-24 23:07:02.252  4628  4636 I libbinder.IPCThreadState: oneway function results for code 1599295570 on binder at 0xb4007237d203fea0 will be dropped but finished with status UNKNOWN_TRANSACTION
+09-24 23:07:02.255  4628  4642 W Looper  : Slow delivery took 37638ms android.bg app=android.process.acore main=false group=FOREGROUND h=android.database.sqlite.SQLiteConnectionPool$IdleConnectionHandler c=null m=1
+09-24 23:07:02.325  4628  4636 I BlockedNumbers: isBlocked: NOT BLOCKED; number=*******, e164=
+09-24 23:07:02.380  4628  4632 W d.process.acore: Cleared Reference was only reachable from finalizer (only reported once)
+09-24 23:07:05.313  4628  4638 I CallLogProvider: insert uid/pid=1000/650, uri=content://call_log/calls, rowId=40
+09-24 23:07:05.319  4628  4636 I CallLogProvider: delete uid/pid=1000/650, uri=content://call_log/calls, numChanged=0
+09-24 23:07:05.324  4628  4636 W SQLiteLog: (28) double-quoted string literal: ""
+09-24 23:07:05.324  4628  4636 W SQLiteLog: (28) double-quoted string literal: ""
+09-24 23:07:05.427  4628  4636 I CallLogProvider: update uid/pid=10154/2543, uri=content://call_log/calls/40, numChanged=1
+09-24 23:07:12.017  4628  4636 I CallLogProvider: insert uid/pid=1000/650, uri=content://call_log/calls, rowId=41
+09-24 23:07:12.020  4628  4636 I CallLogProvider: delete uid/pid=1000/650, uri=content://call_log/calls, numChanged=0
+09-24 23:07:12.947  4628  4636 I BlockedNumbers: isBlocked: NOT BLOCKED; number=*******, e164=
+09-24 23:07:22.056  4628  5616 I CallLogProvider: update uid/pid=10154/2543, uri=content://call_log/calls/41, numChanged=1
+09-24 23:07:32.067  4628  5616 W SQLiteLog: (28) double-quoted string literal: ""
+09-24 23:07:32.068  4628  5616 W SQLiteLog: (28) double-quoted string literal: ""
+09-24 23:08:21.626  4628  4642 W Looper  : Drained

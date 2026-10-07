@@ -1,0 +1,56 @@
+ai_glasses_displayless
+automotive_1024p_landscape
+automotive_1080p_landscape
+automotive_1408p_landscape_with_google_apis
+automotive_1408p_landscape_with_play
+WARNING: The SDK Manager CLI tool (sdkmanager) is deprecated. Android CLI will be used instead.
+The 'android' binary can also be found in the cmdline-tools directory, and 'android sdk' is the replacement for 'sdkmanager'.
+To learn more about the Android CLI and how to use it, see the documentation (https://d.android.com/tools/agents/android-cli)
+
+Usage:
+  sdkmanager [--uninstall] [<common args>] [--package_file=<file>] [<packages>...]
+  sdkmanager --update [<common args>]
+  sdkmanager --list [<common args>]
+  sdkmanager --list_installed [<common args>]
+  sdkmanager --version
+
+With --install (optional), installs or updates packages.
+    By default, the listed packages are installed or (if already installed)
+    updated to the latest version.
+With --uninstall, uninstall the listed packages.
+
+    <package> is a sdk-style path (e.g. "build-tools/23.0.0" or
+             "platforms/android-23").
+    <package-file> is a text file where each line is a sdk-style path
+                   of a package to install or uninstall.
+    Multiple --package_file arguments may be specified in combination
+    with explicit paths.
+
+With --update, all installed packages are updated to the latest version.
+
+With --list, all installed and available packages are printed out.
+
+With --list_installed, all installed packages are printed out.
+
+With --version, prints the current version of sdkmanager.
+Usage: android sdk [-h] [--ignore-outdated-xmls] [--platform=PARAM] [COMMAND]
+Manages the Android SDK installation. Includes commands to install, update,
+remove, and list available and installed SDK packages
+
+Options:
+  -h, --help                  Shows the help message for the specified command
+      --ignore-outdated-xmls  When installing or updating packages, do not
+                              update other packages' XML files
+      --platform=PARAM        Target platform `<os>_<arch>` (for example,
+                              `linux_x86_64`, `mac_arm64`, or `windows_x86`);
+                              defaults to the current host
+
+android options:
+      --sdk=PARAM             Path to the Android SDK
+  -v, --verbose               Enable verbose output for troubleshooting
+  -V, --version               Print version information and exit
+Commands:
+  install  Installs SDK packages
+  list     Lists installed and available SDK packages
+  remove   Removes packages from the SDK
+  update   Updates one or all packages to the latest version

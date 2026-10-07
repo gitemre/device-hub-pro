@@ -1,0 +1,34 @@
+{
+  "info" : {
+    "arguments" : [
+      "devicectl",
+      "device",
+      "pasteboard",
+      "copy",
+      "--file",
+      "/private/tmp/dhp-fix-01/-Users-aqauser001-device-hub-pro/00000000-0000-4000-8000-000000000002/fixtures00/p9c/pb.txt",
+      "--device",
+      "00000000-0000000000000000",
+      "--json-output",
+      "raw/pasteboard-copy.json",
+      "-q"
+    ],
+    "commandType" : "devicectl.device.pasteboard.copy",
+    "environment" : {
+
+    },
+    "jsonVersion" : 5,
+    "outcome" : "success",
+    "version" : "642.16"
+  },
+  "result" : {
+    "deviceIdentifier" : "00000000-0000-4000-8000-000000000001",
+    "itemCount" : 1,
+    "pasteboardName" : "general",
+    "types" : [
+      "public.utf8-plain-text",
+      "public.plain-text",
+      "public.text"
+    ]
+  }
+}

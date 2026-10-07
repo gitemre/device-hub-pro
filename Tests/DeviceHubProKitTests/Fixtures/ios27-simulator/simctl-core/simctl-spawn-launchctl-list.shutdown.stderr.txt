@@ -1,0 +1,4 @@
+An error was encountered processing the command (domain=com.apple.CoreSimulator.SimError, code=405):
+Process spawn via launchd failed because device is not booted.
+Underlying error (domain=com.apple.SimLaunchHostService.RequestError, code=3):
+	Bad or unknown session: com.apple.CoreSimulator.SimDevice.425BD068-3D87-4F27-BE58-EB56A58B2C3A

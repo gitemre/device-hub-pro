@@ -1,0 +1,34 @@
+{
+  "info" : {
+    "arguments" : [
+      "devicectl",
+      "device",
+      "settings",
+      "audio",
+      "--device",
+      "046F4CC5-D53E-4780-9B1B-BB1AEAB9D89F",
+      "--output-device",
+      "BuiltInSpeakerDevice",
+      "-j",
+      "-",
+      "-q",
+      "-t",
+      "30"
+    ],
+    "commandType" : "devicectl.device.settings.audio",
+    "environment" : {
+
+    },
+    "jsonVersion" : 5,
+    "outcome" : "success",
+    "version" : "642.16"
+  },
+  "result" : {
+    "audioOutputDevice" : {
+      "device" : {
+        "_0" : "BuiltInSpeakerDevice"
+      }
+    },
+    "deviceIdentifier" : "046F4CC5-D53E-4780-9B1B-BB1AEAB9D89F"
+  }
+}

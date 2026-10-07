@@ -1,0 +1,1 @@
+KO usage: "resize-display <index>" 0: phone	1: unfolded	2: tablet

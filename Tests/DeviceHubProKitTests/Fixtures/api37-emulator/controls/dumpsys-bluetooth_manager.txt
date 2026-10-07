@@ -1,0 +1,698 @@
+Bluetooth Status:
+  State:         ON
+  Address:       XX:XX:XX:XX:BB:BB
+  Name:          sdk_gphone16k_arm64
+  Inner app:     com.google.android.bluetooth
+  Uptime:        20m 38.233763s
+
+Bluetooth Activity History:
+  TIMESTAMP          ACTION/STATE     DETAILS              
+  ------------------ ---------------- ---------------------
+  09-24 22:56:42.947 Enable           SYSTEM_BOOT (android)
+        +    0ms     BLE_TURNING_ON                        
+        +  253ms     BLE_ON                                
+        +  254ms     TURNING_ON                            
+        +  296ms     ON
+
+Bluetooth crashed 0 times
+
+Ble app registered: {}
+
+BluetoothManagerService:
+  mEnable:true
+  mQuietEnable:Optional.empty
+  mEnableExternal:true
+
+
+BluetoothAdapterProperties
+  Name: sdk_gphone16k_arm64
+  Address: XX:XX:XX:XX:BB:BB
+  ConnectionState: STATE_DISCONNECTED
+  MaxConnectedAudioDevices: 5
+  A2dpOffloadEnabled: false
+BluetoothDeviceDiscovery
+  Discovering: false
+  DiscoveryEndMs: 0
+
+BluetoothRemoteDevices
+  Bonded devices: 0
+
+  Other devices: 0
+
+  Connected devices: 0
+
+Connection Events:
+
+BluetoothActiveDeviceManager
+  Audio mode: 0
+  Dual mode audio: false
+  Broadcasting: false
+  Pending active device: NULL
+  Pending classic active device: NULL
+  Classic device to be activated: NULL
+  Classic device not to be activated: NULL
+  A2DP:
+    Connected count: 0
+    Active: NULL
+    Fallback: NULL
+    Most recent: NULL
+  HFP:
+    Connected count: 0
+    Active: NULL
+    Fallback: NULL
+    Most recent: NULL
+  HA:
+    Connected count: 0
+    Active: 0
+    Most recent: NULL
+  LE Audio:
+    Connected count: 0
+    Active: NULL
+    Most recent: NULL
+  LE HA:
+    Connected count: 0
+    Active: NULL
+    Most recent: NULL
+
+
+BluetoothActiveDeviceManager event log:
+
+
+ScanMode: SCAN_MODE_CONNECTABLE
+Scan Mode Changes:
+  09-24 22:56:43.243 processProfileServiceStateChanged: SCAN_MODE_CONNECTABLE
+Device Discovery Events:
+Bonding Events:
+
+Enabled Profile Services:
+  GATT
+  A2DP
+  AVRCP
+  HEADSET
+  HEARING_AID
+  HID_DEVICE
+  HID_HOST
+  MAP
+  MCP_SERVER
+  OPP
+  PAN
+  PBAP
+
+LE Gatt clients controlling AutoActiveMode:
+
+BluetoothAdapterState:
+ total records=4
+  rec[0]: time=09-24 22:56:43.182 processed=Off org=Off dest=TurningBleOn what=3(0x3) BLE_TURN_ON
+  rec[1]: time=09-24 22:56:43.199 processed=TurningBleOn org=TurningBleOn dest=BleOn what=7(0x7) BLE_STARTED
+  rec[2]: time=09-24 22:56:43.202 processed=BleOn org=BleOn dest=TurningOn what=1(0x1) USER_TURN_ON
+  rec[3]: time=09-24 22:56:43.244 processed=TurningOn org=TurningOn dest=On what=5(0x5) BREDR_STARTED
+ curState=On
+
+SilenceDeviceManager:
+  Address            | Is silenced?
+
+BluetoothStorageManager.EventLog:
+
+BluetoothStorageManager.Database:
+  is_tethering_on: false
+  active_a2dp_devices: []
+  active_hfp_devices: []
+
+Profile: GattService
+  Registered App:
+    Client:
+    Server:
+      app_if: 49, appName: android.uid.bluetooth:1002, transport: AUTO
+
+  GATT Advertiser Map:
+    Last Advertising:
+
+  GATT Client Map:
+    Entries: 0
+    Last apps:
+
+  GATT Server Map:
+    Entries: 1
+    Last apps:
+
+  GATT Handle Map:
+    Entries: 25
+      49: [ 40] Service 00001849-0000-1000-8000-00805f9b34fb
+      49: [ 42]   Characteristic 00002b93-0000-1000-8000-00805f9b34fb
+      49: [ 43]     Descriptor 00002902-0000-1000-8000-00805f9b34fb
+      49: [ 45]   Characteristic 00002b96-0000-1000-8000-00805f9b34fb
+      49: [ 46]     Descriptor 00002902-0000-1000-8000-00805f9b34fb
+      49: [ 48]   Characteristic 00002b97-0000-1000-8000-00805f9b34fb
+      49: [ 49]     Descriptor 00002902-0000-1000-8000-00805f9b34fb
+      49: [ 51]   Characteristic 00002b98-0000-1000-8000-00805f9b34fb
+      49: [ 52]     Descriptor 00002902-0000-1000-8000-00805f9b34fb
+      49: [ 54]   Characteristic 00002b99-0000-1000-8000-00805f9b34fb
+      49: [ 55]     Descriptor 00002902-0000-1000-8000-00805f9b34fb
+      49: [ 57]   Characteristic 00002b9a-0000-1000-8000-00805f9b34fb
+      49: [ 58]     Descriptor 00002902-0000-1000-8000-00805f9b34fb
+      49: [ 60]   Characteristic 00002b9b-0000-1000-8000-00805f9b34fb
+      49: [ 61]     Descriptor 00002902-0000-1000-8000-00805f9b34fb
+      49: [ 63]   Characteristic 00002ba1-0000-1000-8000-00805f9b34fb
+      49: [ 64]     Descriptor 00002902-0000-1000-8000-00805f9b34fb
+      49: [ 66]   Characteristic 00002ba2-0000-1000-8000-00805f9b34fb
+      49: [ 68]   Characteristic 00002ba3-0000-1000-8000-00805f9b34fb
+      49: [ 69]     Descriptor 00002902-0000-1000-8000-00805f9b34fb
+      49: [ 71]   Characteristic 00002ba4-0000-1000-8000-00805f9b34fb
+      49: [ 72]     Descriptor 00002902-0000-1000-8000-00805f9b34fb
+      49: [ 74]   Characteristic 00002ba5-0000-1000-8000-00805f9b34fb
+      49: [ 75]     Descriptor 00002902-0000-1000-8000-00805f9b34fb
+      49: [ 77]   Characteristic 00002bba-0000-1000-8000-00805f9b34fb
+    Requests: 0
+Profile: A2dpService
+  mActiveDevice: null
+  mMaxConnectedAudioDevices: 5
+  codecConfigPriorities:
+    SBC: 1001
+    AAC: 2001
+    aptX: 3001
+    aptX HD: 4001
+    LDAC: 5001
+    Opus: 1501
+    UNKNOWN CODEC(7): 5002
+  mA2dpOffloadEnabled: false
+
+Profile: AvrcpTargetService
+  AVRCP version: 1.6
+  List of MediaControllers: size=0
+  List of Browsers: size=3
+    Browsable Package & Class Name: com.example.musicplayer com.example.musicplayer.mediabrowser.MusicBrowserService
+
+    Browsable Package & Class Name: com.google.android.googlequicksearchbox com.google.android.libraries.assistant.auto.tng.media.mediabrowser.NewsMediaBrowserService
+
+    Browsable Package & Class Name: com.example.video com.example.video.mediabrowser.MainAppMediaBrowserService
+
+  BTAudio Active Player Events:
+
+  BTAudio Audio Playback State Events:
+    09-24 23:07:02.471 onPlaybackConfigChanged: Non-active -> Active
+    09-24 23:07:02.471 onPlaybackConfigChanged: active config: AudioPlaybackConfiguration piid:31 deviceIds:[] type:android.media.MediaPlayer u/pid:1000/650 state:started attr:AudioAttributes: usage=USAGE_NOTIFICATION_RINGTONE content=CONTENT_TYPE_SONIFICATION flags=0x800(FLAG_MUTE_HAPTIC)  tags= bundle=null sessionId:57 mutedState:none  FormatInfo{isSpatialized=false, channelMask=0x0, sampleRate=0}
+    09-24 23:07:02.471 updateMediaForAudioPlayback: update state=PlaybackState {state=PLAYING(3), position=0, buffered position=0, speed=1.0, updated=623072, actions=0, custom actions=[], active item id=-1, error=null}
+    09-24 23:07:05.331 onPlaybackConfigChanged: Active -> Non-active
+    09-24 23:07:05.331 updateMediaForAudioPlayback: update state=PlaybackState {state=STOPPED(1), position=0, buffered position=0, speed=0.0, updated=625932, actions=0, custom actions=[], active item id=-1, error=null}
+
+  BTAudio Media Key Events:
+
+  AvrcpVolumeManager:
+    mCurrentDevice: null
+    Current System Volume: -1
+    Device Absolute Volume Map:
+    BTAudio Volume Events:
+
+
+  AvrcpCoverArtService:
+    psm = 4097
+    timages (0 / 32):
+      Handle   : Hash                              : CoverArt
+    Image bytes: 0
+    clients = []
+Profile: HeadsetService
+  mMaxHeadsetConnections: 5
+  DefaultMaxHeadsetConnections: 5
+  mActiveDevice: null
+  isInbandRingingEnabled: true
+  isInbandRingingSupported: true
+  mInbandRingingRuntimeDisable: false
+  mAudioRouteAllowed: true
+  mVoiceRecognitionStarted: false
+  mVoiceRecognitionTimeoutEvent: null
+  mVirtualCallStarted: false
+  mDialingOutTimeoutEvent: null
+  AudioManager.isBluetoothScoOn(): false
+  Telecom.isInCall(): false
+  Telecom.isRinging(): false
+
+Profile: HearingAidService
+
+Profile: HidDeviceService
+
+Profile: HidHostService
+  mInputDevices:
+
+Profile: BluetoothMapService
+  mRemoteDevice: null
+  mState: 0
+  mAppObserver: com.android.bluetooth.map.BluetoothMapAppObserver@278ee4d
+  mIsWaitingAuthorization: false
+  mRemoveTimeoutMsg: false
+  mPermission: 0
+  mAccountChanged: false
+  mBluetoothMnsObexClient: null
+  mMasInstanceMap:
+    null : MasId: 0 Uri:null SMS/MMS:true
+  mEnabledAccounts:
+
+Profile: McpService
+  Media Control Service instance list:
+  MediaControlService instance current state:
+    Ccid = 1
+    Features: | PLAYER_NAME | TRACK_CHANGED | TRACK_TITLE | TRACK_DURATION | TRACK_POSITION | PLAYBACK_SPEED | SEEKING_SPEED | PLAYING_ORDER | PLAYING_ORDER_SUPPORTED | MEDIA_STATE | MEDIA_CONTROL_POINT | MEDIA_CONTROL_POINT_OPCODES_SUPPORTED | CONTENT_CONTROL_ID | PLAYER_NAME_NOTIFY | TRACK_TITLE_NOTIFY | TRACK_DURATION_NOTIFY | TRACK_POSITION_NOTIFY | PLAYBACK_SPEED_NOTIFY | SEEKING_SPEED_NOTIFY | PLAYING_ORDER_NOTIFY | MEDIA_CONTROL_POINT_OPCODES_SUPPORTED_NOTIFY
+    Player name: <>
+    CurrentPlaybackState = PAUSED
+
+MediaControlGattService instance (CCID=1): :
+  09-24 22:56:43.231 Initializing
+  09-24 22:56:43.231 initGattService: uuid= 00001849-0000-1000-8000-00805f9b34fb
+  09-24 22:56:43.234 setInitialCharacteristicValues
+  09-24 22:56:43.234 updateMediaStateChar: state= INACTIVE(0x00)
+  09-24 22:56:43.235 updatePlayerNameChar: name= ''
+  09-24 22:56:43.236 updateTrackTitleChar: title= ''
+  09-24 22:56:43.236 updateTrackDurationChar: durationMs= -1, duration= -1
+  09-24 22:56:43.236 updateTrackPositionChar: positionMs= -1, position= -1
+  09-24 22:56:43.236 updatePlaybackSpeedChar: intSpeed=0, speed= 1.0
+  09-24 22:56:43.236 updateSeekingSpeedChar: intSpeed=0, speed= 1.0
+  09-24 22:56:43.236 updatePlayingOrderSupportedChar: order= 1
+  09-24 22:56:43.236 updatePlayingOrderChar: order= SINGLE_ONCE
+  09-24 22:56:43.237 updateSupportedOpcodesChar: opcodes= 0x181f (PLAY | PAUSE | FAST_REWIND | FAST_FORWARD | STOP | PREVIOUS_TRACK | NEXT_TRACK)
+  09-24 23:07:02.488 updateTrackPositionChar: positionMs= 0, position= 0
+  09-24 23:07:02.488 updateTrackTitleChar: title= 'Not Provided'
+  09-24 23:07:02.489 updateTrackDurationChar: durationMs= 0, duration= 0
+  09-24 23:07:02.489 updateMediaStateChar: state= PLAYING(0x01)
+  09-24 23:07:05.332 updatePlaybackSpeedChar: intSpeed=-128, speed= 0.0
+  09-24 23:07:05.339 updateTrackPositionChar: positionMs= 0, position= 0
+  09-24 23:07:05.339 updateMediaStateChar: state= PAUSED(0x02)
+
+MediaControlProfile:
+  09-24 22:56:43.231 Register MediaControlGattService instance ccid= 1, features=  | PLAYER_NAME | TRACK_CHANGED | TRACK_TITLE | TRACK_DURATION | TRACK_POSITION | PLAYBACK_SPEED | SEEKING_SPEED | PLAYING_ORDER | PLAYING_ORDER_SUPPORTED | MEDIA_STATE | MEDIA_CONTROL_POINT | MEDIA_CONTROL_POINT_OPCODES_SUPPORTED | CONTENT_CONTROL_ID | PLAYER_NAME_NOTIFY | TRACK_TITLE_NOTIFY | TRACK_DURATION_NOTIFY | TRACK_POSITION_NOTIFY | PLAYBACK_SPEED_NOTIFY | SEEKING_SPEED_NOTIFY | PLAYING_ORDER_NOTIFY | MEDIA_CONTROL_POINT_OPCODES_SUPPORTED_NOTIFY
+  09-24 22:56:43.234 onServiceInstanceRegistered: status= OK
+  09-24 23:07:02.484 onMediaUpdated: track_changed=true state_changed=true queue_changed=true
+  09-24 23:07:02.484 onCurrentPlayerStateUpdated: base actions not supported, player actions= 0, expected at least= 7f
+  09-24 23:07:02.484 onCurrentPlayerStateUpdated state= PLAYING, supported opcodes= 0x181f (PLAY | PAUSE | FAST_REWIND | FAST_FORWARD | STOP | PREVIOUS_TRACK | NEXT_TRACK), track position= 0 (0)
+  09-24 23:07:02.484 onCurrentPlayerStateUpdated metadata: title= 'Not Provided', duration= 0
+  09-24 23:07:05.331 onMediaUpdated: track_changed=false state_changed=true queue_changed=false
+  09-24 23:07:05.331 onCurrentPlayerStateUpdated: base actions not supported, player actions= 0, expected at least= 7f
+  09-24 23:07:05.332 onCurrentPlayerStateUpdated state= PAUSED, supported opcodes= 0x181f (PLAY | PAUSE | FAST_REWIND | FAST_FORWARD | STOP | PREVIOUS_TRACK | NEXT_TRACK), track position= 0 (0)
+
+
+Profile: BluetoothOppService
+
+Profile: PanService
+  mMaxPanDevices: 5
+  mPanIfName: bt-pan
+  mTetherOn: false
+  mPanDevices:
+
+Profile: BluetoothPbapService
+
+LE Scanner:
+  UID   PID   SCANNER_ID PACKAGE                TAG             
+  ----- ----- ---------- ---------------------- ----------------
+  10203 1194  1          com.example.mails nearby_fast_pair
+
+LE Scanner Map:
+  Entries: 1
+  [1/1] com.example.mails (Registered):
+    Scanner ID: ScannerId(1), UUID: 7aaa4f59-0385-420c-8681-9b62fbc1961f, Tag: nearby_fast_pair
+    Scans:
+      STARTED STOPPED ACTIVE              SUSPEND  TOTAL               WEIGHTED_TOTAL_COST
+      ------- ------- ------------------- -------- ------------------- -------------------
+      3       2       20m 35s (1235403ms) 0s (0ms) 20m 35s (1235403ms) 308850
+    Scans per mode:
+               OPPORTUNISTIC LOW_POWER BALANCED            LOW_LATENCY AMBIENT_DISCOVERY
+      -------- ------------- --------- ------------------- ----------- -----------------
+      COUNTER  0             0         3                   0           0                
+      DURATION 0s (0ms)      0s (0ms)  20m 35s (1235403ms) 0s (0ms)    0s (0ms)
+    Number of results:
+      CALLBACK_TYPE SCREEN_OFF SCREEN_ON TOTAL
+      ------------- ---------- --------- -----
+      ALL_MATCHES   0          0         0
+    Current Consumption Severities:
+      WINDOW(H) SEVERITY AVG/HR TOTAL
+      --------- -------- ------ -----
+      1         NORMAL   0      0    
+      4         NORMAL   0      0    
+      8         NORMAL   0      0
+    Last 2 scans:
+      [09-24 22:56:45.710 --> 09-24 23:07:02.198] Duration: 10m 16s (616488ms)
+        └ Info: (Forced) (Filter) Results: (0 / 0 / 0) | ScannerId(1) | [nearby_fast_pair] | CB Regular Scan
+        └ App Importance: Higher than Foreground Service
+          SCAN_MODE CALLBACK_TYPE RESULT_TYPE DELAY_MS MATCH_MODE NUM_MATCHES LEGACY PHY RSSI SCAN_TYPE
+          --------- ------------- ----------- -------- ---------- ----------- ------ --- ---- ---------
+          BALANCED  ALL_MATCHES   FULL        0        AGGRESSIVE FEW         false  1M  -128 ACTIVE
+        └ Filter: [ ServiceDataUuid=0000fff6-0000-1000-8000-00805f9b34fb ServiceData=[0] ServiceDataMask=[0] ]
+        └ Filter: [ ServiceDataUuid=0000fe2c-0000-1000-8000-00805f9b34fb ServiceData=[0] ServiceDataMask=[0] ]
+      [09-24 23:07:02.208 --> 09-24 23:07:05.389] Duration: 3s (3181ms)
+        └ Info: (Filter) Results: (0 / 0 / 0) | ScannerId(1) | [nearby_fast_pair] | CB Regular Scan
+        └ App Importance: Foreground Service
+          SCAN_MODE CALLBACK_TYPE RESULT_TYPE DELAY_MS MATCH_MODE NUM_MATCHES LEGACY PHY RSSI SCAN_TYPE
+          --------- ------------- ----------- -------- ---------- ----------- ------ --- ---- ---------
+          BALANCED  ALL_MATCHES   FULL        0        AGGRESSIVE FEW         false  1M  -128 ACTIVE
+        └ Filter: [ ServiceDataUuid=0000fff6-0000-1000-8000-00805f9b34fb ServiceData=[0] ServiceDataMask=[0] ]
+        └ Filter: [ ServiceDataUuid=0000fe2c-0000-1000-8000-00805f9b34fb ServiceData=[0] ServiceDataMask=[0] ]
+    Ongoing 1 scans:
+      [09-24 23:07:05.450] Elapsed: 10m 15s (615734ms)
+        └ Info: (Forced) (Filter) Results: (0 / 0 / 0) | ScannerId(1) | [nearby_fast_pair] | CB Regular Scan
+          SCAN_MODE CALLBACK_TYPE RESULT_TYPE DELAY_MS MATCH_MODE NUM_MATCHES LEGACY PHY RSSI SCAN_TYPE
+          --------- ------------- ----------- -------- ---------- ----------- ------ --- ---- ---------
+          BALANCED  ALL_MATCHES   FULL        0        AGGRESSIVE FEW         false  1M  -128 ACTIVE
+        └ Filter: [ ServiceDataUuid=0000fff6-0000-1000-8000-00805f9b34fb ServiceData=[0] ServiceDataMask=[0] ]
+        └ Filter: [ ServiceDataUuid=0000fe2c-0000-1000-8000-00805f9b34fb ServiceData=[0] ServiceDataMask=[0] ]
+
+Native:
+  hci_instance_name: default
+
+Connection Events:
+  None
+
+Bond Events:
+  Total Number of events: 0
+
+Link Key Types:
+
+AVRCP Controller Native State:
+  Devices (0 / 5):
+
+A2DP State:
+  TxQueue:
+  Counts (enqueue/dequeue/readbuf)                        : 0 / 0 / 0
+  Last update time ago in ms (enqueue/dequeue/readbuf)    : 0 / 0 / 0
+  Frames per packet (total/max/ave)                       : 0 / 0 / 0
+  Counts (flushed/dropped/dropouts)                       : 0 / 0 / 0
+  Counts (max dropped)                                    : 0
+  Last update time ago in ms (flushed/dropped)            : 0 / 0
+  Counts (underflow)                                      : 0
+  Bytes (underflow)                                       : 0
+  Last update time ago in ms (underflow)                  : 0
+  Enqueue deviation counts (overdue/premature)            : 0 / 0
+  Enqueue overdue scheduling time in ms (total/max/ave)   : 0 / 0 / 0
+  Enqueue premature scheduling time in ms (total/max/ave) : 0 / 0 / 0
+  Dequeue deviation counts (overdue/premature)            : 0 / 0
+  Dequeue overdue scheduling time in ms (total/max/ave)   : 0 / 0 / 0
+  Dequeue premature scheduling time in ms (total/max/ave) : 0 / 0 / 0
+
+A2DP Peers State:
+  Source: active peer: null
+  Sink: active peer: null
+
+A2DP Peer Cache:
+Optional codecs disabled for devices: []
+
+A2DP Source State: Enabled
+  Active peer: 00:00:00:00:00:00
+  Peers:
+
+A2DP Sink State: Disabled
+
+BTA AV State:
+  State Machine State: INIT
+  SDP A2DP source handle: 65539
+  SDP A2DP sink handle: 0
+  Features: 0x865b
+  SDP handle: 0
+  Disabling: false
+  SCO occupied: false
+  Connected audio channels: 0
+  Connected audio channels mask: 0x0
+  Registered audio channels mask: 0x3f
+  Connected LCBs mask: 0x0
+  Offload start pending handle: 0
+  Offload started handle: 0
+
+AVDTP Stack State:
+  AVDTP signalling L2CAP channel MTU: 672
+
+Socket Events:
+  Time        	Address          	State             	Role              	Channel   	Type     	ServerName
+  22:56:43.211	00:00:00:00:00:00	STATE_LISTENING   	ROLE_LISTEN      	-2         	RFCOMM	
+  22:56:43.211	00:00:00:00:00:00	STATE_LISTENING   	ROLE_LISTEN      	2         	RFCOMM	
+  22:56:43.212	00:00:00:00:00:00	STATE_LISTENING   	ROLE_LISTEN      	-2         	L2CAP	
+  22:56:43.212	00:00:00:00:00:00	STATE_LISTENING   	ROLE_LISTEN      	4097         	L2CAP	
+  22:56:43.250	00:00:00:00:00:00	STATE_LISTENING   	ROLE_LISTEN      	-2         	RFCOMM	
+  22:56:43.250	00:00:00:00:00:00	STATE_LISTENING   	ROLE_LISTEN      	5         	RFCOMM	
+  22:56:43.251	00:00:00:00:00:00	STATE_LISTENING   	ROLE_LISTEN      	-2         	L2CAP	
+  22:56:43.251	00:00:00:00:00:00	STATE_LISTENING   	ROLE_LISTEN      	-2         	RFCOMM	
+  22:56:43.252	00:00:00:00:00:00	STATE_LISTENING   	ROLE_LISTEN      	4099         	L2CAP	
+  22:56:43.254	00:00:00:00:00:00	STATE_LISTENING   	ROLE_LISTEN      	-2         	L2CAP	
+  22:56:43.254	00:00:00:00:00:00	STATE_LISTENING   	ROLE_LISTEN      	6         	RFCOMM	
+  22:56:43.256	00:00:00:00:00:00	STATE_LISTENING   	ROLE_LISTEN      	4101         	L2CAP	
+  22:56:43.268	00:00:00:00:00:00	STATE_LISTENING   	ROLE_LISTEN      	-2         	RFCOMM	
+  22:56:43.268	00:00:00:00:00:00	STATE_LISTENING   	ROLE_LISTEN      	7         	RFCOMM	
+  22:56:43.268	00:00:00:00:00:00	STATE_LISTENING   	ROLE_LISTEN      	-2         	L2CAP	
+  22:56:43.268	00:00:00:00:00:00	STATE_LISTENING   	ROLE_LISTEN      	4103         	L2CAP	
+
+
+AVRCP Target Native Service: 0 devices
+  Absolute Volume Enabled: true
+
+stack::gatt    last 0 tcb state transitions:
+TCB (GATT_MAX_PHY_CHANNEL: 8) in_use: 0
+
+GATT offload sessions
+Number of active offload sessions: 0
+
+BTA_GATTC_CB state BTA_GATTC_STATE_ENABLED
+ ->conn_track (GATT_MAX_PHY_CHANNEL=16)
+  -- used: 0
+ ->bg_track (BTA_GATTC_KNOWN_SR_MAX=255)
+  -- used: 0
+ ->cl_rcb (dynamic)
+  app_id: 48  app uuids: 6cf4f6a3-e7be-8f2c-1dc0-c0ea8b586916  clcb_num: 0
+  app_id: 47  app uuids: 1be19b82-0ce8-e239-d476-ac685825cdcf  clcb_num: 0
+  app_id: 46  app uuids: 13ede402-bc39-1435-c453-57c235498297  clcb_num: 0
+  app_id: 44  app uuids: e77f15b7-e983-e208-a0c5-173f2a621583  clcb_num: 0
+  -- used: 4
+ ->clcb (dynamic)
+  -- used: 0
+ ->known_server (BTA_GATTC_KNOWN_SR_MAX=255)
+  -- used: 0
+
+
+Bluetooth Iot Config:
+  Config Source: New file
+  Devices loaded: 0
+  File created/tagged: 2026-09-24 22:56:43
+
+Bluetooth HF Client BTA Statistics
+
+Bluetooth Wakelock Statistics:
+  Is acquired                    : false
+  Acquired/released count        : 0 / 0
+  Acquired/released error count  : 0 / 0
+  Last acquire/release error code: 0 / 0
+  Last acquired time (ms)        : 0
+  Acquired time min/max/avg (ms) : 0 / 0 / 0
+  Total acquired time (ms)       : 0
+  Total run time (ms)            : 1241786
+
+Bluetooth Alarms Statistics:
+  Total Alarms: 0
+
+Coordinated Set Service Client:
+
+Hearing Access Service Client:
+  no instance
+
+Hearing Aid Manager:
+  Hearing Aid Audio HAL:
+    Counts (underflow)                                      : 0
+    Bytes (underflow)                                       : 0
+    Last update time ago in ms (underflow)                  : 0
+
+Device Groups Manager:
+  Not initialized 
+GmapServer is enabled: 0
+LeAudio Manager:
+  Not initialized
+  LE AudioHalClient:
+    Counts (underflow)                                      : 0
+    Bytes (underflow)                                       : 0
+    Last update time ago in ms (underflow)                  : 0
+  ----------------
+  ISO Manager:
+    Available credits: 12
+    Controller buffer size: 1021
+    CIGs:
+    BIGs (Source):
+    BIGs (Sink):
+  ----------------
+
+Le Audio Broadcaster:
+
+Volume Control Manager:
+
+Volume Control Profile (VCP) Renderer:
+  Not initialized
+
+VAP Server Manager:
+    VA Name: 
+    Active VA Group ID: -1
+    Active VA Device: 00:00:00:00:00:00
+    VAP CCID: 0
+    VA Supported Features: 0
+    VAP GATT Server IF: 0
+
+
+connection_manager state:
+    no Low Energy connection attempts
+
+BT Quality Report Events:
+Event queue is empty.
+ ----- stack::avct -----
+stack::avct  Id: 0 profile_uuid:0x110e role:AVCT_ROLE_ACCEPTOR control:0x 7
+stack::avct   Link  : No link channel
+stack::avct   Browse: No browse channel
+ ----- shim::legacy::pan -----
+shim::legacy::pan Connections:0 roles configured:C.N[0x5] current:...[0x0] previous:...[0x0]
+shim::legacy::pan service_name_user:"Android Network User"
+shim::legacy::pan service_name_nap:"Android Network Access Point"
+ ----- shim::legacy::hid -----
+shim::legacy::hid status:BTIF_HH_ENABLED num_devices:0
+shim::legacy::hid status:BTIF_HH_ENABLED
+ ----- BR/EDR HID host -----
+BR/EDR HID host Registered:true, SDP busy:false
+ ----- shim::legacy::bta::dm -----
+shim::legacy::bta::dm  last 0 discovery state transitions
+shim::legacy::bta::dm  current bta_dm_discovery_state:BTA_DM_DISCOVER_IDLE
+shim::legacy::bta::dm  last 0 search state transitions
+shim::legacy::bta::dm  current bta_dm_search_state:BTA_DM_SEARCH_IDLE
+shim::legacy::bta::dm  last 0 gatt history entries
+shim::legacy::bta::dm::sniff_offload  sniff offload started state: is_started:false status_code:0
+shim::legacy::bta::dm::sniff_offload  last 0 sniff offload parameters writes
+ ----- shim::legacy::sdp -----
+shim::legacy::sdp max_attribute_list_size:1008 max_records_per_search:21
+ ----- shim::legacy::l2cap -----
+ ----- shim::btm -----
+shim::btm  2026-09-24 22:56:43.187 Initialized btm history
+shim::btm  2026-09-24 22:56:43.211 RFCOMM Server started           : ff:ff:ff:ff:ff:ff handle:2 scn:2 dlci:4 mtu:990
+shim::btm  2026-09-24 22:56:43.213 RFCOMM Server started           : ff:ff:ff:ff:ff:ff handle:3 scn:3 dlci:6 mtu:256
+shim::btm  2026-09-24 22:56:43.213 RFCOMM Server started           : ff:ff:ff:ff:ff:ff handle:4 scn:4 dlci:8 mtu:256
+shim::btm  2026-09-24 22:56:43.213 RFCOMM Server started           : ff:ff:ff:ff:ff:ff handle:5 scn:3 dlci:6 mtu:256
+shim::btm  2026-09-24 22:56:43.213 RFCOMM Server started           : ff:ff:ff:ff:ff:ff handle:6 scn:4 dlci:8 mtu:256
+shim::btm  2026-09-24 22:56:43.213 RFCOMM Server started           : ff:ff:ff:ff:ff:ff handle:7 scn:3 dlci:6 mtu:256
+shim::btm  2026-09-24 22:56:43.213 RFCOMM Server started           : ff:ff:ff:ff:ff:ff handle:8 scn:4 dlci:8 mtu:256
+shim::btm  2026-09-24 22:56:43.213 RFCOMM Server started           : ff:ff:ff:ff:ff:ff handle:9 scn:3 dlci:6 mtu:256
+shim::btm  2026-09-24 22:56:43.213 RFCOMM Server started           : ff:ff:ff:ff:ff:ff handle:10 scn:4 dlci:8 mtu:256
+shim::btm  2026-09-24 22:56:43.213 RFCOMM Server started           : ff:ff:ff:ff:ff:ff handle:11 scn:3 dlci:6 mtu:256
+shim::btm  2026-09-24 22:56:43.213 RFCOMM Server started           : ff:ff:ff:ff:ff:ff handle:12 scn:4 dlci:8 mtu:256
+shim::btm  2026-09-24 22:56:43.213 RFCOMM Server started           : ff:ff:ff:ff:ff:ff handle:13 scn:3 dlci:6 mtu:256
+shim::btm  2026-09-24 22:56:43.213 RFCOMM Server started           : ff:ff:ff:ff:ff:ff handle:14 scn:4 dlci:8 mtu:256
+shim::btm  2026-09-24 22:56:43.238 PAN    Registered               : 00:00:00:00:00:00 
+shim::btm  2026-09-24 22:56:43.238 PAN    Role change              : 00:00:00:00:00:00 role:0x5
+shim::btm  2026-09-24 22:56:43.243 SCAN   Classic updated          : 00:00:00:00:00:00 inquiry_scan_enable:F page_scan_enable:F
+shim::btm  2026-09-24 22:56:43.243 SCAN   Classic updated          : 00:00:00:00:00:00 inquiry_scan_enable:F page_scan_enable:T
+shim::btm  2026-09-24 22:56:43.250 RFCOMM Server started           : ff:ff:ff:ff:ff:ff handle:15 scn:5 dlci:10 mtu:990
+shim::btm  2026-09-24 22:56:43.254 RFCOMM Server started           : ff:ff:ff:ff:ff:ff handle:16 scn:6 dlci:12 mtu:990
+shim::btm  2026-09-24 22:56:43.268 RFCOMM Server started           : ff:ff:ff:ff:ff:ff handle:17 scn:7 dlci:14 mtu:990
+shim::btm  2026-09-24 22:56:45.721 SCAN   Le scan started          : 00:00:00:00:00:00 
+shim::btm  2026-09-24 22:56:45.722 SCAN   Le scan stopped          : 00:00:00:00:00:00 duration_s: 0.001 results:0  
+shim::btm  2026-09-24 22:56:45.722 SCAN   Le scan started          : 00:00:00:00:00:00 
+shim::btm  2026-09-24 22:56:51.735 SCAN   Le scan stopped          : 00:00:00:00:00:00 duration_s: 6.007 results:0  
+shim::btm  2026-09-24 22:56:51.739 SCAN   Le scan started          : 00:00:00:00:00:00 
+shim::btm  2026-09-24 23:01:45.741 SCAN   Le scan stopped          : 00:00:00:00:00:00 duration_s:294.002 results:0  
+shim::btm  2026-09-24 23:01:45.741 SCAN   Le scan started          : 00:00:00:00:00:00 
+shim::btm  2026-09-24 23:07:02.200 SCAN   Le scan stopped          : 00:00:00:00:00:00 duration_s:316.459 results:0  
+shim::btm  2026-09-24 23:07:02.210 SCAN   Le scan started          : 00:00:00:00:00:00 
+shim::btm  2026-09-24 23:07:02.210 SCAN   Le scan stopped          : 00:00:00:00:00:00 duration_s: 0.000 results:0  
+shim::btm  2026-09-24 23:07:02.210 SCAN   Le scan started          : 00:00:00:00:00:00 
+shim::btm  2026-09-24 23:07:05.390 SCAN   Le scan stopped          : 00:00:00:00:00:00 duration_s: 3.180 results:0  
+shim::btm  2026-09-24 23:07:05.452 SCAN   Le scan started          : 00:00:00:00:00:00 
+shim::btm  2026-09-24 23:07:05.452 SCAN   Le scan stopped          : 00:00:00:00:00:00 duration_s: 0.000 results:0  
+shim::btm  2026-09-24 23:07:05.452 SCAN   Le scan started          : 00:00:00:00:00:00 
+shim::btm  2026-09-24 23:12:05.535 SCAN   Le scan stopped          : 00:00:00:00:00:00 duration_s:300.083 results:0  
+shim::btm  2026-09-24 23:12:05.535 SCAN   Le scan started          : 00:00:00:00:00:00 
+shim::legacy::dumpsys Dumping shim legacy targets:1
+shim::stack Stack information ᛒᚼ
+shim::stack Classic inquiry:disabled
+shim::stack Le scan:enabled duration_s:315.650 results:0
+shim::stack Last 0 inquiry scans:
+ ----- shim::acl -----
+
+HCI ControllerImpl Dumpsys:
+    local_version_information:
+        hci_version: V_5_3(0x0c)
+        hci_revision: 0x0
+        lmp_version: V_5_3(0x0c)
+        lmp_subversion: 0x0
+        manufacturer_name: 224
+    buffer_size:
+        acl_data_packet_length: 1023
+        total_num_acl_data_packets: 10
+        sco_data_packet_length: 255
+        total_num_sco_data_packets: 10
+    le_buffer_size:
+        le_acl_data_packet_length: 27
+        total_num_le_acl_data_packets: 20
+        iso_data_packet_length: 1021
+        total_num_iso_data_packets: 12
+    le_maximum_data_length:
+        supported_max_tx_octets: 74
+        supported_max_tx_time: 338
+        supported_max_rx_octets: 64
+        supported_max_rx_time: 328
+    le_accept_list_size: 16
+    le_resolving_list_size: 16
+    le_maximum_advertising_data_length: 512
+    le_suggested_default_data_length: 27
+    le_suggested_default_data_length_v2: 0
+    le_number_supported_advertising_sets: 16
+    le_periodic_advertiser_list_size: 8
+    le_supported_states: 0x000003ffffffffff
+    local_supported_features:
+        page0: 0x871bffdbfe8ffeff
+        page1: 0x0000000000000002
+        page2: 0x0000000000000300
+    le_local_supported_features:
+        page0: 0x00004022f30039ff
+    local_supported_commands: [
+        0xf3, 0xff, 0xef, 0x03, 0xce, 0xff, 0x83, 0xff,
+        0x3f, 0x3f, 0xff, 0x1f, 0xfe, 0x0f, 0xe8, 0x6e,
+        0xff, 0xf7, 0x83, 0xff, 0xfc, 0x00, 0x04, 0x18,
+        0xe3, 0xf7, 0xff, 0xff, 0x7f, 0x3f, 0x00, 0x00,
+        0xfe, 0xf0, 0xfb, 0x7f, 0xfe, 0xff, 0xff, 0x07,
+        0xc0, 0xa3, 0xbf, 0x1f, 0x9a, 0x01, 0x03, 0x00,
+        0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
+        0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
+    ]
+    vendor_capabilities:
+        is_supported: 1
+        max_adv_instances: 0
+        offloaded_resolution_of_private_addresses: 0
+        total_scan_result_storage: 0
+        max_irk_list_size: 16
+        filtering_support: 1
+        max_filter: 16
+        activity_energy_info_support: 0
+        version_supported: 262
+        total_num_of_advt_tracked: 16
+        extended_scan_support: 0
+        debug_logging_supported: 0
+        le_address_generation_offloading_support: 0
+        a2dp_source_offload_capability_mask: 0
+        bluetooth_quality_report_support: 0
+        dynamic_audio_buffer_support: 0
+        a2dp_offload_v2_support: 0
+        iso_link_feedback_support: 0
+        sniff_offload_support: 0
+        big_set_channel_map_classification_support: 0
+        vendor_connection_handle_min: 768
+        vendor_connection_handle_max: 1023
+
+ACL Manager Dumpsys:
+    le_connectability_state: "ConnectabilityState::DISARMED"
+    le_filter_accept_list_count: 0
+    le_filter_accept_list: [
+    ]
+
+LE Advertising Manager Dumpsys:
+
+Wakelock Dumpsys:
+    is_acquired: false
+    is_native: true
+    acquired_count: 1
+    released_count: 1
+    acquired_error_count: 0
+    released_error_count: 0
+    last_acquired_error_code: 0
+    last_released_error_code: 0
+    last_acquired_timestamp_ms: 26
+    last_released_timestamp_ms: 3769
+    last_interval_ms: 26
+    max_interval_ms: 26
+    min_interval_ms: 26
+    avg_interval_ms: 26
+    total_interval_ms: 26
+    total_time_since_reset_ms: 1238044

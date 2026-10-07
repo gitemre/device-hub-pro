@@ -1,0 +1,1 @@
+Unable to create a device for device type: iPhone 17 Pro (com.apple.CoreSimulator.SimDeviceType.iPhone-17-Pro), runtime: tvOS 27.0 (27.0 - 24J360) - com.apple.CoreSimulator.SimRuntime.tvOS-27-0

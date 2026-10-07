@@ -1,0 +1,165 @@
+# Builds and tests the macOS app, unit-tests the Android verifier, and lints
+# the packaging scripts. No secrets are used.
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  macos:
+    name: macOS — swift build and swift test
+    # The repository variable MACOS_RUNNER can point this at another image or
+    # a self-hosted Mac without editing the workflow.
+    runs-on: ${{ vars.MACOS_RUNNER || 'macos-26' }}
+    timeout-minutes: 60
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Select the newest Xcode on the runner
+        run: |
+          set -euo pipefail
+          best=""
+          best_version="0"
+          for app in /Applications/Xcode*.app; do
+            [ -d "$app" ] || continue
+            version="$(plutil -extract CFBundleShortVersionString raw -o - "$app/Contents/Info.plist" 2>/dev/null)" || continue
+            if awk -v a="$version" -v b="$best_version" 'BEGIN { n = split(a, x, "."); split(b, y, "."); for (i = 1; i <= 3; i++) { if (x[i] + 0 != y[i] + 0) exit !(x[i] + 0 > y[i] + 0) } exit 1 }'; then
+              best="$app"
+              best_version="$version"
+            fi
+          done
+          if [ -z "$best" ]; then
+            echo "::error title=No Xcode::No Xcode found in /Applications on this runner."
+            exit 1
+          fi
+          echo "DEVELOPER_DIR=$best/Contents/Developer" >> "$GITHUB_ENV"
+          echo "Selected $best (Xcode $best_version)"
+
+      # Package.swift links the app with `-platform_version macos 26.0 <sdk>`:
+      # the minimum must equal `platforms` and packaging/Info.plist's
+      # LSMinimumSystemVersion (DeploymentTargetTests checks the three in
+      # `swift test` below), and the SDK number is the SDK the app claims in
+      # LC_BUILD_VERSION (see AGENTS.md), which should match the toolchain's
+      # SDK. The tests only run on a runner at or above the minimum, so an
+      # older runner stops the job here with a clear message; an older SDK
+      # only warns (below).
+      - name: Check the runner and toolchain against Package.swift
+        run: |
+          set -euo pipefail
+          xcodebuild -version
+          swift --version
+          minimum="$(awk '/"-platform_version"/ { found = 1 } found && match($0, /"[0-9]+\.[0-9]+"/) { print substr($0, RSTART + 1, RLENGTH - 2); exit }' Package.swift)"
+          claimed="$(awk '/"-platform_version"/ { found = 1 } found && match($0, /"[0-9]+\.[0-9]+"/) { n++; if (n == 2) { print substr($0, RSTART + 1, RLENGTH - 2); exit } }' Package.swift)"
+          sdk="$(xcrun --sdk macosx --show-sdk-version)"
+          os="$(sw_vers -productVersion)"
+          echo "Package.swift targets macOS $minimum and claims the macOS $claimed SDK; this runner has macOS $os and the macOS $sdk SDK."
+          if [ -z "$minimum" ] || [ -z "$claimed" ]; then
+            echo "::error title=Package.swift::Could not read the -platform_version numbers from Package.swift."
+            exit 1
+          fi
+          if ! awk -v a="$os" -v b="$minimum" 'BEGIN { split(a, x, "."); split(b, y, "."); exit !((x[1] + 0 > y[1] + 0) || (x[1] + 0 == y[1] + 0 && x[2] + 0 >= y[2] + 0)) }'; then
+            echo "::error title=Runner too old::Device Hub Pro needs macOS $minimum or later, and this runner has macOS $os, so the tests cannot run. Set the MACOS_RUNNER repository variable to a newer image."
+            exit 1
+          fi
+          if ! awk -v a="$sdk" -v b="$claimed" 'BEGIN { split(a, x, "."); split(b, y, "."); exit !((x[1] + 0 > y[1] + 0) || (x[1] + 0 == y[1] + 0 && x[2] + 0 >= y[2] + 0)) }'; then
+            # The claimed SDK number only goes into LC_BUILD_VERSION; linking
+            # against an older SDK still builds and tests the code. Release
+            # builds are made on a Mac with the claimed SDK, so CI warns
+            # instead of stopping here.
+            echo "::warning title=Older SDK on this runner::Package.swift links Device Hub Pro with -platform_version macos $minimum $claimed, but the newest Xcode on this runner ships the macOS $sdk SDK. Building and testing anyway; release builds need an Xcode with the macOS $claimed SDK (set the MACOS_RUNNER repository variable to a runner that has one)."
+          fi
+
+      - name: swift build
+        run: swift build
+
+      # Device integration tests skip themselves when no emulator or pinned
+      # phone is attached, which is always the case here.
+      - name: swift test
+        run: swift test
+
+  native-async-odr:
+    name: macOS — native build async ODR check
+    runs-on: ${{ vars.MACOS_RUNNER || 'macos-26' }}
+    # The native build system links a Task.sleep specialization whose copies
+    # disagree on their async context size (docs/native-build-async-odr.md).
+    # Packaging uses Swift Build, which is not exposed; this job catches a
+    # dependency or code change that brings a mismatched copy back.
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Select the newest Xcode on the runner
+        run: |
+          set -euo pipefail
+          best=""
+          best_version="0"
+          for app in /Applications/Xcode*.app; do
+            [ -d "$app" ] || continue
+            version="$(plutil -extract CFBundleShortVersionString raw -o - "$app/Contents/Info.plist" 2>/dev/null)" || continue
+            if awk -v a="$version" -v b="$best_version" 'BEGIN { n = split(a, x, "."); split(b, y, "."); for (i = 1; i <= 3; i++) { if (x[i] + 0 != y[i] + 0) exit !(x[i] + 0 > y[i] + 0) } exit 1 }'; then
+              best="$app"
+              best_version="$version"
+            fi
+          done
+          if [ -z "$best" ]; then
+            echo "::error title=No Xcode::No Xcode found in /Applications on this runner."
+            exit 1
+          fi
+          echo "DEVELOPER_DIR=$best/Contents/Developer" >> "$GITHUB_ENV"
+          echo "Selected $best (Xcode $best_version)"
+
+      - name: Native release build and weak async function check
+        run: bash Scripts/check-async-odr.sh --build
+
+  android-verifier:
+    name: Android verifier — unit tests
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    defaults:
+      run:
+        working-directory: android/verifier
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: "17"
+          cache: gradle
+          cache-dependency-path: |
+            android/verifier/**/*.gradle.kts
+            android/verifier/gradle/libs.versions.toml
+            android/verifier/gradle/wrapper/gradle-wrapper.properties
+
+      - uses: gradle/actions/wrapper-validation@v4
+
+      - name: ./gradlew :app:testDebugUnitTest
+        run: ./gradlew --no-daemon :app:testDebugUnitTest
+
+      - name: Upload the test reports
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: verifier-test-reports
+          path: android/verifier/app/build/reports/tests/
+          retention-days: 7
+
+  scripts:
+    name: Packaging scripts — shellcheck
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+      - name: shellcheck
+        run: |
+          shellcheck --version
+          shellcheck Scripts/package-app.sh Scripts/notarize.sh Scripts/release.sh

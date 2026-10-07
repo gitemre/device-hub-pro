@@ -1,0 +1,1 @@
+am broadcast -a com.android.systemui.demo -e command network -e wifi show -e level 2 -e fully true; am broadcast -a com.android.systemui.demo -e command network -e mobile hide; am broadcast -a com.android.systemui.demo -e command battery -e level 50 -e plugged true -e powersave false; true

@@ -1,0 +1,8 @@
+Error: Could not load devices from /Users/testeruser/Library/Android/sdk/system-images/android-34/google_atd/arm64-v8a/devices.xml
+Error: /Users/testeruser/Library/Android/sdk/system-images/android-34/google_atd/arm64-v8a/devices.xml
+Error: Could not load devices from /Users/testeruser/Library/Android/sdk/system-images/android-35/google_apis/arm64-v8a/devices.xml
+Error: /Users/testeruser/Library/Android/sdk/system-images/android-35/google_apis/arm64-v8a/devices.xml
+Error: Could not load devices from /Users/testeruser/Library/Android/sdk/system-images/android-36.1/google_apis_playstore_ps16k/arm64-v8a/devices.xml
+Error: /Users/testeruser/Library/Android/sdk/system-images/android-36.1/google_apis_playstore_ps16k/arm64-v8a/devices.xml
+Error: Could not load devices from /Users/testeruser/Library/Android/sdk/system-images/android-37.1/google_apis_playstore_ps16k/arm64-v8a/devices.xml
+Error: /Users/testeruser/Library/Android/sdk/system-images/android-37.1/google_apis_playstore_ps16k/arm64-v8a/devices.xml

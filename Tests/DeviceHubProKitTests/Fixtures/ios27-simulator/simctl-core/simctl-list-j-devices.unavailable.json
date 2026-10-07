@@ -1,0 +1,51 @@
+{
+  "devices" : {
+    "com.apple.CoreSimulator.SimRuntime.iOS-27-0" : [
+      {
+        "dataPath" : "\/private\/tmp\/aqa-tmp-01\/aqa-project-placeholder-01\/aqa-session-placeholder-000000000000\/fixtures00\/track1\/sets\/B2\/57115356-41CB-4225-B08F-FB0DC4159E0D\/data",
+        "dataPathSize" : 18337792,
+        "logPath" : "\/Users\/aqauser001\/Library\/Logs\/CoreSimulator\/57115356-41CB-4225-B08F-FB0DC4159E0D",
+        "udid" : "57115356-41CB-4225-B08F-FB0DC4159E0D",
+        "isAvailable" : true,
+        "deviceTypeIdentifier" : "com.apple.CoreSimulator.SimDeviceType.iPhone-17-Pro",
+        "state" : "Shutdown",
+        "name" : "DeviceHubPro-UI-available"
+      }
+    ],
+    "com.apple.CoreSimulator.SimRuntime.tvOS-27-0" : [
+
+    ],
+    "com.apple.CoreSimulator.SimRuntime.iOS-17-5" : [
+      {
+        "availabilityError" : "runtime profile not found using “System” match policy",
+        "dataPath" : "\/private\/tmp\/aqa-tmp-01\/aqa-project-placeholder-01\/aqa-session-placeholder-000000000000\/fixtures00\/track1\/sets\/B2\/DC327F5C-B982-438A-8208-789CEAA842CB\/data",
+        "dataPathSize" : 18337792,
+        "logPath" : "\/Users\/aqauser001\/Library\/Logs\/CoreSimulator\/DC327F5C-B982-438A-8208-789CEAA842CB",
+        "udid" : "DC327F5C-B982-438A-8208-789CEAA842CB",
+        "isAvailable" : false,
+        "deviceTypeIdentifier" : "com.apple.CoreSimulator.SimDeviceType.iPhone-17-Pro",
+        "state" : "Shutdown",
+        "name" : "DeviceHubPro-UI-too-old"
+      }
+    ],
+    "com.apple.CoreSimulator.SimRuntime.tvOS-26-5" : [
+
+    ],
+    "com.apple.CoreSimulator.SimRuntime.iOS-26-2" : [
+      {
+        "availabilityError" : "runtime profile not found using “System” match policy",
+        "dataPath" : "\/private\/tmp\/aqa-tmp-01\/aqa-project-placeholder-01\/aqa-session-placeholder-000000000000\/fixtures00\/track1\/sets\/B2\/EC1D7ABE-94C4-4FF4-9047-235ABF87C569\/data",
+        "dataPathSize" : 18337792,
+        "logPath" : "\/Users\/aqauser001\/Library\/Logs\/CoreSimulator\/EC1D7ABE-94C4-4FF4-9047-235ABF87C569",
+        "udid" : "EC1D7ABE-94C4-4FF4-9047-235ABF87C569",
+        "isAvailable" : false,
+        "deviceTypeIdentifier" : "com.apple.CoreSimulator.SimDeviceType.iPhone-17-Pro",
+        "state" : "Shutdown",
+        "name" : "DeviceHubPro-UI-missing-runtime"
+      }
+    ],
+    "com.apple.CoreSimulator.SimRuntime.iOS-26-5" : [
+
+    ]
+  }
+}

@@ -1,0 +1,38 @@
+{
+  "info" : {
+    "arguments" : [
+      "devicectl",
+      "device",
+      "install",
+      "app",
+      "--device",
+      "00000000-0000000000000000",
+      "verifier-device/DeviceHubProVerifier.app",
+      "--json-output",
+      "raw-write/install-app-2.json",
+      "-q"
+    ],
+    "commandType" : "devicectl.device.install.app",
+    "environment" : {
+
+    },
+    "jsonVersion" : 5,
+    "outcome" : "success",
+    "version" : "642.16"
+  },
+  "result" : {
+    "deviceIdentifier" : "00000000-0000-4000-8000-000000000001",
+    "installedApplications" : [
+      {
+        "bundleID" : "com.devicehubpro.verifier",
+        "databaseSequenceNumber" : 5940,
+        "databaseUUID" : "AD541610-B7FE-491F-8AEB-468AA26E6C80",
+        "installationURL" : "file:///private/var/containers/Bundle/Application/3D48C4A1-AA46-4678-843E-A0350D2AE31F/DeviceHubProVerifier.app/",
+        "launchServicesIdentifier" : "unknown",
+        "options" : {
+
+        }
+      }
+    ]
+  }
+}

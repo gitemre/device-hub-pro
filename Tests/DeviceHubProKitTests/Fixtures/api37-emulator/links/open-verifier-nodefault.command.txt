@@ -1,0 +1,1 @@
+am start -W -a android.intent.action.VIEW -d devicehubpro-verifier://nodefault/x -c android.intent.category.BROWSABLE 2>&1; echo @@devicehubpro:link:exit=$?

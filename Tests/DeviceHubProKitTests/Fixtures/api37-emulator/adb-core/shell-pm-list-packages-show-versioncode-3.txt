@@ -1,0 +1,2 @@
+package:com.example.testing.companion versionCode:1
+package:com.devicehubpro.verifier versionCode:1

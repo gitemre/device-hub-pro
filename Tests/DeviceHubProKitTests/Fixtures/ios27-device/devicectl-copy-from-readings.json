@@ -1,0 +1,37 @@
+{
+  "info" : {
+    "arguments" : [
+      "devicectl",
+      "device",
+      "copy",
+      "from",
+      "--device",
+      "00000000-0000000000000000",
+      "--domain-type",
+      "appDataContainer",
+      "--domain-identifier",
+      "com.devicehubpro.verifier",
+      "--source",
+      "Documents/readings.json",
+      "--destination",
+      "raw-write/readings.json",
+      "--json-output",
+      "raw-write/copy-from-readings.json",
+      "-q"
+    ],
+    "commandType" : "devicectl.device.copy.from",
+    "environment" : {
+
+    },
+    "jsonVersion" : 5,
+    "outcome" : "success",
+    "version" : "642.16"
+  },
+  "result" : {
+    "destination" : "file:///Users/aqauser001/DeviceHubPro-private/phase9/raw-write/readings.json",
+    "deviceIdentifier" : "00000000-0000-4000-8000-000000000001",
+    "domain" : "appDataContainer",
+    "domainIdentifier" : "com.devicehubpro.verifier",
+    "source" : "Documents/readings.json"
+  }
+}

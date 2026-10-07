@@ -1,0 +1,98 @@
+SERVICE com.android.systemui/.SystemUIService 1175879 pid=904 user=0
+  Client:
+    Dump starting: 09-25 20:08:20.714
+
+    BatteryController:
+    ----------------------------------------------------------------------------
+    BatteryController state:
+      mHasReceivedBattery=true
+      mLevel=100
+      mPluggedIn=false
+      mCharging=false
+      mCharged=false
+      mIsBatteryDefender=false
+      mIsIncompatibleCharging=false
+      mPowerSave=false
+      mStateUnknown=false
+      Callbacks:------------------
+        com.google.android.systemui.reversecharging.ReverseChargingController$1@ec4a771
+        com.android.systemui.statusbar.phone.DozeParameters$2@725e956
+        com.android.systemui.classifier.FalsingCollectorImpl$4@6c0bdd7
+        com.android.systemui.statusbar.pipeline.battery.data.repository.BatteryRepositoryImpl$batteryState$1$callback$1@53286c4
+        LightBarController: 
+         mAppearance=
+         stack #0: AppearanceRegion{ bounds=[0,0][1280,2856]} isLight=false
+         mNavigationLight=false
+         mHasLightNavigationBar=false
+        
+         mStatusBarMode=0 mNavigationBarMode=0
+        
+         mForceDarkForScrim=false
+         mForceLightForScrim=false
+        
+         mQsCustomizing=false
+         mQsExpanded=false
+         mBouncerVisible=false
+         mGlobalActionsVisible=false
+         mDirectReplying=false
+         mNavbarColorManagedByIme=false
+        
+         Recent Calculation Logs:
+           null
+           null
+        
+         StatusBarTransitionsController:
+          mTransitionDeferring=false  mTransitionPending=false mTintChangePending=false
+          mPendingDarkIntensity=0.0 mDarkIntensity=0.0 mNextDarkIntensity=0.0
+         mAreNavigationButtonForcedVisible=false
+        
+         NavigationBarTransitionsController:
+          mTransitionDeferring=false  mTransitionPending=false mTintChangePending=false
+          mPendingDarkIntensity=0.0 mDarkIntensity=0.0 mNextDarkIntensity=0.0
+         mAreNavigationButtonForcedVisible=false
+        
+        com.android.systemui.charging.WiredChargingRippleController$registerCallbacks$batteryStateChangeCallback$1@ddfd3a9
+        com.android.systemui.statusbar.phone.CentralSurfacesImpl$17@880cd2e
+        com.google.android.systemui.statusbar.phone.CentralSurfacesGoogle$1@cef90cf
+        LightBarController: 
+         mAppearance=
+         stack #0: AppearanceRegion{ bounds=[0,0][1280,2856]} isLight=false
+         mNavigationLight=false
+         mHasLightNavigationBar=false
+        
+         mStatusBarMode=0 mNavigationBarMode=0
+        
+         mForceDarkForScrim=false
+         mForceLightForScrim=false
+        
+         mQsCustomizing=false
+         mQsExpanded=false
+         mBouncerVisible=false
+         mGlobalActionsVisible=false
+         mDirectReplying=false
+         mNavbarColorManagedByIme=false
+        
+         Recent Calculation Logs:
+           null
+           null
+        
+         StatusBarTransitionsController:
+          mTransitionDeferring=false  mTransitionPending=false mTintChangePending=false
+          mPendingDarkIntensity=0.0 mDarkIntensity=0.0 mNextDarkIntensity=0.0
+         mAreNavigationButtonForcedVisible=false
+        
+         NavigationBarTransitionsController:
+          mTransitionDeferring=false  mTransitionPending=false mTintChangePending=false
+          mPendingDarkIntensity=0.0 mDarkIntensity=0.0 mNextDarkIntensity=0.0
+         mAreNavigationButtonForcedVisible=false
+        
+        com.google.android.systemui.qs.pipeline.domain.autoaddable.ReverseChargingAutoAddable$getCallback$1@f39ea5c
+        com.android.systemui.statusbar.events.SystemEventCoordinator$batteryStateListener$1@390165
+        com.android.keyguard.ClockEventController$batteryCallback$1@fd08e3a
+      ------------------
+      mReverse=false
+      mExtremeSaver=false
+
+    CRITICAL dump took 1ms -- BatteryController
+
+    Dump took 2ms

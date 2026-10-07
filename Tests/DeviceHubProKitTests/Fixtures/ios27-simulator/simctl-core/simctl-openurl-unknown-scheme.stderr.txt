@@ -1,0 +1,4 @@
+An error was encountered processing the command (domain=LSApplicationWorkspaceErrorDomain, code=115):
+Simulator device failed to open nosuchscheme-aqa://x.
+Underlying error (domain=LSApplicationWorkspaceErrorDomain, code=115):
+	The operation couldn’t be completed. (LSApplicationWorkspaceErrorDomain error 115.)

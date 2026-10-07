@@ -1,0 +1,24 @@
+{
+    ApplicationType = System;
+    Bundle = "file:///private/var/run/com.apple.security.cryptexd/mnt/com.apple.iPhoneOS.SimulatorRuntime-v24.1.434.0.OraVyw/Library/Developer/CoreSimulator/Profiles/Runtimes/iOS%2027.0.simruntime/Contents/Resources/RuntimeRoot/Applications/MobileSafari.app/";
+    CFBundleDisplayName = Safari;
+    CFBundleExecutable = MobileSafari;
+    CFBundleIdentifier = "com.apple.mobilesafari";
+    CFBundleName = MobileSafari;
+    CFBundleShortVersionString = "27.0";
+    CFBundleVersion = "8625.1.29.10.29";
+    DataContainer = "file:///private/tmp/aqa-tmp-01/aqa-project-placeholder-01/aqa-session-placeholder-000000000000/fixtures00/trackA/simset/95D9676B-3317-4BA5-8CF6-3CDD0488CACA/data/Containers/Data/Application/DEEC28D4-5835-4EBF-8A41-D5F388E542AC/";
+    GroupContainers =     {
+        "group.com.apple.BrowserKit" = "file:///private/tmp/aqa-tmp-01/aqa-project-placeholder-01/aqa-session-placeholder-000000000000/fixtures00/trackA/simset/95D9676B-3317-4BA5-8CF6-3CDD0488CACA/data/Containers/Shared/AppGroup/3BCF4007-A715-473F-8F54-38DE49B441F1/";
+        "group.com.apple.sports" = "file:///private/tmp/aqa-tmp-01/aqa-project-placeholder-01/aqa-session-placeholder-000000000000/fixtures00/trackA/simset/95D9676B-3317-4BA5-8CF6-3CDD0488CACA/data/Containers/Shared/AppGroup/066AF207-0C9D-49D6-92C8-65EF22349BBE/";
+        "group.com.apple.tipsnext" = "file:///private/tmp/aqa-tmp-01/aqa-project-placeholder-01/aqa-session-placeholder-000000000000/fixtures00/trackA/simset/95D9676B-3317-4BA5-8CF6-3CDD0488CACA/data/Containers/Shared/AppGroup/2692E97D-D803-4806-98FC-5C955E8AEF7A/";
+    };
+    IsAppClip = 0;
+    IsDeveloperApp = 0;
+    IsFirstParty = 1;
+    IsHidden = 0;
+    IsRemovable = 0;
+    Path = "/private/var/run/com.apple.security.cryptexd/mnt/com.apple.iPhoneOS.SimulatorRuntime-v24.1.434.0.OraVyw/Library/Developer/CoreSimulator/Profiles/Runtimes/iOS 27.0.simruntime/Contents/Resources/RuntimeRoot/Applications/MobileSafari.app";
+    SBAppTags =     (
+    );
+}

@@ -1,0 +1,45 @@
+{
+  "info" : {
+    "arguments" : [
+      "devicectl",
+      "device",
+      "info",
+      "apps",
+      "--device",
+      "00000000-0000000000000000",
+      "--json-output",
+      "raw-write/info-apps-after-install.json",
+      "-q"
+    ],
+    "commandType" : "devicectl.device.info.apps",
+    "environment" : {
+
+    },
+    "jsonVersion" : 5,
+    "outcome" : "success",
+    "version" : "642.16"
+  },
+  "result" : {
+    "apps" : [
+      {
+        "appClip" : false,
+        "builtByDeveloper" : true,
+        "bundleIdentifier" : "com.devicehubpro.verifier",
+        "bundleVersion" : "1",
+        "containerAccessible" : true,
+        "defaultApp" : false,
+        "hidden" : false,
+        "internalApp" : false,
+        "name" : "AQA Verifier",
+        "removable" : true,
+        "url" : "file:///private/var/containers/Bundle/Application/99A596BC-82D8-4C65-BBD0-944CE7560FDE/DeviceHubProVerifier.app/",
+        "version" : "1.0"
+      }
+    ],
+    "defaultAppsIncluded" : false,
+    "deviceIdentifier" : "00000000-0000-4000-8000-000000000001",
+    "hiddenAppsIncluded" : false,
+    "internalAppsIncluded" : false,
+    "removableAppsIncluded" : true
+  }
+}

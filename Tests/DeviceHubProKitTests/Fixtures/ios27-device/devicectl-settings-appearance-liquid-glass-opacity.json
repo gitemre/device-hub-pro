@@ -1,0 +1,29 @@
+{
+  "info" : {
+    "arguments" : [
+      "devicectl",
+      "device",
+      "settings",
+      "appearance",
+      "--liquid-glass-opacity",
+      "0.70",
+      "--device",
+      "00000000-0000000000000000",
+      "--json-output",
+      "raw/settings-appearance-liquid-glass-opacity.json",
+      "-q"
+    ],
+    "commandType" : "devicectl.device.settings.appearance",
+    "environment" : {
+
+    },
+    "jsonVersion" : 5,
+    "outcome" : "success",
+    "version" : "642.16"
+  },
+  "result" : {
+    "deviceIdentifier" : "00000000-0000-4000-8000-000000000001",
+    "liquidGlassOpacity" : 0.7,
+    "userInterfaceStyle" : "light"
+  }
+}

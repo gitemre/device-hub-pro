@@ -1,0 +1,14 @@
+2026-10-01 23:53:20.030000+0300 DeviceHubProAgentHost[0000:000000] [host] host app launched
+2026-10-01 23:53:20.031195+0300 DeviceHubProAgentHost[0000:000000] [host] TMP info
+2026-10-01 23:53:20.031205+0300 DeviceHubProAgentHost[0000:000000] [host] TMP debug
+TMP print stdout
+2026-10-01 23:53:20.031211+0300 DeviceHubProAgentHost[0000:000000] [host] TMP error
+2026-10-01 23:53:20.031238+0300 DeviceHubProAgentHost[0000:000000] [host] TMP fault
+2026-10-01 23:53:20.031314+0300 DeviceHubProAgentHost[0000:000000] [] TMP nocategory
+2026-10-01 23:53:20.031339+0300 DeviceHubProAgentHost[0000:000000] TMP default osmessage
+2026-10-01 23:53:20.031755+0300 DeviceHubProAgentHost[0000:000000] TMP nslog 7
+2026-10-01 23:53:20.031820+0300 DeviceHubProAgentHost[0000:000000] [host] TMP multi
+line
+Launched application with com.devicehubpro.agent.host bundle identifier.
+Waiting for the application to terminate...
+App terminated due to signal 2.

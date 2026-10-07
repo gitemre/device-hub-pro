@@ -1,0 +1,32 @@
+{
+  "info" : {
+    "arguments" : [
+      "devicectl",
+      "device",
+      "simulate",
+      "location",
+      "coordinate",
+      "--latitude",
+      "41.0082",
+      "--longitude",
+      "28.9784",
+      "--device",
+      "00000000-0000000000000000",
+      "--json-output",
+      "raw/simulate-location-coordinate.json",
+      "-q"
+    ],
+    "commandType" : "devicectl.device.simulate.location.coordinate",
+    "environment" : {
+
+    },
+    "jsonVersion" : 5,
+    "outcome" : "success",
+    "version" : "642.16"
+  },
+  "result" : {
+    "deviceIdentifier" : "00000000-0000-4000-8000-000000000001",
+    "latitude" : 41.0082,
+    "longitude" : 28.9784
+  }
+}

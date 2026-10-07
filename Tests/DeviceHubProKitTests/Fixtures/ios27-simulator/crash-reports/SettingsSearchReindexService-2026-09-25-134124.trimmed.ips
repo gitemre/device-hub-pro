@@ -1,0 +1,33 @@
+{"app_name":"SettingsSearchReindexService","timestamp":"2026-09-25 13:41:24.00 +0300","app_version":"1.0","slice_uuid":"0742fa30-9b63-3b11-8d91-2ce8d01e3fd1","build_version":"2027.0.2","platform":7,"bundleID":"com.apple.SettingsServices.SearchReindexService","share_with_app_devs":0,"is_first_party":1,"bug_type":"309","os_version":"macOS 27.0 (26A428)","roots_installed":0,"name":"SettingsSearchReindexService","incident_id":"EAD1B203-92E1-45FD-8E56-B6D9C88E79EE"}
+{
+  "captureTime" : "2026-09-25 13:41:20.8462 +0300",
+  "pid" : 46468,
+  "procName" : "SettingsSearchReindexService",
+  "procPath" : "\/Volumes\/VOLUME\/*\/SettingsServices.framework\/XPCServices\/SettingsSearchReindexService.xpc\/SettingsSearchReindexService",
+  "bundleInfo" : {"CFBundleShortVersionString":"1.0","CFBundleVersion":"2027.0.2","CFBundleIdentifier":"com.apple.SettingsServices.SearchReindexService"},
+  "parentProc" : "launchd_sim",
+  "coalitionName" : "com.apple.CoreSimulator.SimDevice.D9F3A76F-51E7-4A91-B06E-11AC95157EE5",
+  "exception" : {"codes":"0x0000000000000001, 0x00000001c16c415c","rawCodes":[1,7540064604],"type":"EXC_BREAKPOINT","signal":"SIGTRAP"},
+  "termination" : {"flags":0,"code":5,"namespace":"SIGNAL","indicator":"Trace\/BPT trap: 5","byProc":"exc handler","byPid":46468},
+  "trialInfo" : {
+  "rollouts" : [
+    {
+      "rolloutId" : "661464ecda55e5192b100804",
+      "factorPackIds" : [
+
+      ],
+      "deploymentId" : 240000005
+    },
+    {
+      "rolloutId" : "642da32dea3b2418c750f848",
+      "factorPackIds" : [
+        "66d8b2f77cd4b62688efd2cf"
+      ],
+      "deploymentId" : 240000011
+    }
+  ],
+  "experiments" : [
+
+  ]
+}
+}

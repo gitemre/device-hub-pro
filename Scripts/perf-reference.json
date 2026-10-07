@@ -1,0 +1,95 @@
+{
+  "window": "stock 1920x985 pt, largest layer-0 Device Hub Pro window",
+  "workload": "HOME, open the app drawer + 6 flings, open/close Settings with 3 flings, rotate 0 -> 1 -> 0",
+  "baseline": "2026-09-24, MMAP default: Pixel 9 Pro Fold AVD on emulator 37.2.8 started with -gpu host -qt-hide-window, debug build, no transport variables, macOS 27 arm64. Workload 8/8 PASS: 60.1 fps peak, 0 % dropped, 7.1 ms, 21.9 % CPU, 390 MB, guest p50 17 ms, 8.4 % janky. Idle 5.6 % with in-app audio on (15.9 % before 239411c). launch-median-s and soak-footprint-growth-pct keep the 2026-09-20 raw-transport values (not re-measured). The bounds fail a fall back to raw frames (37.2.8 raw: 53 fps, 12 % dropped, 27 ms, 41 % CPU, 829 MB) and a software-GPU emulator (guest p50 93 ms, 26.6 fps); an emulator older than 37.2.3 has no MMAP and fails the stream checks by design. The 2026-09-20 raw baseline is the reference at 4f528a2 (git show 4f528a2:Scripts/perf-reference.json) for PERF_REFERENCE.",
+  "checks": [
+    {
+      "name": "emulator-gpu-host",
+      "kind": "exact",
+      "expected": 1,
+      "tolerance": 0,
+      "unit": "",
+      "description": "the mirrored emulator must run with -gpu host; software rendering (e.g. -no-window without -gpu) measured 26.6 fps and a 93 ms guest p50"
+    },
+    {
+      "name": "stream-fps-peak",
+      "kind": "min",
+      "expected": 60,
+      "tolerance": 6,
+      "unit": " fps",
+      "description": "peak 1 s stream fps during the workload (mirror stats log); raw frames peak at 53 on 37.2.8"
+    },
+    {
+      "name": "stream-dropped-pct",
+      "kind": "max",
+      "expected": 0,
+      "tolerance": 3,
+      "unit": " %",
+      "description": "dropped frames as a share of received frames during the workload (raw frames: 12-18 %)"
+    },
+    {
+      "name": "stream-latency-ms",
+      "kind": "max",
+      "expected": 7.1,
+      "tolerance": 5,
+      "unit": " ms",
+      "description": "median stream latency (frame timestamp to render) during the workload (raw frames: 27-28 ms)"
+    },
+    {
+      "name": "app-cpu-mean-pct",
+      "kind": "max",
+      "expected": 21.9,
+      "tolerance": 8.1,
+      "unit": " %",
+      "description": "mean app CPU while mirroring the workload (raw frames: 41 %)"
+    },
+    {
+      "name": "app-footprint-mb",
+      "kind": "max",
+      "expected": 390,
+      "tolerance": 130,
+      "unit": " MB",
+      "description": "app phys_footprint after the workload (raw frames on 37.2.8: 829 MB)"
+    },
+    {
+      "name": "guest-frame-p50-ms",
+      "kind": "max",
+      "expected": 17,
+      "tolerance": 6,
+      "unit": " ms",
+      "description": "guest launcher 50th-percentile frame time (dumpsys gfxinfo); software GPU measured 93 ms"
+    },
+    {
+      "name": "guest-janky-pct",
+      "kind": "max",
+      "expected": 8.4,
+      "tolerance": 8,
+      "unit": " %",
+      "description": "guest launcher janky frame share"
+    },
+    {
+      "name": "launch-median-s",
+      "kind": "max",
+      "expected": 0.5,
+      "tolerance": 0.25,
+      "unit": " s",
+      "description": "cold launch: process start to first on-screen window, median of PERF_LAUNCH_RUNS (2026-09-20 value)"
+    },
+    {
+      "name": "idle-cpu-mean-pct",
+      "kind": "max",
+      "expected": 5.6,
+      "tolerance": 2.4,
+      "unit": " %",
+      "description": "mean app CPU over 30 s idle with the mirror attached and in-app audio on (15.9 % before the audio fix 239411c)"
+    },
+    {
+      "name": "soak-footprint-growth-pct",
+      "kind": "max",
+      "expected": 1,
+      "tolerance": 8,
+      "unit": " %",
+      "description": "app footprint growth across the soak, floor of the second half vs the first (leak signal; 2026-09-20 value)"
+    }
+  ]
+}

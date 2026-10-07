@@ -1,0 +1,33 @@
+{
+  "info" : {
+    "arguments" : [
+      "devicectl",
+      "device",
+      "settings",
+      "biometrics",
+      "--device",
+      "22EF39AE-0150-4F90-99AF-6AC9981559B0",
+      "-j",
+      "-",
+      "-t",
+      "30"
+    ],
+    "commandType" : "devicectl.device.settings.biometrics",
+    "environment" : {
+
+    },
+    "jsonVersion" : 5,
+    "outcome" : "success",
+    "version" : "642.16"
+  },
+  "result" : {
+    "biometrics" : [
+      {
+        "enabled" : false,
+        "type" : "Touch ID"
+      }
+    ],
+    "deviceIdentifier" : "22EF39AE-0150-4F90-99AF-6AC9981559B0",
+    "operation" : "query"
+  }
+}

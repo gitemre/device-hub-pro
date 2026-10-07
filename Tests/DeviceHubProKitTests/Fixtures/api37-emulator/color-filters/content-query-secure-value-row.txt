@@ -1,0 +1,1 @@
+Row: 0 _id=246, name=accessibility_display_daltonizer_enabled, value=0, is_preserved_in_restore=false

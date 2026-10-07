@@ -1,0 +1,19 @@
+.DS_Store
+.build/
+.swiftpm/
+DerivedData/
+xcuserdata/
+*.xcodeproj
+
+/out/
+*.log
+
+# Packaged app and disk images (Scripts/package-app.sh)
+/dist/
+
+# LLVM coverage output
+*.profraw
+/fastinput/build/
+
+# Test fixtures that are real tool logs
+!Tests/DeviceHubProKitTests/Fixtures/**/*.log

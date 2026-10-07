@@ -1,0 +1,29 @@
+{
+  "info" : {
+    "arguments" : [
+      "devicectl",
+      "device",
+      "orientation",
+      "set",
+      "landscapeLeft",
+      "--device",
+      "00000000-0000000000000000",
+      "--json-output",
+      "raw/orientation-set-landscapeLeft.json",
+      "-q"
+    ],
+    "commandType" : "devicectl.device.orientation.set",
+    "environment" : {
+
+    },
+    "jsonVersion" : 5,
+    "outcome" : "success",
+    "version" : "642.16"
+  },
+  "result" : {
+    "deviceIdentifier" : "00000000-0000-4000-8000-000000000001",
+    "deviceIsOrientationLocked" : false,
+    "deviceOrientation" : "portrait",
+    "deviceOrientationNonFlat" : "portrait"
+  }
+}

@@ -1,0 +1,18 @@
+Binary APK
+Package name=com.android.bookmarkprovider id=7f
+  type mipmap id=01 entryCount=1
+    resource 0x7f010000 mipmap/ic_launcher_shortcut_browser_bookmark
+      (mdpi) (file) res/mipmap-mdpi-v4/ic_launcher_shortcut_browser_bookmark.png type=PNG
+      (hdpi) (file) res/mipmap-hdpi-v4/ic_launcher_shortcut_browser_bookmark.png type=PNG
+      (xhdpi) (file) res/mipmap-xhdpi-v4/ic_launcher_shortcut_browser_bookmark.png type=PNG
+  type string id=02 entryCount=1
+    resource 0x7f020000 string/application_name
+      () "Bookmark Provider"
+      (en-rXA) "[βööķḿåŕķ ÞŕöVîðéŕ one two three]"
+      (en-rXA-neuter) "(N)[βööķḿåŕķ ÞŕöVîðéŕ one two three]"
+      (en-rXA-feminine) "(F)[βööķḿåŕķ ÞŕöVîðéŕ one two three]"
+      (en-rXA-masculine) "(M)[βööķḿåŕķ ÞŕöVîðéŕ one two three]"
+      (ar-rXB) "‏‮Bookmark‬‏ ‏‮Provider‬‏"
+      (ar-rXB-neuter) "(N)‏‮Bookmark‬‏ ‏‮Provider‬‏"
+      (ar-rXB-feminine) "(F)‏‮Bookmark‬‏ ‏‮Provider‬‏"
+      (ar-rXB-masculine) "(M)‏‮Bookmark‬‏ ‏‮Provider‬‏"

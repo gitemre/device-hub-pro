@@ -1,0 +1,31 @@
+{
+  "info" : {
+    "arguments" : [
+      "devicectl",
+      "device",
+      "uninstall",
+      "app",
+      "--device",
+      "00000000-0000000000000000",
+      "com.devicehubpro.verifier",
+      "--json-output",
+      "raw-write/uninstall-app-missing.json",
+      "-q"
+    ],
+    "commandType" : "devicectl.device.uninstall.app",
+    "environment" : {
+
+    },
+    "jsonVersion" : 5,
+    "outcome" : "success",
+    "version" : "642.16"
+  },
+  "result" : {
+    "deviceIdentifier" : "00000000-0000-4000-8000-000000000001",
+    "uninstalledApplications" : [
+      {
+        "bundleID" : "com.devicehubpro.verifier"
+      }
+    ]
+  }
+}

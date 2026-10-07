@@ -1,0 +1,27 @@
+{
+  "devices" : {
+    "com.apple.CoreSimulator.SimRuntime.iOS-27-0" : [
+      {
+        "dataPath" : "\/private\/tmp\/aqa-tmp-01\/aqa-project-placeholder-01\/aqa-session-placeholder-000000000000\/fixtures00\/simtier\/set\/425BD068-3D87-4F27-BE58-EB56A58B2C3A\/data",
+        "dataPathSize" : 360407040,
+        "logPath" : "\/Users\/aqauser001\/Library\/Logs\/CoreSimulator\/425BD068-3D87-4F27-BE58-EB56A58B2C3A",
+        "udid" : "425BD068-3D87-4F27-BE58-EB56A58B2C3A",
+        "lastUsedAt" : "2026-09-26T06:57:25Z",
+        "isAvailable" : true,
+        "logPathSize" : 98304,
+        "deviceTypeIdentifier" : "com.apple.CoreSimulator.SimDeviceType.iPhone-17-Pro",
+        "state" : "Booted",
+        "name" : "DeviceHubPro-UI-core-renamed"
+      }
+    ],
+    "com.apple.CoreSimulator.SimRuntime.tvOS-27-0" : [
+
+    ],
+    "com.apple.CoreSimulator.SimRuntime.tvOS-26-5" : [
+
+    ],
+    "com.apple.CoreSimulator.SimRuntime.iOS-26-5" : [
+
+    ]
+  }
+}

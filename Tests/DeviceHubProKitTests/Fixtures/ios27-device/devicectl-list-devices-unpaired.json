@@ -1,0 +1,188 @@
+{
+  "info": {
+    "arguments": [
+      "devicectl",
+      "list",
+      "devices",
+      "--json-output",
+      "/Users/aqauser001/DeviceHubPro-private/phase9/xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxlist.json",
+      "-q"
+    ],
+    "commandType": "devicectl.list.devices",
+    "environment": {},
+    "jsonVersion": 5,
+    "outcome": "success",
+    "version": "642.16"
+  },
+  "result": {
+    "devices": [
+      {
+        "_deprecationNotice": {
+          "deprecatedFields": [
+            "hardwareProperties",
+            "deviceProperties",
+            "connectionProperties"
+          ],
+          "message": "The 'hardwareProperties', 'deviceProperties', 'connectionProperties' fields are deprecated and will be removed in a future release. Use the 'properties' dictionary instead.",
+          "replacement": "properties"
+        },
+        "capabilities": [
+          {
+            "featureIdentifier": "com.apple.coredevice.feature.acquireusageassertion",
+            "name": "Acquire Usage Assertion"
+          },
+          {
+            "featureIdentifier": "com.apple.coredevice.feature.inititatepairing",
+            "name": "Initiate Pairing"
+          },
+          {
+            "featureIdentifier": "com.apple.coredevice.feature.default.user.credentials",
+            "name": "Modify Credentials for Default Users for a Device"
+          },
+          {
+            "featureIdentifier": "com.apple.coredevice.feature.tags",
+            "name": "Modify Tags"
+          }
+        ],
+        "connectionProperties": {
+          "isMobileDeviceOnly": false,
+          "pairingState": "unpaired",
+          "potentialHostnames": [],
+          "transportType": "wired",
+          "tunnelState": "disconnected",
+          "tunnelTransportProtocol": "tcp"
+        },
+        "deviceProperties": {
+          "bootState": "booted",
+          "ddiServicesAvailable": false,
+          "name": "AQA iPhone’u0",
+          "osBuildUpdate": "24A5380h",
+          "osVersionNumber": "27.0"
+        },
+        "hardwareProperties": {
+          "cpuType": {
+            "name": "arm64e",
+            "subType": -2147483646,
+            "type": 16777228
+          },
+          "deviceType": "iPhone",
+          "ecid": 1000000000000000,
+          "hardwareModel": "D53gAP",
+          "isProductionFused": true,
+          "platform": "iOS",
+          "productType": "iPhone13,2",
+          "serialNumber": "AQASERIAL000",
+          "supportedCPUTypes": [
+            {
+              "name": "arm64e",
+              "subType": -2147483646,
+              "type": 16777228
+            },
+            {
+              "name": "arm64",
+              "subType": 0,
+              "type": 16777228
+            }
+          ],
+          "supportedDeviceFamilies": [
+            1
+          ],
+          "udid": "00000000-0000000000000000"
+        },
+        "identifier": "00000000-0000-4000-8000-000000000001",
+        "properties": {
+          "connection": {
+            "pairingState": "unpaired",
+            "state": "disconnected",
+            "transportType": "wired",
+            "tunnelTransportProtocol": "tcp"
+          },
+          "hardware": {
+            "cpuType": {
+              "subtype": 18446744071562067970,
+              "type": 16777228
+            },
+            "deviceType": "iPhone",
+            "ecid": 1000000000000000,
+            "platform": "iOS",
+            "productType": "iPhone13,2",
+            "serialNumber": "AQASERIAL000",
+            "supportedCPUTypes": [
+              {
+                "subtype": 18446744071562067970,
+                "type": 16777228
+              },
+              {
+                "subtype": 0,
+                "type": 16777228
+              }
+            ],
+            "supportedDeviceFamilies": [
+              1
+            ],
+            "udid": "00000000-0000000000000000"
+          },
+          "software": {
+            "osBuildVersions": {
+              "buildVersion": {
+                "majorLetterComponent": "A",
+                "majorNumberComponent": 24,
+                "name": "24A5380h",
+                "revisionVersion": {
+                  "components": [
+                    24,
+                    1,
+                    380,
+                    5,
+                    8
+                  ],
+                  "originalComponentsCount": 5,
+                  "stringValue": "24.1.380.5.8"
+                },
+                "trainProgram": "iOS",
+                "updateLetterComponent": "h",
+                "updateNumberComponent": 5380
+              },
+              "supplementalBuildVersion": {
+                "majorLetterComponent": "A",
+                "majorNumberComponent": 24,
+                "name": "24A5380h",
+                "revisionVersion": {
+                  "components": [
+                    24,
+                    1,
+                    380,
+                    5,
+                    8
+                  ],
+                  "originalComponentsCount": 5,
+                  "stringValue": "24.1.380.5.8"
+                },
+                "trainProgram": "iOS",
+                "updateLetterComponent": "h",
+                "updateNumberComponent": 5380
+              }
+            },
+            "osVersionNumber": {
+              "components": [
+                27,
+                0,
+                0,
+                0,
+                0
+              ],
+              "originalComponentsCount": 2,
+              "stringValue": "27.0"
+            }
+          },
+          "state": {
+            "bootState": "booted",
+            "name": "AQA iPhone’u0"
+          }
+        },
+        "propertyDisplayNames": null,
+        "visibilityClass": "default"
+      }
+    ]
+  }
+}

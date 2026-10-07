@@ -1,0 +1,27 @@
+{
+  "info" : {
+    "arguments" : [
+      "devicectl",
+      "device",
+      "simulate",
+      "location",
+      "clear",
+      "--device",
+      "00000000-0000000000000000",
+      "--json-output",
+      "raw/simulate-location-clear.json",
+      "-q"
+    ],
+    "commandType" : "devicectl.device.simulate.location.clear",
+    "environment" : {
+
+    },
+    "jsonVersion" : 5,
+    "outcome" : "success",
+    "version" : "642.16"
+  },
+  "result" : {
+    "cleared" : true,
+    "deviceIdentifier" : "00000000-0000-4000-8000-000000000001"
+  }
+}

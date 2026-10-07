@@ -1,0 +1,1 @@
+am broadcast -a com.android.systemui.demo -e command battery -e level 50 -e plugged false -e powersave true; true

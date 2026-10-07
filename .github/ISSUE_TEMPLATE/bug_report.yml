@@ -1,0 +1,66 @@
+name: Bug report
+description: Something does not work as it should.
+labels: [bug]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Thanks for reporting. Please check the [troubleshooting page](https://github.com/gitemre/device-hub-pro/blob/main/docs/troubleshooting.md) first.
+        Do not paste serial numbers, UDIDs or anything else you would not want public.
+  - type: textarea
+    id: what
+    attributes:
+      label: What happened?
+      description: What you did, what you expected, and what happened instead.
+    validations:
+      required: true
+  - type: textarea
+    id: steps
+    attributes:
+      label: Steps to reproduce
+      placeholder: |
+        1. Select the Pixel 9 emulator
+        2. Open Controls ▸ Network
+        3. ...
+    validations:
+      required: true
+  - type: dropdown
+    id: device
+    attributes:
+      label: Device type
+      multiple: true
+      options:
+        - Android emulator
+        - Android phone (USB)
+        - Android phone (Wi-Fi)
+        - iOS simulator
+        - iPhone or iPad
+        - Not device-specific
+    validations:
+      required: true
+  - type: input
+    id: device-details
+    attributes:
+      label: Device details
+      placeholder: "Pixel 9 emulator, Android 17 (API 37) / iPhone 17 Pro simulator, iOS 27.0"
+  - type: input
+    id: app-version
+    attributes:
+      label: Device Hub Pro version
+      description: Device Hub Pro ▸ About Device Hub Pro
+      placeholder: "1.0.0 (1)"
+    validations:
+      required: true
+  - type: input
+    id: macos
+    attributes:
+      label: macOS and Xcode versions
+      placeholder: "macOS 27.0, Xcode 27.0"
+    validations:
+      required: true
+  - type: textarea
+    id: logs
+    attributes:
+      label: Logs or screenshots
+      description: Device ▸ Diagnostics, the log pane, or a screenshot. Remove anything private.
+      render: text

@@ -1,0 +1,1 @@
+    topResumedActivity=ActivityRecord{45739545 u0 com.android.settings/.homepage.SettingsHomepageActivity t315}

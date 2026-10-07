@@ -1,0 +1,5 @@
+Detected file type from extension: PNG
+Note: No display specified. Defaulting to display: 00C53342-54E6-4CF5-81BD-66EB1632425C (screenID: 1, name: LCD)
+An error was encountered processing the command (domain=NSPOSIXErrorDomain, code=60):
+The operation couldn’t be completed. Timeout waiting for screen surfaces
+Timeout waiting for screen surfaces

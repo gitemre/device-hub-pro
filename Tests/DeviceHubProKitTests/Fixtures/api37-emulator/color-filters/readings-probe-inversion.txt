@@ -1,0 +1,12 @@
+@@devicehubpro-cf:enabled
+null
+@@devicehubpro-cf:mode
+null
+@@devicehubpro-cf:level
+null
+@@devicehubpro-cf:inversion
+1
+@@devicehubpro-cf:display
+Display 4619827259835644672 (physical, "EMU_display_0")
+   isEnabled=true isSecure=true usesDeviceComposition=true 
+   colorTransformMatrix=[[0.402,-1.174,-0.228,1.000][-0.598,-0.174,-0.228,1.000][-0.599,-1.175,0.772,1.000][0.000,0.000,0.000,1.000]] 

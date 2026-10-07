@@ -1,0 +1,865 @@
+{
+    "com.apple.Bridge" =     {
+        ApplicationType = System;
+        Bundle = "file:///private/var/run/com.apple.security.cryptexd/mnt/com.apple.iPhoneOS.SimulatorRuntime-v24.1.434.0.OraVyw/Library/Developer/CoreSimulator/Profiles/Runtimes/iOS%2027.0.simruntime/Contents/Resources/RuntimeRoot/Applications/Bridge.app/";
+        CFBundleDisplayName = Watch;
+        CFBundleExecutable = Bridge;
+        CFBundleIdentifier = "com.apple.Bridge";
+        CFBundleName = Watch;
+        CFBundleShortVersionString = "1.0";
+        CFBundleVersion = "1.0";
+        DataContainer = "file:///Users/aqauser001/Library/Developer/CoreSimulator/Devices/F5DE19D7-2EB5-4EFC-A3ED-E6C3D7E6935B/data/Containers/Data/Application/90C10F6B-9EF2-40D0-811A-0E0BC30A3F91/";
+        GroupContainers =         {
+            "243LU875E5.groups.com.apple.podcasts" = "file:///Users/aqauser001/Library/Developer/CoreSimulator/Devices/F5DE19D7-2EB5-4EFC-A3ED-E6C3D7E6935B/data/Containers/Shared/AppGroup/0C7CD141-B76B-44E7-8D5E-D9517DA0E4FD/";
+            "group.com.apple.bridge" = "file:///Users/aqauser001/Library/Developer/CoreSimulator/Devices/F5DE19D7-2EB5-4EFC-A3ED-E6C3D7E6935B/data/Containers/Shared/AppGroup/F13A8199-4512-4D22-9F9F-CA0AC7A94AFD/";
+            "group.com.apple.iBooks" = "file:///Users/aqauser001/Library/Developer/CoreSimulator/Devices/F5DE19D7-2EB5-4EFC-A3ED-E6C3D7E6935B/data/Containers/Shared/AppGroup/5DB825D7-19C8-4C6B-9998-7BAC41836A02/";
+            "group.com.apple.mail" = "file:///Users/aqauser001/Library/Developer/CoreSimulator/Devices/F5DE19D7-2EB5-4EFC-A3ED-E6C3D7E6935B/data/Containers/Shared/AppGroup/719B8938-DF7C-4627-99B9-85D13F82E5B2/";
+            "group.com.apple.stocks" = "file:///Users/aqauser001/Library/Developer/CoreSimulator/Devices/F5DE19D7-2EB5-4EFC-A3ED-E6C3D7E6935B/data/Containers/Shared/AppGroup/074288A3-CC91-46A4-A124-AFBDBCB0BCE6/";
+            "group.com.apple.weather" = "file:///Users/aqauser001/Library/Developer/CoreSimulator/Devices/F5DE19D7-2EB5-4EFC-A3ED-E6C3D7E6935B/data/Containers/Shared/AppGroup/688271C6-A1EE-4A7C-96A3-7B7B0963DEA8/";
+        };
+        IsAppClip = 0;
+        IsDeveloperApp = 0;
+        IsFirstParty = 1;
+        IsHidden = 0;
+        IsRemovable = 0;
+        Path = "/private/var/run/com.apple.security.cryptexd/mnt/com.apple.iPhoneOS.SimulatorRuntime-v24.1.434.0.OraVyw/Library/Developer/CoreSimulator/Profiles/Runtimes/iOS 27.0.simruntime/Contents/Resources/RuntimeRoot/Applications/Bridge.app";
+        SBAppTags =         (
+            "watch-companion"
+        );
+    };
+    "com.apple.CarPlayApp" =     {
+        ApplicationType = System;
+        Bundle = "file:///private/var/run/com.apple.security.cryptexd/mnt/com.apple.iPhoneOS.SimulatorRuntime-v24.1.434.0.OraVyw/Library/Developer/CoreSimulator/Profiles/Runtimes/iOS%2027.0.simruntime/Contents/Resources/RuntimeRoot/System/Library/CoreServices/CarPlay.app/";
+        CFBundleDisplayName = CarPlay;
+        CFBundleExecutable = CarPlay;
+        CFBundleIdentifier = "com.apple.CarPlayApp";
+        CFBundleName = CarPlay;
+        CFBundleShortVersionString = "1.0";
+        CFBundleVersion = 1;
+        GroupContainers =         {
+        };
+        IsAppClip = 0;
+        IsDeveloperApp = 0;
+        IsFirstParty = 1;
+        IsHidden = 0;
+        IsRemovable = 0;
+        Path = "/private/var/run/com.apple.security.cryptexd/mnt/com.apple.iPhoneOS.SimulatorRuntime-v24.1.434.0.OraVyw/Library/Developer/CoreSimulator/Profiles/Runtimes/iOS 27.0.simruntime/Contents/Resources/RuntimeRoot/System/Library/CoreServices/CarPlay.app";
+        SBAppTags =         (
+        );
+    };
+    "com.apple.DocumentsApp" =     {
+        ApplicationType = System;
+        Bundle = "file:///private/var/run/com.apple.security.cryptexd/mnt/com.apple.iPhoneOS.SimulatorRuntime-v24.1.434.0.OraVyw/Library/Developer/CoreSimulator/Profiles/Runtimes/iOS%2027.0.simruntime/Contents/Resources/RuntimeRoot/Applications/Files.app/";
+        CFBundleDisplayName = Files;
+        CFBundleExecutable = Files;
+        CFBundleIdentifier = "com.apple.DocumentsApp";
+        CFBundleName = Files;
+        CFBundleShortVersionString = "1.0";
+        CFBundleVersion = 401;
+        DataContainer = "file:///Users/aqauser001/Library/Developer/CoreSimulator/Devices/F5DE19D7-2EB5-4EFC-A3ED-E6C3D7E6935B/data/Containers/Data/Application/CB4B33C3-A7A3-4F4F-BA7E-970791E9EEF3/";
+        GroupContainers =         {
+            "group.com.apple.DocumentManager" = "file:///Users/aqauser001/Library/Developer/CoreSimulator/Devices/F5DE19D7-2EB5-4EFC-A3ED-E6C3D7E6935B/data/Containers/Shared/AppGroup/31271ADA-8C3A-4014-968C-B061D30435C7/";
+            "group.com.apple.FileProvider.LocalStorage" = "file:///Users/aqauser001/Library/Developer/CoreSimulator/Devices/F5DE19D7-2EB5-4EFC-A3ED-E6C3D7E6935B/data/Containers/Shared/AppGroup/B8ACA8C0-467A-43F9-A1E3-4DFB71E893B7/";
+            "group.com.apple.tipsnext" = "file:///Users/aqauser001/Library/Developer/CoreSimulator/Devices/F5DE19D7-2EB5-4EFC-A3ED-E6C3D7E6935B/data/Containers/Shared/AppGroup/1BDA5A06-8288-4E79-A8AC-FBB4654D0F01/";
+        };
+        IsAppClip = 0;
+        IsDeveloperApp = 0;
+        IsFirstParty = 1;
+        IsHidden = 0;
+        IsRemovable = 0;
+        Path = "/private/var/run/com.apple.security.cryptexd/mnt/com.apple.iPhoneOS.SimulatorRuntime-v24.1.434.0.OraVyw/Library/Developer/CoreSimulator/Profiles/Runtimes/iOS 27.0.simruntime/Contents/Resources/RuntimeRoot/Applications/Files.app";
+        SBAppTags =         (
+        );
+    };
+    "com.apple.EmojiPoster" =     {
+        ApplicationType = System;
+        Bundle = "file:///private/var/run/com.apple.security.cryptexd/mnt/com.apple.iPhoneOS.SimulatorRuntime-v24.1.434.0.OraVyw/Library/Developer/CoreSimulator/Profiles/Runtimes/iOS%2027.0.simruntime/Contents/Resources/RuntimeRoot/Applications/EmojiPoster.app/";
+        CFBundleDisplayName = Emoji;
+        CFBundleExecutable = EmojiPoster;
+        CFBundleIdentifier = "com.apple.EmojiPoster";
+        CFBundleName = EmojiPoster;
+        CFBundleShortVersionString = "1.0";
+        CFBundleVersion = 1;
+        GroupContainers =         {
+        };
+        IsAppClip = 0;
+        IsDeveloperApp = 0;
+        IsFirstParty = 1;
+        IsHidden = 0;
+        IsRemovable = 0;
+        Path = "/private/var/run/com.apple.security.cryptexd/mnt/com.apple.iPhoneOS.SimulatorRuntime-v24.1.434.0.OraVyw/Library/Developer/CoreSimulator/Profiles/Runtimes/iOS 27.0.simruntime/Contents/Resources/RuntimeRoot/Applications/EmojiPoster.app";
+        SBAppTags =         (
+        );
+    };
+    "com.apple.EscrowSecurityAlert" =     {
+        ApplicationType = System;
+        Bundle = "file:///private/var/run/com.apple.security.cryptexd/mnt/com.apple.iPhoneOS.SimulatorRuntime-v24.1.434.0.OraVyw/Library/Developer/CoreSimulator/Profiles/Runtimes/iOS%2027.0.simruntime/Contents/Resources/RuntimeRoot/System/Library/CoreServices/EscrowSecurityAlert.app/";
+        CFBundleDisplayName = EscrowSecurityAlert;
+        CFBundleExecutable = EscrowSecurityAlert;
+        CFBundleIdentifier = "com.apple.EscrowSecurityAlert";
+        CFBundleName = EscrowSecurityAlert;
+        CFBundleShortVersionString = "1.0";
+        CFBundleVersion = 1;
+        GroupContainers =         {
+        };
+        IsAppClip = 0;
+        IsDeveloperApp = 0;
+        IsFirstParty = 1;
+        IsHidden = 0;
+        IsRemovable = 0;
+        Path = "/private/var/run/com.apple.security.cryptexd/mnt/com.apple.iPhoneOS.SimulatorRuntime-v24.1.434.0.OraVyw/Library/Developer/CoreSimulator/Profiles/Runtimes/iOS 27.0.simruntime/Contents/Resources/RuntimeRoot/System/Library/CoreServices/EscrowSecurityAlert.app";
+        SBAppTags =         (
+        );
+    };
+    "com.apple.Fitness" =     {
+        ApplicationType = System;
+        Bundle = "file:///private/var/run/com.apple.security.cryptexd/mnt/com.apple.iPhoneOS.SimulatorRuntime-v24.1.434.0.OraVyw/Library/Developer/CoreSimulator/Profiles/Runtimes/iOS%2027.0.simruntime/Contents/Resources/RuntimeRoot/Applications/Fitness.app/";
+        CFBundleDisplayName = Fitness;
+        CFBundleExecutable = Fitness;
+        CFBundleIdentifier = "com.apple.Fitness";
+        CFBundleName = Fitness;
+        CFBundleShortVersionString = "1.0";
+        CFBundleVersion = "1.0";
+        DataContainer = "file:///Users/aqauser001/Library/Developer/CoreSimulator/Devices/F5DE19D7-2EB5-4EFC-A3ED-E6C3D7E6935B/data/Containers/Data/Application/1BBAFE52-E691-41A7-A2BB-76195A82F8DF/";
+        GroupContainers =         {
+            "group.com.apple.Fitness" = "file:///Users/aqauser001/Library/Developer/CoreSimulator/Devices/F5DE19D7-2EB5-4EFC-A3ED-E6C3D7E6935B/data/Containers/Shared/AppGroup/A91097C3-0D64-4D51-9D0F-E48B31833A5A/";
+            "group.com.apple.weather" = "file:///Users/aqauser001/Library/Developer/CoreSimulator/Devices/F5DE19D7-2EB5-4EFC-A3ED-E6C3D7E6935B/data/Containers/Shared/AppGroup/688271C6-A1EE-4A7C-96A3-7B7B0963DEA8/";
+        };
+        IsAppClip = 0;
+        IsDeveloperApp = 0;
+        IsFirstParty = 1;
+        IsHidden = 0;
+        IsRemovable = 0;
+        Path = "/private/var/run/com.apple.security.cryptexd/mnt/com.apple.iPhoneOS.SimulatorRuntime-v24.1.434.0.OraVyw/Library/Developer/CoreSimulator/Profiles/Runtimes/iOS 27.0.simruntime/Contents/Resources/RuntimeRoot/Applications/Fitness.app";
+        SBAppTags =         (
+        );
+    };
+    "com.apple.GradientPoster" =     {
+        ApplicationType = System;
+        Bundle = "file:///private/var/run/com.apple.security.cryptexd/mnt/com.apple.iPhoneOS.SimulatorRuntime-v24.1.434.0.OraVyw/Library/Developer/CoreSimulator/Profiles/Runtimes/iOS%2027.0.simruntime/Contents/Resources/RuntimeRoot/Applications/GradientPoster.app/";
+        CFBundleDisplayName = Color;
+        CFBundleExecutable = GradientPoster;
+        CFBundleIdentifier = "com.apple.GradientPoster";
+        CFBundleName = GradientPoster;
+        CFBundleShortVersionString = "1.0";
+        CFBundleVersion = 1;
+        GroupContainers =         {
+        };
+        IsAppClip = 0;
+        IsDeveloperApp = 0;
+        IsFirstParty = 1;
+        IsHidden = 0;
+        IsRemovable = 0;
+        Path = "/private/var/run/com.apple.security.cryptexd/mnt/com.apple.iPhoneOS.SimulatorRuntime-v24.1.434.0.OraVyw/Library/Developer/CoreSimulator/Profiles/Runtimes/iOS 27.0.simruntime/Contents/Resources/RuntimeRoot/Applications/GradientPoster.app";
+        SBAppTags =         (
+        );
+    };
+    "com.apple.Health" =     {
+        ApplicationType = System;
+        Bundle = "file:///private/var/run/com.apple.security.cryptexd/mnt/com.apple.iPhoneOS.SimulatorRuntime-v24.1.434.0.OraVyw/Library/Developer/CoreSimulator/Profiles/Runtimes/iOS%2027.0.simruntime/Contents/Resources/RuntimeRoot/Applications/Health.app/";
+        CFBundleDisplayName = Health;
+        CFBundleExecutable = Health;
+        CFBundleIdentifier = "com.apple.Health";
+        CFBundleName = Health;
+        CFBundleShortVersionString = "1.0";
+        CFBundleVersion = "7027.0.72.2.7";
+        DataContainer = "file:///Users/aqauser001/Library/Developer/CoreSimulator/Devices/F5DE19D7-2EB5-4EFC-A3ED-E6C3D7E6935B/data/Containers/Data/Application/CFA41A1A-47C1-48F0-9499-F80D2F5C5091/";
+        GroupContainers =         {
+            "group.com.apple.Health" = "file:///Users/aqauser001/Library/Developer/CoreSimulator/Devices/F5DE19D7-2EB5-4EFC-A3ED-E6C3D7E6935B/data/Containers/Shared/AppGroup/57F2BB15-D3D5-41BA-9F7C-8BCE72566496/";
+            "group.com.apple.ip.redirects" = "file:///Users/aqauser001/Library/Developer/CoreSimulator/Devices/F5DE19D7-2EB5-4EFC-A3ED-E6C3D7E6935B/data/Containers/Shared/AppGroup/84D76FC1-6EFC-4424-B9BB-AAE5674DAB3C/";
+        };
+        IsAppClip = 0;
+        IsDeveloperApp = 0;
+        IsFirstParty = 1;
+        IsHidden = 0;
+        IsRemovable = 0;
+        Path = "/private/var/run/com.apple.security.cryptexd/mnt/com.apple.iPhoneOS.SimulatorRuntime-v24.1.434.0.OraVyw/Library/Developer/CoreSimulator/Profiles/Runtimes/iOS 27.0.simruntime/Contents/Resources/RuntimeRoot/Applications/Health.app";
+        SBAppTags =         (
+        );
+    };
+    "com.apple.Maps" =     {
+        ApplicationType = System;
+        Bundle = "file:///private/var/run/com.apple.security.cryptexd/mnt/com.apple.iPhoneOS.SimulatorRuntime-v24.1.434.0.OraVyw/Library/Developer/CoreSimulator/Profiles/Runtimes/iOS%2027.0.simruntime/Contents/Resources/RuntimeRoot/Applications/Maps.app/";
+        CFBundleDisplayName = Maps;
+        CFBundleExecutable = Maps;
+        CFBundleIdentifier = "com.apple.Maps";
+        CFBundleName = Maps;
+        CFBundleShortVersionString = "1.0";
+        CFBundleVersion = "2972.30.6.12.58";
+        DataContainer = "file:///Users/aqauser001/Library/Developer/CoreSimulator/Devices/F5DE19D7-2EB5-4EFC-A3ED-E6C3D7E6935B/data/Containers/Data/Application/5BE7A18C-B27C-4C74-8F4C-9E68836AC8C5/";
+        GroupContainers =         {
+            "group.com.apple.Maps" = "file:///Users/aqauser001/Library/Developer/CoreSimulator/Devices/F5DE19D7-2EB5-4EFC-A3ED-E6C3D7E6935B/data/Containers/Shared/AppGroup/3F25C8A4-A52F-4D3C-8054-C3D35CB98472/";
+            "group.com.apple.weather.internal" = "file:///Users/aqauser001/Library/Developer/CoreSimulator/Devices/F5DE19D7-2EB5-4EFC-A3ED-E6C3D7E6935B/data/Containers/Shared/AppGroup/85B2637B-28A9-45BD-A6CC-9573D99560A0/";
+        };
+        IsAppClip = 0;
+        IsDeveloperApp = 0;
+        IsFirstParty = 1;
+        IsHidden = 0;
+        IsRemovable = 0;
+        Path = "/private/var/run/com.apple.security.cryptexd/mnt/com.apple.iPhoneOS.SimulatorRuntime-v24.1.434.0.OraVyw/Library/Developer/CoreSimulator/Profiles/Runtimes/iOS 27.0.simruntime/Contents/Resources/RuntimeRoot/Applications/Maps.app";
+        SBAppTags =         (
+        );
+    };
+    "com.apple.MobileAddressBook" =     {
+        ApplicationType = System;
+        Bundle = "file:///private/var/run/com.apple.security.cryptexd/mnt/com.apple.iPhoneOS.SimulatorRuntime-v24.1.434.0.OraVyw/Library/Developer/CoreSimulator/Profiles/Runtimes/iOS%2027.0.simruntime/Contents/Resources/RuntimeRoot/Applications/Contacts.app/";
+        CFBundleDisplayName = Contacts;
+        CFBundleExecutable = Contacts;
+        CFBundleIdentifier = "com.apple.MobileAddressBook";
+        CFBundleName = Contacts;
+        CFBundleShortVersionString = "1.0";
+        CFBundleVersion = "1.0";
+        DataContainer = "file:///Users/aqauser001/Library/Developer/CoreSimulator/Devices/F5DE19D7-2EB5-4EFC-A3ED-E6C3D7E6935B/data/Containers/Data/Application/B0BEB40A-E063-4097-B946-2610D2F31415/";
+        GroupContainers =         {
+            "group.com.apple.SuggestedImage.SharedSecureContainer" = "file:///Users/aqauser001/Library/Developer/CoreSimulator/Devices/F5DE19D7-2EB5-4EFC-A3ED-E6C3D7E6935B/data/Containers/Shared/AppGroup/E7A912A1-BCDF-45EE-B8CF-4BFC08A29975/";
+        };
+        IsAppClip = 0;
+        IsDeveloperApp = 0;
+        IsFirstParty = 1;
+        IsHidden = 0;
+        IsRemovable = 0;
+        Path = "/private/var/run/com.apple.security.cryptexd/mnt/com.apple.iPhoneOS.SimulatorRuntime-v24.1.434.0.OraVyw/Library/Developer/CoreSimulator/Profiles/Runtimes/iOS 27.0.simruntime/Contents/Resources/RuntimeRoot/Applications/Contacts.app";
+        SBAppTags =         (
+            "stand-alone-contacts"
+        );
+    };
+    "com.apple.MobileSMS" =     {
+        ApplicationType = System;
+        Bundle = "file:///private/var/run/com.apple.security.cryptexd/mnt/com.apple.iPhoneOS.SimulatorRuntime-v24.1.434.0.OraVyw/Library/Developer/CoreSimulator/Profiles/Runtimes/iOS%2027.0.simruntime/Contents/Resources/RuntimeRoot/Applications/MobileSMS.app/";
+        CFBundleDisplayName = Messages;
+        CFBundleExecutable = MobileSMS;
+        CFBundleIdentifier = "com.apple.MobileSMS";
+        CFBundleName = MobileSMS;
+        CFBundleShortVersionString = "26.0";
+        CFBundleVersion = "1491.100.1.2.25";
+        DataContainer = "file:///Users/aqauser001/Library/Developer/CoreSimulator/Devices/F5DE19D7-2EB5-4EFC-A3ED-E6C3D7E6935B/data/Containers/Data/Application/D4548FA3-16DD-4F37-9809-23794B5CD52A/";
+        GroupContainers =         {
+            "group.com.apple.PegasusConfiguration" = "file:///Users/aqauser001/Library/Developer/CoreSimulator/Devices/F5DE19D7-2EB5-4EFC-A3ED-E6C3D7E6935B/data/Containers/Shared/AppGroup/84B52ED0-AD67-4FD2-8BB5-3AA6673B0490/";
+            "group.com.apple.SuggestedImage.SharedSecureContainer" = "file:///Users/aqauser001/Library/Developer/CoreSimulator/Devices/F5DE19D7-2EB5-4EFC-A3ED-E6C3D7E6935B/data/Containers/Shared/AppGroup/E7A912A1-BCDF-45EE-B8CF-4BFC08A29975/";
+            "group.com.apple.hashtagImages" = "file:///Users/aqauser001/Library/Developer/CoreSimulator/Devices/F5DE19D7-2EB5-4EFC-A3ED-E6C3D7E6935B/data/Containers/Shared/AppGroup/54CE4295-6667-4A4F-B4E1-A1F76AC1A6AF/";
+            "group.com.apple.mobileslideshow.PhotosFileProvider" = "file:///Users/aqauser001/Library/Developer/CoreSimulator/Devices/F5DE19D7-2EB5-4EFC-A3ED-E6C3D7E6935B/data/Containers/Shared/AppGroup/593BBDD7-1798-4EB3-AC15-D331B783E31C/";
+            "group.com.apple.safari" = "file:///Users/aqauser001/Library/Developer/CoreSimulator/Devices/F5DE19D7-2EB5-4EFC-A3ED-E6C3D7E6935B/data/Containers/Shared/AppGroup/B4BAAF52-605C-4291-A236-1366ADE7AFCF/";
+            "group.com.apple.tipsnext" = "file:///Users/aqauser001/Library/Developer/CoreSimulator/Devices/F5DE19D7-2EB5-4EFC-A3ED-E6C3D7E6935B/data/Containers/Shared/AppGroup/1BDA5A06-8288-4E79-A8AC-FBB4654D0F01/";
+        };
+        IsAppClip = 0;
+        IsDeveloperApp = 0;
+        IsFirstParty = 1;
+        IsHidden = 0;
+        IsRemovable = 0;
+        Path = "/private/var/run/com.apple.security.cryptexd/mnt/com.apple.iPhoneOS.SimulatorRuntime-v24.1.434.0.OraVyw/Library/Developer/CoreSimulator/Profiles/Runtimes/iOS 27.0.simruntime/Contents/Resources/RuntimeRoot/Applications/MobileSMS.app";
+        SBAppTags =         (
+        );
+    };
+    "com.apple.NanoUniverse.AegirProxyApp" =     {
+        ApplicationType = System;
+        Bundle = "file:///private/var/run/com.apple.security.cryptexd/mnt/com.apple.iPhoneOS.SimulatorRuntime-v24.1.434.0.OraVyw/Library/Developer/CoreSimulator/Profiles/Runtimes/iOS%2027.0.simruntime/Contents/Resources/RuntimeRoot/System/Library/CoreServices/AegirProxyApp.app/";
+        CFBundleDisplayName = Astronomy;
+        CFBundleExecutable = AegirProxyApp;
+        CFBundleIdentifier = "com.apple.NanoUniverse.AegirProxyApp";
+        CFBundleName = AegirProxyApp;
+        CFBundleShortVersionString = "1.0";
+        CFBundleVersion = 1;
+        GroupContainers =         {
+        };
+        IsAppClip = 0;
+        IsDeveloperApp = 0;
+        IsFirstParty = 1;
+        IsHidden = 0;
+        IsRemovable = 0;
+        Path = "/private/var/run/com.apple.security.cryptexd/mnt/com.apple.iPhoneOS.SimulatorRuntime-v24.1.434.0.OraVyw/Library/Developer/CoreSimulator/Profiles/Runtimes/iOS 27.0.simruntime/Contents/Resources/RuntimeRoot/System/Library/CoreServices/AegirProxyApp.app";
+        SBAppTags =         (
+        );
+    };
+    "com.apple.Passbook" =     {
+        ApplicationType = System;
+        Bundle = "file:///private/var/run/com.apple.security.cryptexd/mnt/com.apple.iPhoneOS.SimulatorRuntime-v24.1.434.0.OraVyw/Library/Developer/CoreSimulator/Profiles/Runtimes/iOS%2027.0.simruntime/Contents/Resources/RuntimeRoot/Applications/Passbook.app/";
+        CFBundleDisplayName = Wallet;
+        CFBundleExecutable = Passbook;
+        CFBundleIdentifier = "com.apple.Passbook";
+        CFBundleName = Wallet;
+        CFBundleShortVersionString = "1.0";
+        CFBundleVersion = "1695.1.4";
+        DataContainer = "file:///Users/aqauser001/Library/Developer/CoreSimulator/Devices/F5DE19D7-2EB5-4EFC-A3ED-E6C3D7E6935B/data/Containers/Data/Application/C8279354-B405-4160-A3EF-440EB6C4936F/";
+        GroupContainers =         {
+            "com.apple.CoreODI" = "file:///Users/aqauser001/Library/Developer/CoreSimulator/Devices/F5DE19D7-2EB5-4EFC-A3ED-E6C3D7E6935B/data/Containers/Shared/AppGroup/7C3158AA-A37E-4447-8846-628E5D70C21E/";
+        };
+        IsAppClip = 0;
+        IsDeveloperApp = 0;
+        IsFirstParty = 1;
+        IsHidden = 0;
+        IsRemovable = 0;
+        Path = "/private/var/run/com.apple.security.cryptexd/mnt/com.apple.iPhoneOS.SimulatorRuntime-v24.1.434.0.OraVyw/Library/Developer/CoreSimulator/Profiles/Runtimes/iOS 27.0.simruntime/Contents/Resources/RuntimeRoot/Applications/Passbook.app";
+        SBAppTags =         (
+        );
+    };
+    "com.apple.Passwords" =     {
+        ApplicationType = System;
+        Bundle = "file:///private/var/run/com.apple.security.cryptexd/mnt/com.apple.iPhoneOS.SimulatorRuntime-v24.1.434.0.OraVyw/Library/Developer/CoreSimulator/Profiles/Runtimes/iOS%2027.0.simruntime/Contents/Resources/RuntimeRoot/Applications/Passwords.app/";
+        CFBundleDisplayName = Passwords;
+        CFBundleExecutable = Passwords;
+        CFBundleIdentifier = "com.apple.Passwords";
+        CFBundleName = Passwords;
+        CFBundleShortVersionString = "3.0";
+        CFBundleVersion = "8625.1.29.10.29";
+        DataContainer = "file:///Users/aqauser001/Library/Developer/CoreSimulator/Devices/F5DE19D7-2EB5-4EFC-A3ED-E6C3D7E6935B/data/Containers/Data/Application/0F77851C-9651-4708-BDC0-0DA12008DC43/";
+        GroupContainers =         {
+        };
+        IsAppClip = 0;
+        IsDeveloperApp = 0;
+        IsFirstParty = 1;
+        IsHidden = 0;
+        IsRemovable = 0;
+        Path = "/private/var/run/com.apple.security.cryptexd/mnt/com.apple.iPhoneOS.SimulatorRuntime-v24.1.434.0.OraVyw/Library/Developer/CoreSimulator/Profiles/Runtimes/iOS 27.0.simruntime/Contents/Resources/RuntimeRoot/Applications/Passwords.app";
+        SBAppTags =         (
+        );
+    };
+    "com.apple.Posters.ImagePlaygroundPosterApp" =     {
+        ApplicationType = System;
+        Bundle = "file:///private/var/run/com.apple.security.cryptexd/mnt/com.apple.iPhoneOS.SimulatorRuntime-v24.1.434.0.OraVyw/Library/Developer/CoreSimulator/Profiles/Runtimes/iOS%2027.0.simruntime/Contents/Resources/RuntimeRoot/Applications/ImagePlaygroundPosterApp.app/";
+        CFBundleDisplayName = "Image Playground";
+        CFBundleExecutable = ImagePlaygroundPosterApp;
+        CFBundleIdentifier = "com.apple.Posters.ImagePlaygroundPosterApp";
+        CFBundleName = ImagePlaygroundPosterApp;
+        CFBundleShortVersionString = "1.0";
+        CFBundleVersion = "9999.99.99";
+        GroupContainers =         {
+        };
+        IsAppClip = 0;
+        IsDeveloperApp = 0;
+        IsFirstParty = 1;
+        IsHidden = 0;
+        IsRemovable = 0;
+        Path = "/private/var/run/com.apple.security.cryptexd/mnt/com.apple.iPhoneOS.SimulatorRuntime-v24.1.434.0.OraVyw/Library/Developer/CoreSimulator/Profiles/Runtimes/iOS 27.0.simruntime/Contents/Resources/RuntimeRoot/Applications/ImagePlaygroundPosterApp.app";
+        SBAppTags =         (
+        );
+    };
+    "com.apple.Posters.KaleidoscopePosterApp" =     {
+        ApplicationType = System;
+        Bundle = "file:///private/var/run/com.apple.security.cryptexd/mnt/com.apple.iPhoneOS.SimulatorRuntime-v24.1.434.0.OraVyw/Library/Developer/CoreSimulator/Profiles/Runtimes/iOS%2027.0.simruntime/Contents/Resources/RuntimeRoot/Applications/KaleidoscopePosterApp.app/";
+        CFBundleDisplayName = Kaleidoscope;
+        CFBundleExecutable = KaleidoscopePosterApp;
+        CFBundleIdentifier = "com.apple.Posters.KaleidoscopePosterApp";
+        CFBundleName = KaleidoscopePosterApp;
+        CFBundleShortVersionString = "1.0";
+        CFBundleVersion = 1;
+        GroupContainers =         {
+        };
+        IsAppClip = 0;
+        IsDeveloperApp = 0;
+        IsFirstParty = 1;
+        IsHidden = 0;
+        IsRemovable = 0;
+        Path = "/private/var/run/com.apple.security.cryptexd/mnt/com.apple.iPhoneOS.SimulatorRuntime-v24.1.434.0.OraVyw/Library/Developer/CoreSimulator/Profiles/Runtimes/iOS 27.0.simruntime/Contents/Resources/RuntimeRoot/Applications/KaleidoscopePosterApp.app";
+        SBAppTags =         (
+        );
+    };
+    "com.apple.Posters.UnityPosterApp" =     {
+        ApplicationType = System;
+        Bundle = "file:///private/var/run/com.apple.security.cryptexd/mnt/com.apple.iPhoneOS.SimulatorRuntime-v24.1.434.0.OraVyw/Library/Developer/CoreSimulator/Profiles/Runtimes/iOS%2027.0.simruntime/Contents/Resources/RuntimeRoot/Applications/UnityPosterApp.app/";
+        CFBundleDisplayName = Unity;
+        CFBundleExecutable = UnityPosterApp;
+        CFBundleIdentifier = "com.apple.Posters.UnityPosterApp";
+        CFBundleName = UnityPosterApp;
+        CFBundleShortVersionString = "1.0";
+        CFBundleVersion = 1;
+        GroupContainers =         {
+        };
+        IsAppClip = 0;
+        IsDeveloperApp = 0;
+        IsFirstParty = 1;
+        IsHidden = 0;
+        IsRemovable = 0;
+        Path = "/private/var/run/com.apple.security.cryptexd/mnt/com.apple.iPhoneOS.SimulatorRuntime-v24.1.434.0.OraVyw/Library/Developer/CoreSimulator/Profiles/Runtimes/iOS 27.0.simruntime/Contents/Resources/RuntimeRoot/Applications/UnityPosterApp.app";
+        SBAppTags =         (
+        );
+    };
+    "com.apple.Posters.WeatherPosterApp" =     {
+        ApplicationType = System;
+        Bundle = "file:///private/var/run/com.apple.security.cryptexd/mnt/com.apple.iPhoneOS.SimulatorRuntime-v24.1.434.0.OraVyw/Library/Developer/CoreSimulator/Profiles/Runtimes/iOS%2027.0.simruntime/Contents/Resources/RuntimeRoot/Applications/WeatherPosterApp.app/";
+        CFBundleDisplayName = "Weather Wallpaper";
+        CFBundleExecutable = WeatherPosterApp;
+        CFBundleIdentifier = "com.apple.Posters.WeatherPosterApp";
+        CFBundleName = "Weather Wallpaper";
+        CFBundleShortVersionString = "6.0";
+        CFBundleVersion = "1454.1";
+        GroupContainers =         {
+        };
+        IsAppClip = 0;
+        IsDeveloperApp = 0;
+        IsFirstParty = 1;
+        IsHidden = 0;
+        IsRemovable = 0;
+        Path = "/private/var/run/com.apple.security.cryptexd/mnt/com.apple.iPhoneOS.SimulatorRuntime-v24.1.434.0.OraVyw/Library/Developer/CoreSimulator/Profiles/Runtimes/iOS 27.0.simruntime/Contents/Resources/RuntimeRoot/Applications/WeatherPosterApp.app";
+        SBAppTags =         (
+        );
+    };
+    "com.apple.Preferences" =     {
+        ApplicationType = System;
+        Bundle = "file:///private/var/run/com.apple.security.cryptexd/mnt/com.apple.iPhoneOS.SimulatorRuntime-v24.1.434.0.OraVyw/Library/Developer/CoreSimulator/Profiles/Runtimes/iOS%2027.0.simruntime/Contents/Resources/RuntimeRoot/Applications/Preferences.app/";
+        CFBundleDisplayName = Settings;
+        CFBundleExecutable = Preferences;
+        CFBundleIdentifier = "com.apple.Preferences";
+        CFBundleName = Settings;
+        CFBundleShortVersionString = "1.0";
+        CFBundleVersion = "2027.0.10.401";
+        GroupContainers =         {
+        };
+        IsAppClip = 0;
+        IsDeveloperApp = 0;
+        IsFirstParty = 1;
+        IsHidden = 0;
+        IsRemovable = 0;
+        Path = "/private/var/run/com.apple.security.cryptexd/mnt/com.apple.iPhoneOS.SimulatorRuntime-v24.1.434.0.OraVyw/Library/Developer/CoreSimulator/Profiles/Runtimes/iOS 27.0.simruntime/Contents/Resources/RuntimeRoot/Applications/Preferences.app";
+        SBAppTags =         (
+        );
+    };
+    "com.apple.Preview" =     {
+        ApplicationType = System;
+        Bundle = "file:///private/var/run/com.apple.security.cryptexd/mnt/com.apple.iPhoneOS.SimulatorRuntime-v24.1.434.0.OraVyw/Library/Developer/CoreSimulator/Profiles/Runtimes/iOS%2027.0.simruntime/Contents/Resources/RuntimeRoot/Applications/Preview.app/";
+        CFBundleDisplayName = Preview;
+        CFBundleExecutable = Preview;
+        CFBundleIdentifier = "com.apple.Preview";
+        CFBundleName = Preview;
+        CFBundleShortVersionString = "1.0";
+        CFBundleVersion = 1034;
+        DataContainer = "file:///Users/aqauser001/Library/Developer/CoreSimulator/Devices/F5DE19D7-2EB5-4EFC-A3ED-E6C3D7E6935B/data/Containers/Data/Application/039CBC99-B9E3-449A-804C-2538743A383A/";
+        GroupContainers =         {
+        };
+        IsAppClip = 0;
+        IsDeveloperApp = 0;
+        IsFirstParty = 1;
+        IsHidden = 0;
+        IsRemovable = 0;
+        Path = "/private/var/run/com.apple.security.cryptexd/mnt/com.apple.iPhoneOS.SimulatorRuntime-v24.1.434.0.OraVyw/Library/Developer/CoreSimulator/Profiles/Runtimes/iOS 27.0.simruntime/Contents/Resources/RuntimeRoot/Applications/Preview.app";
+        SBAppTags =         (
+        );
+    };
+    "com.apple.PreviewShell" =     {
+        ApplicationType = System;
+        Bundle = "file:///private/var/run/com.apple.security.cryptexd/mnt/com.apple.iPhoneOS.SimulatorRuntime-v24.1.434.0.OraVyw/Library/Developer/CoreSimulator/Profiles/Runtimes/iOS%2027.0.simruntime/Contents/Resources/RuntimeRoot/Applications/PreviewShell.app/";
+        CFBundleDisplayName = "Xcode Previews";
+        CFBundleExecutable = PreviewShell;
+        CFBundleIdentifier = "com.apple.PreviewShell";
+        CFBundleName = "Xcode Previews";
+        CFBundleShortVersionString = "16.0";
+        CFBundleVersion = "24.0.45.1";
+        DataContainer = "file:///Users/aqauser001/Library/Developer/CoreSimulator/Devices/F5DE19D7-2EB5-4EFC-A3ED-E6C3D7E6935B/data/Containers/Data/Application/E8D82298-FB7B-4BA6-B3C5-63520D06C9CA/";
+        GroupContainers =         {
+        };
+        IsAppClip = 0;
+        IsDeveloperApp = 0;
+        IsFirstParty = 1;
+        IsHidden = 0;
+        IsRemovable = 0;
+        Path = "/private/var/run/com.apple.security.cryptexd/mnt/com.apple.iPhoneOS.SimulatorRuntime-v24.1.434.0.OraVyw/Library/Developer/CoreSimulator/Profiles/Runtimes/iOS 27.0.simruntime/Contents/Resources/RuntimeRoot/Applications/PreviewShell.app";
+        SBAppTags =         (
+        );
+    };
+    "com.apple.PridePoster" =     {
+        ApplicationType = System;
+        Bundle = "file:///private/var/run/com.apple.security.cryptexd/mnt/com.apple.iPhoneOS.SimulatorRuntime-v24.1.434.0.OraVyw/Library/Developer/CoreSimulator/Profiles/Runtimes/iOS%2027.0.simruntime/Contents/Resources/RuntimeRoot/Applications/PridePosterApp.app/";
+        CFBundleDisplayName = Pride;
+        CFBundleExecutable = PridePosterApp;
+        CFBundleIdentifier = "com.apple.PridePoster";
+        CFBundleName = PridePosterApp;
+        CFBundleShortVersionString = "1.0";
+        CFBundleVersion = 1;
+        GroupContainers =         {
+        };
+        IsAppClip = 0;
+        IsDeveloperApp = 0;
+        IsFirstParty = 1;
+        IsHidden = 0;
+        IsRemovable = 0;
+        Path = "/private/var/run/com.apple.security.cryptexd/mnt/com.apple.iPhoneOS.SimulatorRuntime-v24.1.434.0.OraVyw/Library/Developer/CoreSimulator/Profiles/Runtimes/iOS 27.0.simruntime/Contents/Resources/RuntimeRoot/Applications/PridePosterApp.app";
+        SBAppTags =         (
+        );
+    };
+    "com.apple.ShortcutsActions" =     {
+        ApplicationType = System;
+        Bundle = "file:///private/var/run/com.apple.security.cryptexd/mnt/com.apple.iPhoneOS.SimulatorRuntime-v24.1.434.0.OraVyw/Library/Developer/CoreSimulator/Profiles/Runtimes/iOS%2027.0.simruntime/Contents/Resources/RuntimeRoot/System/Library/CoreServices/ShortcutsActions.app/";
+        CFBundleDisplayName = ShortcutsActions;
+        CFBundleExecutable = ShortcutsActions;
+        CFBundleIdentifier = "com.apple.ShortcutsActions";
+        CFBundleName = ShortcutsActions;
+        GroupContainers =         {
+        };
+        IsAppClip = 0;
+        IsDeveloperApp = 0;
+        IsFirstParty = 1;
+        IsHidden = 0;
+        IsRemovable = 0;
+        Path = "/private/var/run/com.apple.security.cryptexd/mnt/com.apple.iPhoneOS.SimulatorRuntime-v24.1.434.0.OraVyw/Library/Developer/CoreSimulator/Profiles/Runtimes/iOS 27.0.simruntime/Contents/Resources/RuntimeRoot/System/Library/CoreServices/ShortcutsActions.app";
+        SBAppTags =         (
+        );
+    };
+    "com.apple.SiriApp" =     {
+        ApplicationType = System;
+        Bundle = "file:///private/var/run/com.apple.security.cryptexd/mnt/com.apple.iPhoneOS.SimulatorRuntime-v24.1.434.0.OraVyw/Library/Developer/CoreSimulator/Profiles/Runtimes/iOS%2027.0.simruntime/Contents/Resources/RuntimeRoot/Applications/SiriApp.app/";
+        CFBundleDisplayName = Siri;
+        CFBundleExecutable = SiriApp;
+        CFBundleIdentifier = "com.apple.SiriApp";
+        CFBundleName = SiriApp;
+        DataContainer = "file:///Users/aqauser001/Library/Developer/CoreSimulator/Devices/F5DE19D7-2EB5-4EFC-A3ED-E6C3D7E6935B/data/Containers/Data/Application/D6050712-C8B7-448C-A704-3239DE102817/";
+        GroupContainers =         {
+        };
+        IsAppClip = 0;
+        IsDeveloperApp = 0;
+        IsFirstParty = 1;
+        IsHidden = 0;
+        IsRemovable = 0;
+        Path = "/private/var/run/com.apple.security.cryptexd/mnt/com.apple.iPhoneOS.SimulatorRuntime-v24.1.434.0.OraVyw/Library/Developer/CoreSimulator/Profiles/Runtimes/iOS 27.0.simruntime/Contents/Resources/RuntimeRoot/Applications/SiriApp.app";
+        SBAppTags =         (
+        );
+    };
+    "com.apple.SystemIntents" =     {
+        ApplicationType = System;
+        Bundle = "file:///private/var/run/com.apple.security.cryptexd/mnt/com.apple.iPhoneOS.SimulatorRuntime-v24.1.434.0.OraVyw/Library/Developer/CoreSimulator/Profiles/Runtimes/iOS%2027.0.simruntime/Contents/Resources/RuntimeRoot/System/Library/CoreServices/SystemIntents.app/";
+        CFBundleDisplayName = SystemIntents;
+        CFBundleExecutable = SystemIntents;
+        CFBundleIdentifier = "com.apple.SystemIntents";
+        CFBundleName = SystemIntents;
+        CFBundleShortVersionString = "1.0";
+        CFBundleVersion = 17;
+        GroupContainers =         {
+        };
+        IsAppClip = 0;
+        IsDeveloperApp = 0;
+        IsFirstParty = 1;
+        IsHidden = 0;
+        IsRemovable = 0;
+        Path = "/private/var/run/com.apple.security.cryptexd/mnt/com.apple.iPhoneOS.SimulatorRuntime-v24.1.434.0.OraVyw/Library/Developer/CoreSimulator/Profiles/Runtimes/iOS 27.0.simruntime/Contents/Resources/RuntimeRoot/System/Library/CoreServices/SystemIntents.app";
+        SBAppTags =         (
+        );
+    };
+    "com.apple.TVRemoteApp" =     {
+        ApplicationType = System;
+        Bundle = "file:///private/var/run/com.apple.security.cryptexd/mnt/com.apple.iPhoneOS.SimulatorRuntime-v24.1.434.0.OraVyw/Library/Developer/CoreSimulator/Profiles/Runtimes/iOS%2027.0.simruntime/Contents/Resources/RuntimeRoot/Applications/TVRemote.app/";
+        CFBundleDisplayName = Remote;
+        CFBundleExecutable = TVRemote;
+        CFBundleIdentifier = "com.apple.TVRemoteApp";
+        CFBundleName = TVRemote;
+        CFBundleShortVersionString = "1.0";
+        CFBundleVersion = 1;
+        DataContainer = "file:///Users/aqauser001/Library/Developer/CoreSimulator/Devices/F5DE19D7-2EB5-4EFC-A3ED-E6C3D7E6935B/data/Containers/Data/Application/ECFDA172-C6DE-4F04-8583-5615E31042FF/";
+        GroupContainers =         {
+            "group.com.apple.TVRemote" = "file:///Users/aqauser001/Library/Developer/CoreSimulator/Devices/F5DE19D7-2EB5-4EFC-A3ED-E6C3D7E6935B/data/Containers/Shared/AppGroup/5F1C4912-5306-4E7B-953C-AB7B3C822225/";
+            "group.com.apple.tipsnext" = "file:///Users/aqauser001/Library/Developer/CoreSimulator/Devices/F5DE19D7-2EB5-4EFC-A3ED-E6C3D7E6935B/data/Containers/Shared/AppGroup/1BDA5A06-8288-4E79-A8AC-FBB4654D0F01/";
+        };
+        IsAppClip = 0;
+        IsDeveloperApp = 0;
+        IsFirstParty = 1;
+        IsHidden = 0;
+        IsRemovable = 0;
+        Path = "/private/var/run/com.apple.security.cryptexd/mnt/com.apple.iPhoneOS.SimulatorRuntime-v24.1.434.0.OraVyw/Library/Developer/CoreSimulator/Profiles/Runtimes/iOS 27.0.simruntime/Contents/Resources/RuntimeRoot/Applications/TVRemote.app";
+        SBAppTags =         (
+        );
+    };
+    "com.apple.VoiceOverTouch" =     {
+        ApplicationType = System;
+        Bundle = "file:///private/var/run/com.apple.security.cryptexd/mnt/com.apple.iPhoneOS.SimulatorRuntime-v24.1.434.0.OraVyw/Library/Developer/CoreSimulator/Profiles/Runtimes/iOS%2027.0.simruntime/Contents/Resources/RuntimeRoot/System/Library/CoreServices/VoiceOverTouch.app/";
+        CFBundleDisplayName = VoiceOver;
+        CFBundleExecutable = vot;
+        CFBundleIdentifier = "com.apple.VoiceOverTouch";
+        CFBundleName = VoiceOverTouch;
+        CFBundleShortVersionString = "1.0";
+        CFBundleVersion = "1.0";
+        DataContainer = "file:///Users/aqauser001/Library/Developer/CoreSimulator/Devices/F5DE19D7-2EB5-4EFC-A3ED-E6C3D7E6935B/data/Containers/Data/Application/B7E22489-07A0-4160-B6C2-A9FB44C60549/";
+        GroupContainers =         {
+        };
+        IsAppClip = 0;
+        IsDeveloperApp = 0;
+        IsFirstParty = 1;
+        IsHidden = 0;
+        IsRemovable = 0;
+        Path = "/private/var/run/com.apple.security.cryptexd/mnt/com.apple.iPhoneOS.SimulatorRuntime-v24.1.434.0.OraVyw/Library/Developer/CoreSimulator/Profiles/Runtimes/iOS 27.0.simruntime/Contents/Resources/RuntimeRoot/System/Library/CoreServices/VoiceOverTouch.app";
+        SBAppTags =         (
+        );
+    };
+    "com.apple.assistivetouchd" =     {
+        ApplicationType = System;
+        Bundle = "file:///private/var/run/com.apple.security.cryptexd/mnt/com.apple.iPhoneOS.SimulatorRuntime-v24.1.434.0.OraVyw/Library/Developer/CoreSimulator/Profiles/Runtimes/iOS%2027.0.simruntime/Contents/Resources/RuntimeRoot/System/Library/CoreServices/AssistiveTouch.app/";
+        CFBundleDisplayName = AssistiveTouch;
+        CFBundleExecutable = assistivetouchd;
+        CFBundleIdentifier = "com.apple.assistivetouchd";
+        CFBundleName = AssistiveTouch;
+        CFBundleShortVersionString = "1.0";
+        CFBundleVersion = "1.0";
+        GroupContainers =         {
+        };
+        IsAppClip = 0;
+        IsDeveloperApp = 0;
+        IsFirstParty = 1;
+        IsHidden = 0;
+        IsRemovable = 0;
+        Path = "/private/var/run/com.apple.security.cryptexd/mnt/com.apple.iPhoneOS.SimulatorRuntime-v24.1.434.0.OraVyw/Library/Developer/CoreSimulator/Profiles/Runtimes/iOS 27.0.simruntime/Contents/Resources/RuntimeRoot/System/Library/CoreServices/AssistiveTouch.app";
+        SBAppTags =         (
+        );
+    };
+    "com.apple.commandandcontrol" =     {
+        ApplicationType = System;
+        Bundle = "file:///private/var/run/com.apple.security.cryptexd/mnt/com.apple.iPhoneOS.SimulatorRuntime-v24.1.434.0.OraVyw/Library/Developer/CoreSimulator/Profiles/Runtimes/iOS%2027.0.simruntime/Contents/Resources/RuntimeRoot/System/Library/CoreServices/CommandAndControl.app/";
+        CFBundleDisplayName = "Voice Control";
+        CFBundleExecutable = CommandAndControl;
+        CFBundleIdentifier = "com.apple.commandandcontrol";
+        CFBundleName = CommandAndControl;
+        CFBundleShortVersionString = "1.2.43";
+        CFBundleVersion = "1.2.43";
+        GroupContainers =         {
+        };
+        IsAppClip = 0;
+        IsDeveloperApp = 0;
+        IsFirstParty = 1;
+        IsHidden = 0;
+        IsRemovable = 0;
+        Path = "/private/var/run/com.apple.security.cryptexd/mnt/com.apple.iPhoneOS.SimulatorRuntime-v24.1.434.0.OraVyw/Library/Developer/CoreSimulator/Profiles/Runtimes/iOS 27.0.simruntime/Contents/Resources/RuntimeRoot/System/Library/CoreServices/CommandAndControl.app";
+        SBAppTags =         (
+        );
+    };
+    "com.apple.fullkeyboardaccess" =     {
+        ApplicationType = System;
+        Bundle = "file:///private/var/run/com.apple.security.cryptexd/mnt/com.apple.iPhoneOS.SimulatorRuntime-v24.1.434.0.OraVyw/Library/Developer/CoreSimulator/Profiles/Runtimes/iOS%2027.0.simruntime/Contents/Resources/RuntimeRoot/System/Library/CoreServices/FullKeyboardAccess.app/";
+        CFBundleDisplayName = FullKeyboardAccess;
+        CFBundleExecutable = FullKeyboardAccess;
+        CFBundleIdentifier = "com.apple.fullkeyboardaccess";
+        CFBundleName = FullKeyboardAccess;
+        CFBundleShortVersionString = "1.0";
+        CFBundleVersion = 1;
+        DataContainer = "file:///Users/aqauser001/Library/Developer/CoreSimulator/Devices/F5DE19D7-2EB5-4EFC-A3ED-E6C3D7E6935B/data/Containers/Data/Application/1B180321-233E-4AB0-8F71-FFE13FF05BF8/";
+        GroupContainers =         {
+        };
+        IsAppClip = 0;
+        IsDeveloperApp = 0;
+        IsFirstParty = 1;
+        IsHidden = 0;
+        IsRemovable = 0;
+        Path = "/private/var/run/com.apple.security.cryptexd/mnt/com.apple.iPhoneOS.SimulatorRuntime-v24.1.434.0.OraVyw/Library/Developer/CoreSimulator/Profiles/Runtimes/iOS 27.0.simruntime/Contents/Resources/RuntimeRoot/System/Library/CoreServices/FullKeyboardAccess.app";
+        SBAppTags =         (
+        );
+    };
+    "com.apple.livetranscriptionui" =     {
+        ApplicationType = System;
+        Bundle = "file:///private/var/run/com.apple.security.cryptexd/mnt/com.apple.iPhoneOS.SimulatorRuntime-v24.1.434.0.OraVyw/Library/Developer/CoreSimulator/Profiles/Runtimes/iOS%2027.0.simruntime/Contents/Resources/RuntimeRoot/System/Library/CoreServices/LiveTranscriptionUI.app/";
+        CFBundleDisplayName = "Live Captions";
+        CFBundleExecutable = LiveTranscriptionUI;
+        CFBundleIdentifier = "com.apple.livetranscriptionui";
+        CFBundleName = LiveTranscriptionUI;
+        CFBundleShortVersionString = "1.0";
+        CFBundleVersion = 1;
+        GroupContainers =         {
+        };
+        IsAppClip = 0;
+        IsDeveloperApp = 0;
+        IsFirstParty = 1;
+        IsHidden = 0;
+        IsRemovable = 0;
+        Path = "/private/var/run/com.apple.security.cryptexd/mnt/com.apple.iPhoneOS.SimulatorRuntime-v24.1.434.0.OraVyw/Library/Developer/CoreSimulator/Profiles/Runtimes/iOS 27.0.simruntime/Contents/Resources/RuntimeRoot/System/Library/CoreServices/LiveTranscriptionUI.app";
+        SBAppTags =         (
+        );
+    };
+    "com.apple.mobilecal" =     {
+        ApplicationType = System;
+        Bundle = "file:///private/var/run/com.apple.security.cryptexd/mnt/com.apple.iPhoneOS.SimulatorRuntime-v24.1.434.0.OraVyw/Library/Developer/CoreSimulator/Profiles/Runtimes/iOS%2027.0.simruntime/Contents/Resources/RuntimeRoot/Applications/MobileCal.app/";
+        CFBundleDisplayName = Calendar;
+        CFBundleExecutable = MobileCal;
+        CFBundleIdentifier = "com.apple.mobilecal";
+        CFBundleName = MobileCal;
+        CFBundleShortVersionString = "1.0";
+        CFBundleVersion = 1;
+        DataContainer = "file:///Users/aqauser001/Library/Developer/CoreSimulator/Devices/F5DE19D7-2EB5-4EFC-A3ED-E6C3D7E6935B/data/Containers/Data/Application/2C56E9BA-E33D-43B0-A95E-4A16AB079F95/";
+        GroupContainers =         {
+            "group.com.apple.assistant.shared" = "file:///Users/aqauser001/Library/Developer/CoreSimulator/Devices/F5DE19D7-2EB5-4EFC-A3ED-E6C3D7E6935B/data/Containers/Shared/AppGroup/A3ADC396-DD3D-4C13-9DA6-212DCD072D33/";
+            "group.com.apple.reminders" = "file:///Users/aqauser001/Library/Developer/CoreSimulator/Devices/F5DE19D7-2EB5-4EFC-A3ED-E6C3D7E6935B/data/Containers/Shared/AppGroup/13139060-5F9D-4EC3-9E09-5631470F16D2/";
+            "group.com.apple.tipsnext" = "file:///Users/aqauser001/Library/Developer/CoreSimulator/Devices/F5DE19D7-2EB5-4EFC-A3ED-E6C3D7E6935B/data/Containers/Shared/AppGroup/1BDA5A06-8288-4E79-A8AC-FBB4654D0F01/";
+        };
+        IsAppClip = 0;
+        IsDeveloperApp = 0;
+        IsFirstParty = 1;
+        IsHidden = 0;
+        IsRemovable = 0;
+        Path = "/private/var/run/com.apple.security.cryptexd/mnt/com.apple.iPhoneOS.SimulatorRuntime-v24.1.434.0.OraVyw/Library/Developer/CoreSimulator/Profiles/Runtimes/iOS 27.0.simruntime/Contents/Resources/RuntimeRoot/Applications/MobileCal.app";
+        SBAppTags =         (
+        );
+    };
+    "com.apple.mobilesafari" =     {
+        ApplicationType = System;
+        Bundle = "file:///private/var/run/com.apple.security.cryptexd/mnt/com.apple.iPhoneOS.SimulatorRuntime-v24.1.434.0.OraVyw/Library/Developer/CoreSimulator/Profiles/Runtimes/iOS%2027.0.simruntime/Contents/Resources/RuntimeRoot/Applications/MobileSafari.app/";
+        CFBundleDisplayName = Safari;
+        CFBundleExecutable = MobileSafari;
+        CFBundleIdentifier = "com.apple.mobilesafari";
+        CFBundleName = MobileSafari;
+        CFBundleShortVersionString = "27.0";
+        CFBundleVersion = "8625.1.29.10.29";
+        DataContainer = "file:///Users/aqauser001/Library/Developer/CoreSimulator/Devices/F5DE19D7-2EB5-4EFC-A3ED-E6C3D7E6935B/data/Containers/Data/Application/1EEA963A-8ED5-4E16-9A72-BF9CFF9D8BB3/";
+        GroupContainers =         {
+            "group.com.apple.BrowserKit" = "file:///Users/aqauser001/Library/Developer/CoreSimulator/Devices/F5DE19D7-2EB5-4EFC-A3ED-E6C3D7E6935B/data/Containers/Shared/AppGroup/C2E66C9C-275E-4CEC-875D-8BD4D5FA5F4C/";
+            "group.com.apple.sports" = "file:///Users/aqauser001/Library/Developer/CoreSimulator/Devices/F5DE19D7-2EB5-4EFC-A3ED-E6C3D7E6935B/data/Containers/Shared/AppGroup/6DEE3C29-6F94-4BBD-A287-268ABA26F08A/";
+            "group.com.apple.tipsnext" = "file:///Users/aqauser001/Library/Developer/CoreSimulator/Devices/F5DE19D7-2EB5-4EFC-A3ED-E6C3D7E6935B/data/Containers/Shared/AppGroup/1BDA5A06-8288-4E79-A8AC-FBB4654D0F01/";
+        };
+        IsAppClip = 0;
+        IsDeveloperApp = 0;
+        IsFirstParty = 1;
+        IsHidden = 0;
+        IsRemovable = 0;
+        Path = "/private/var/run/com.apple.security.cryptexd/mnt/com.apple.iPhoneOS.SimulatorRuntime-v24.1.434.0.OraVyw/Library/Developer/CoreSimulator/Profiles/Runtimes/iOS 27.0.simruntime/Contents/Resources/RuntimeRoot/Applications/MobileSafari.app";
+        SBAppTags =         (
+        );
+    };
+    "com.apple.mobileslideshow" =     {
+        ApplicationType = System;
+        Bundle = "file:///private/var/run/com.apple.security.cryptexd/mnt/com.apple.iPhoneOS.SimulatorRuntime-v24.1.434.0.OraVyw/Library/Developer/CoreSimulator/Profiles/Runtimes/iOS%2027.0.simruntime/Contents/Resources/RuntimeRoot/Applications/Photos.app/";
+        CFBundleDisplayName = Photos;
+        CFBundleExecutable = Photos;
+        CFBundleIdentifier = "com.apple.mobileslideshow";
+        CFBundleName = Photos;
+        CFBundleShortVersionString = "1.0";
+        CFBundleVersion = "912.0.235";
+        GroupContainers =         {
+        };
+        IsAppClip = 0;
+        IsDeveloperApp = 0;
+        IsFirstParty = 1;
+        IsHidden = 0;
+        IsRemovable = 0;
+        Path = "/private/var/run/com.apple.security.cryptexd/mnt/com.apple.iPhoneOS.SimulatorRuntime-v24.1.434.0.OraVyw/Library/Developer/CoreSimulator/Profiles/Runtimes/iOS 27.0.simruntime/Contents/Resources/RuntimeRoot/Applications/Photos.app";
+        SBAppTags =         (
+        );
+    };
+    "com.apple.news" =     {
+        ApplicationType = System;
+        Bundle = "file:///private/var/run/com.apple.security.cryptexd/mnt/com.apple.iPhoneOS.SimulatorRuntime-v24.1.434.0.OraVyw/Library/Developer/CoreSimulator/Profiles/Runtimes/iOS%2027.0.simruntime/Contents/Resources/RuntimeRoot/Applications/News.app/";
+        CFBundleDisplayName = News;
+        CFBundleExecutable = News;
+        CFBundleIdentifier = "com.apple.news";
+        CFBundleName = News;
+        CFBundleShortVersionString = "12.0";
+        CFBundleVersion = "5934.3";
+        DataContainer = "file:///Users/aqauser001/Library/Developer/CoreSimulator/Devices/F5DE19D7-2EB5-4EFC-A3ED-E6C3D7E6935B/data/Containers/Data/Application/C849613D-A14A-4C7A-BC40-D1E5EC2F3C27/";
+        GroupContainers =         {
+            "group.com.apple.news" = "file:///Users/aqauser001/Library/Developer/CoreSimulator/Devices/F5DE19D7-2EB5-4EFC-A3ED-E6C3D7E6935B/data/Containers/Shared/AppGroup/15DC3F91-4EA7-45D1-A8C0-6121347A8528/";
+            "group.com.apple.newsd" = "file:///Users/aqauser001/Library/Developer/CoreSimulator/Devices/F5DE19D7-2EB5-4EFC-A3ED-E6C3D7E6935B/data/Containers/Shared/AppGroup/5B5C1BAD-D83F-4209-99BC-DBFB9188FF10/";
+            "group.com.apple.stocks-news" = "file:///Users/aqauser001/Library/Developer/CoreSimulator/Devices/F5DE19D7-2EB5-4EFC-A3ED-E6C3D7E6935B/data/Containers/Shared/AppGroup/CEBAC588-A2AC-44EC-B1F4-CAA0617E56BC/";
+            "group.com.apple.weather" = "file:///Users/aqauser001/Library/Developer/CoreSimulator/Devices/F5DE19D7-2EB5-4EFC-A3ED-E6C3D7E6935B/data/Containers/Shared/AppGroup/688271C6-A1EE-4A7C-96A3-7B7B0963DEA8/";
+            "group.tvappservices.container" = "file:///Users/aqauser001/Library/Developer/CoreSimulator/Devices/F5DE19D7-2EB5-4EFC-A3ED-E6C3D7E6935B/data/Containers/Shared/AppGroup/763F91B6-BFE8-4280-8A74-E1BBA394225D/";
+        };
+        IsAppClip = 0;
+        IsDeveloperApp = 0;
+        IsFirstParty = 1;
+        IsHidden = 0;
+        IsRemovable = 0;
+        Path = "/private/var/run/com.apple.security.cryptexd/mnt/com.apple.iPhoneOS.SimulatorRuntime-v24.1.434.0.OraVyw/Library/Developer/CoreSimulator/Profiles/Runtimes/iOS 27.0.simruntime/Contents/Resources/RuntimeRoot/Applications/News.app";
+        SBAppTags =         (
+        );
+    };
+    "com.apple.reminders" =     {
+        ApplicationType = System;
+        Bundle = "file:///private/var/run/com.apple.security.cryptexd/mnt/com.apple.iPhoneOS.SimulatorRuntime-v24.1.434.0.OraVyw/Library/Developer/CoreSimulator/Profiles/Runtimes/iOS%2027.0.simruntime/Contents/Resources/RuntimeRoot/Applications/Reminders.app/";
+        CFBundleDisplayName = Reminders;
+        CFBundleExecutable = Reminders;
+        CFBundleIdentifier = "com.apple.reminders";
+        CFBundleName = Reminders;
+        CFBundleShortVersionString = "7.0";
+        CFBundleVersion = "4046.11";
+        DataContainer = "file:///Users/aqauser001/Library/Developer/CoreSimulator/Devices/F5DE19D7-2EB5-4EFC-A3ED-E6C3D7E6935B/data/Containers/Data/Application/A2A97B9D-A800-4E3D-9A53-441791A6C3D8/";
+        GroupContainers =         {
+            "group.com.apple.assistant.shared" = "file:///Users/aqauser001/Library/Developer/CoreSimulator/Devices/F5DE19D7-2EB5-4EFC-A3ED-E6C3D7E6935B/data/Containers/Shared/AppGroup/A3ADC396-DD3D-4C13-9DA6-212DCD072D33/";
+            "group.com.apple.reminders" = "file:///Users/aqauser001/Library/Developer/CoreSimulator/Devices/F5DE19D7-2EB5-4EFC-A3ED-E6C3D7E6935B/data/Containers/Shared/AppGroup/13139060-5F9D-4EC3-9E09-5631470F16D2/";
+        };
+        IsAppClip = 0;
+        IsDeveloperApp = 0;
+        IsFirstParty = 1;
+        IsHidden = 0;
+        IsRemovable = 0;
+        Path = "/private/var/run/com.apple.security.cryptexd/mnt/com.apple.iPhoneOS.SimulatorRuntime-v24.1.434.0.OraVyw/Library/Developer/CoreSimulator/Profiles/Runtimes/iOS 27.0.simruntime/Contents/Resources/RuntimeRoot/Applications/Reminders.app";
+        SBAppTags =         (
+        );
+    };
+    "com.apple.shortcuts" =     {
+        ApplicationType = System;
+        Bundle = "file:///private/var/run/com.apple.security.cryptexd/mnt/com.apple.iPhoneOS.SimulatorRuntime-v24.1.434.0.OraVyw/Library/Developer/CoreSimulator/Profiles/Runtimes/iOS%2027.0.simruntime/Contents/Resources/RuntimeRoot/Applications/Shortcuts.app/";
+        CFBundleDisplayName = Shortcuts;
+        CFBundleExecutable = Shortcuts;
+        CFBundleIdentifier = "com.apple.shortcuts";
+        CFBundleName = Shortcuts;
+        CFBundleShortVersionString = "10.0";
+        CFBundleVersion = "5037.109";
+        DataContainer = "file:///Users/aqauser001/Library/Developer/CoreSimulator/Devices/F5DE19D7-2EB5-4EFC-A3ED-E6C3D7E6935B/data/Containers/Data/Application/EE81768E-1B37-4E61-8EC7-1FF89346A677/";
+        GroupContainers =         {
+            "group.com.apple.shortcuts" = "file:///Users/aqauser001/Library/Developer/CoreSimulator/Devices/F5DE19D7-2EB5-4EFC-A3ED-E6C3D7E6935B/data/Containers/Shared/AppGroup/5EAC769D-77BB-4376-987C-74AE65A40AC6/";
+            "group.com.apple.tipsnext" = "file:///Users/aqauser001/Library/Developer/CoreSimulator/Devices/F5DE19D7-2EB5-4EFC-A3ED-E6C3D7E6935B/data/Containers/Shared/AppGroup/1BDA5A06-8288-4E79-A8AC-FBB4654D0F01/";
+            "group.is.workflow.my.app" = "file:///Users/aqauser001/Library/Developer/CoreSimulator/Devices/F5DE19D7-2EB5-4EFC-A3ED-E6C3D7E6935B/data/Containers/Shared/AppGroup/AA9BE144-60FE-4555-998B-0DC9311F2D4C/";
+            "group.is.workflow.shortcuts" = "file:///Users/aqauser001/Library/Developer/CoreSimulator/Devices/F5DE19D7-2EB5-4EFC-A3ED-E6C3D7E6935B/data/Containers/Shared/AppGroup/43204C58-BDE0-48A8-B0A3-74519DBA2850/";
+        };
+        IsAppClip = 0;
+        IsDeveloperApp = 0;
+        IsFirstParty = 1;
+        IsHidden = 0;
+        IsRemovable = 0;
+        Path = "/private/var/run/com.apple.security.cryptexd/mnt/com.apple.iPhoneOS.SimulatorRuntime-v24.1.434.0.OraVyw/Library/Developer/CoreSimulator/Profiles/Runtimes/iOS 27.0.simruntime/Contents/Resources/RuntimeRoot/Applications/Shortcuts.app";
+        SBAppTags =         (
+        );
+    };
+    "com.apple.springboard" =     {
+        ApplicationType = System;
+        Bundle = "file:///private/var/run/com.apple.security.cryptexd/mnt/com.apple.iPhoneOS.SimulatorRuntime-v24.1.434.0.OraVyw/Library/Developer/CoreSimulator/Profiles/Runtimes/iOS%2027.0.simruntime/Contents/Resources/RuntimeRoot/System/Library/CoreServices/SpringBoard.app/";
+        CFBundleDisplayName = SpringBoard;
+        CFBundleExecutable = SpringBoard;
+        CFBundleIdentifier = "com.apple.springboard";
+        CFBundleName = SpringBoard;
+        CFBundleShortVersionString = "1.0";
+        CFBundleVersion = 50;
+        GroupContainers =         {
+        };
+        IsAppClip = 0;
+        IsDeveloperApp = 0;
+        IsFirstParty = 1;
+        IsHidden = 0;
+        IsRemovable = 0;
+        Path = "/private/var/run/com.apple.security.cryptexd/mnt/com.apple.iPhoneOS.SimulatorRuntime-v24.1.434.0.OraVyw/Library/Developer/CoreSimulator/Profiles/Runtimes/iOS 27.0.simruntime/Contents/Resources/RuntimeRoot/System/Library/CoreServices/SpringBoard.app";
+        SBAppTags =         (
+        );
+    };
+    "com.apple.webapp" =     {
+        ApplicationType = System;
+        Bundle = "file:///private/var/run/com.apple.security.cryptexd/mnt/com.apple.iPhoneOS.SimulatorRuntime-v24.1.434.0.OraVyw/Library/Developer/CoreSimulator/Profiles/Runtimes/iOS%2027.0.simruntime/Contents/Resources/RuntimeRoot/Applications/Web.app/";
+        CFBundleDisplayName = Web;
+        CFBundleExecutable = Web;
+        CFBundleIdentifier = "com.apple.webapp";
+        CFBundleName = Web;
+        CFBundleShortVersionString = 8625;
+        CFBundleVersion = "8625.1.29.10.29";
+        DataContainer = "file:///Users/aqauser001/Library/Developer/CoreSimulator/Devices/F5DE19D7-2EB5-4EFC-A3ED-E6C3D7E6935B/data/Containers/Data/Application/2AC72F59-DEFF-4E50-AB56-03A78EE9D59A/";
+        GroupContainers =         {
+        };
+        IsAppClip = 0;
+        IsDeveloperApp = 0;
+        IsFirstParty = 1;
+        IsHidden = 0;
+        IsRemovable = 0;
+        Path = "/private/var/run/com.apple.security.cryptexd/mnt/com.apple.iPhoneOS.SimulatorRuntime-v24.1.434.0.OraVyw/Library/Developer/CoreSimulator/Profiles/Runtimes/iOS 27.0.simruntime/Contents/Resources/RuntimeRoot/Applications/Web.app";
+        SBAppTags =         (
+        );
+    };
+    "dev.devicehubpro.fixture.apps" =     {
+        ApplicationType = User;
+        Bundle = "file:///Users/aqauser001/Library/Developer/CoreSimulator/Devices/F5DE19D7-2EB5-4EFC-A3ED-E6C3D7E6935B/data/Containers/Bundle/Application/677ED678-1CC0-4BBB-8715-9167BB9221EA/AQAAppsFixture.app/";
+        BundleContainer = "file:///Users/aqauser001/Library/Developer/CoreSimulator/Devices/F5DE19D7-2EB5-4EFC-A3ED-E6C3D7E6935B/data/Containers/Bundle/Application/677ED678-1CC0-4BBB-8715-9167BB9221EA/";
+        CFBundleDisplayName = "AQA Fixture";
+        CFBundleExecutable = AQAAppsFixture;
+        CFBundleIdentifier = "dev.devicehubpro.fixture.apps";
+        CFBundleName = AQAAppsFixture;
+        CFBundleShortVersionString = "1.2";
+        CFBundleVersion = 7;
+        DataContainer = "file:///Users/aqauser001/Library/Developer/CoreSimulator/Devices/F5DE19D7-2EB5-4EFC-A3ED-E6C3D7E6935B/data/Containers/Data/Application/2431DF93-C88C-4040-86CC-14B749A24295/";
+        GroupContainers =         {
+        };
+        IsAppClip = 0;
+        IsDeveloperApp = 1;
+        IsFirstParty = 0;
+        IsHidden = 0;
+        IsRemovable = 1;
+        Path = "/Users/aqauser001/Library/Developer/CoreSimulator/Devices/F5DE19D7-2EB5-4EFC-A3ED-E6C3D7E6935B/data/Containers/Bundle/Application/677ED678-1CC0-4BBB-8715-9167BB9221EA/AQAAppsFixture.app";
+        SBAppTags =         (
+        );
+    };
+}

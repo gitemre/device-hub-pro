@@ -1,0 +1,3 @@
+Error: Volume must be between 0 and 100
+Usage: devicectl device settings audio --device <uuid|ecid|serial_number|udid|name|dns_name> [--output-device <output-device>] [--input-device <input-device>] [--volume <volume>] [--verbose] [--quiet] [--timeout <seconds>] [--json-output <path>] [--omit-deprecated-fields-in-json] [--log-output <path>]
+  See 'devicectl device settings audio --help' for more information.

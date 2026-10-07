@@ -1,0 +1,35 @@
+{
+  "error" : {
+    "code" : 1000,
+    "domain" : "com.apple.dt.CoreDeviceError",
+    "userInfo" : {
+      "DeviceName" : {
+        "string" : "95D9676B-3317-4BA5-8CF6-3CDD0488CACA"
+      },
+      "NSLocalizedDescription" : {
+        "string" : "The specified device was not found. (Name: 95D9676B-3317-4BA5-8CF6-3CDD0488CACA)"
+      }
+    }
+  },
+  "info" : {
+    "arguments" : [
+      "devicectl",
+      "device",
+      "info",
+      "details",
+      "--device",
+      "95D9676B-3317-4BA5-8CF6-3CDD0488CACA",
+      "-j",
+      "-",
+      "-t",
+      "30"
+    ],
+    "commandType" : "devicectl.device.info.details",
+    "environment" : {
+
+    },
+    "jsonVersion" : 5,
+    "outcome" : "failed",
+    "version" : "642.16"
+  }
+}

@@ -1,0 +1,4 @@
+An error was encountered processing the command (domain=NSOSStatusErrorDomain, code=-50):
+Simulator device failed to open not%20a%20url.
+Underlying error (domain=NSOSStatusErrorDomain, code=-50):
+	The operation couldn’t be completed. (OSStatus error -50.)

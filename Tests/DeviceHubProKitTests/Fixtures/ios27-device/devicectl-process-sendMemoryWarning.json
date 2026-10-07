@@ -1,0 +1,31 @@
+{
+  "error" : {
+    "code" : 2,
+    "domain" : "NSPOSIXErrorDomain",
+    "userInfo" : {
+
+    }
+  },
+  "info" : {
+    "arguments" : [
+      "devicectl",
+      "device",
+      "process",
+      "sendMemoryWarning",
+      "--pid",
+      "5076",
+      "--device",
+      "00000000-0000000000000000",
+      "--json-output",
+      "raw/process-sendMemoryWarning.json",
+      "-q"
+    ],
+    "commandType" : "devicectl.device.process.sendMemoryWarning",
+    "environment" : {
+
+    },
+    "jsonVersion" : 5,
+    "outcome" : "failed",
+    "version" : "642.16"
+  }
+}

@@ -1,0 +1,12 @@
+key 28    ENTER
+key 102   MOVE_HOME
+key 103   DPAD_UP
+key 105   DPAD_LEFT
+key 106   DPAD_RIGHT
+key 108   DPAD_DOWN
+key 139   MENU
+key 158   BACK
+key 164   MEDIA_PLAY_PAUSE
+key 172   HOME
+# key 352 "KEY_OK"
+key 353   DPAD_CENTER

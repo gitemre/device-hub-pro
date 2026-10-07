@@ -1,0 +1,1 @@
+E scrcpy : Could not invoke method ... InputManager.injectInputEvent ... Caused by: java.lang.SecurityException: Injecting input events requires the caller (or the source of the instrumentation, if any) to have the INJECT_EVENTS permission.

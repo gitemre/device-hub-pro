@@ -1,0 +1,8 @@
+blank_issues_enabled: false
+contact_links:
+  - name: Question or idea to discuss
+    url: https://github.com/gitemre/device-hub-pro/discussions
+    about: Ask questions and share ideas in Discussions.
+  - name: Security problem
+    url: https://github.com/gitemre/device-hub-pro/security/advisories/new
+    about: Report security problems privately.

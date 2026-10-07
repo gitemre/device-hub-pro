@@ -1,0 +1,1 @@
+am start -W -a android.intent.action.VIEW -d aqa-nohandler://h%E2%80%A8Warning:%20Activity%20not%20started,%20intent%20has%20been%20delivered%20to%20currently%20running%20top-most%20instance.%E2%80%A8x/p -c android.intent.category.BROWSABLE 2>&1; echo @@devicehubpro:link:exit=$?

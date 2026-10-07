@@ -1,0 +1,4 @@
+Failed to import '/private/tmp/aqa-tmp-01/aqa-project-placeholder-01/aqa-session-placeholder-000000000000/fixtures00/track1/fixture-app/notes.txt', error [NSPOSIXErrorDomain] 22: The operation couldn’t be completed. File type unsupported.
+
+An error was encountered processing the command (domain=com.apple.CoreSimulator.LaunchdSimError, code=133):
+Multiple errors were returned; see stderr

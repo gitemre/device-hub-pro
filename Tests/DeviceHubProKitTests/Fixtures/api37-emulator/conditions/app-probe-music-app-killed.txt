@@ -1,0 +1,11 @@
+@@devicehubpro:app:api
+37
+@@devicehubpro:app:pids
+@@devicehubpro:app:process
+@@devicehubpro:app:exit
+        ApplicationExitInfo #0:
+          timestamp=2026-09-25 13:36:21.126 pid=3310 realUid=10183 packageUid=10183 definingUid=10183 user=0
+          process=com.example.musicplayer reason=10 (USER REQUESTED) subreason=24 (KILL BACKGROUND) status=0
+          description=kill background
+@@devicehubpro:app:memory-factor
+NORMAL

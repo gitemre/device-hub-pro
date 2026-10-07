@@ -1,0 +1,24 @@
+SERVICE com.android.systemui/.SystemUIService c36fb9 pid=1026 user=0
+  Client:
+    Dump starting: 09-25 20:15:40.325
+
+    DemoModeController:
+    ----------------------------------------------------------------------------
+    DemoModeController state -
+      isInDemoMode=false
+      isDemoModeAllowed=true
+      receivers=[BatteryControllerImplGoogle, MobileRepositorySwitcher$isDemoMode$1$callback$1, WifiRepositorySwitcher$isDemoMode$1$callback$1, StatusBarIconControllerImpl, MobileContextProvider, DemoModeInteractorImpl$callback$1, VolumeDialogComponent, CentralSurfacesImpl$20, StatusBarDemoMode, DeviceBasedSatelliteRepositorySwitcher$isDemoMode$1$callback$1]
+      receiverMap= [
+        bars : [StatusBarDemoMode]
+        battery : [BatteryControllerImplGoogle]
+        clock : [StatusBarDemoMode]
+        network : [MobileContextProvider]
+        notifications : []
+        operator : [StatusBarDemoMode]
+        status : [StatusBarIconControllerImpl]
+        volume : [VolumeDialogComponent]
+     ]
+
+    NORMAL dump took 2ms -- DemoModeController
+
+    Dump took 8ms

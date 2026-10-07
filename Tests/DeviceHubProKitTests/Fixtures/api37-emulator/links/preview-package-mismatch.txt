@@ -1,0 +1,9 @@
+@@devicehubpro:link:api
+37
+@@devicehubpro:link:resolve
+No activity found
+@@devicehubpro:link:candidates
+1 activities found:
+  Activity #0:
+    priority=0 preferredOrder=0 match=0x208000 specificIndex=-1 isDefault=true
+    com.example.browser/com.example.browser.app.IntentDispatcher

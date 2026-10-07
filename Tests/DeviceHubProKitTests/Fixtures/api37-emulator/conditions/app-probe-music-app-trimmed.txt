@@ -1,0 +1,17 @@
+@@devicehubpro:app:api
+37
+@@devicehubpro:app:pids
+3310
+@@devicehubpro:app:process
+  *APP* UID 10183 ProcessRecord{91994fb 3310:com.example.musicplayer/u0a183}
+    pid=3310 
+    trimMemoryLevel=10
+    curProcState=19 mRepProcState=19 setProcState=19 lastStateTime=-3m25s853ms
+    isPendingFreeze=false isFrozen=true 
+@@devicehubpro:app:exit
+        ApplicationExitInfo #0:
+          timestamp=2026-09-23 06:43:37.352 pid=23633 realUid=10183 packageUid=10183 definingUid=10183 user=0
+          process=com.example.musicplayer reason=16 (PACKAGE UPDATED) subreason=0 (UNKNOWN) status=0
+          description=stop com.example.musicplayer due to installPackageLI
+@@devicehubpro:app:memory-factor
+NORMAL

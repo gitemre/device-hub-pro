@@ -1,0 +1,4 @@
+An error was encountered processing the command (domain=UNErrorDomain, code=2003):
+Simulator device failed to complete the requested operation.
+Underlying error (domain=UNErrorDomain, code=2003):
+	Repository could not save notification. Source is not authorized.

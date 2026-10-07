@@ -1,0 +1,46 @@
+{
+  "info" : {
+    "arguments" : [
+      "devicectl",
+      "device",
+      "info",
+      "appearance",
+      "--device",
+      "00000000-0000000000000000",
+      "--json-output",
+      "raw/info-appearance-0.json",
+      "-q"
+    ],
+    "commandType" : "devicectl.device.info.appearance",
+    "environment" : {
+
+    },
+    "jsonVersion" : 5,
+    "outcome" : "success",
+    "version" : "642.16"
+  },
+  "result" : {
+    "colorFilter" : {
+      "enabled" : false
+    },
+    "deviceIdentifier" : "00000000-0000-4000-8000-000000000001",
+    "increaseContrast" : false,
+    "largerAccessibilitySizesEnabled" : true,
+    "liquidGlassOpacity" : 0.5,
+    "lookAndFeel" : "Liquid Glass",
+    "reduceMotion" : {
+      "enabled" : false
+    },
+    "reduceTransparency" : {
+      "enabled" : false
+    },
+    "showBorders" : {
+      "enabled" : false
+    },
+    "supportedLooksAndFeels" : [
+      "Liquid Glass"
+    ],
+    "textSize" : "Large",
+    "userInterfaceStyle" : "light"
+  }
+}

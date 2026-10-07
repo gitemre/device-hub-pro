@@ -1,0 +1,31 @@
+{
+  "info" : {
+    "arguments" : [
+      "devicectl",
+      "device",
+      "capture",
+      "screenshot",
+      "--device",
+      "00000000-0000000000000000",
+      "--destination",
+      "raw-write/shot.png",
+      "--json-output",
+      "raw-write/capture-screenshot.json",
+      "-q"
+    ],
+    "commandType" : "devicectl.device.capture.screenshot",
+    "environment" : {
+
+    },
+    "jsonVersion" : 5,
+    "outcome" : "success",
+    "version" : "642.16"
+  },
+  "result" : {
+    "destination" : "file:///Users/aqauser001/DeviceHubPro-private/phase9/raw-write/shot.png",
+    "deviceIdentifier" : "00000000-0000-4000-8000-000000000001",
+    "height" : 2532,
+    "imageFormat" : "png",
+    "width" : 1170
+  }
+}

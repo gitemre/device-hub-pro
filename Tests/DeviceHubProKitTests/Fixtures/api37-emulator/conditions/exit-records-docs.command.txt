@@ -1,0 +1,1 @@
+dumpsys activity exit-info com.example.docs 2>/dev/null | grep -E '^ +(ApplicationExitInfo #|timestamp=|process=|description=)' | head -n 40; true

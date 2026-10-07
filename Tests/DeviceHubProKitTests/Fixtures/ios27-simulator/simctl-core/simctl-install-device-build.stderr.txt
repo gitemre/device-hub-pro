@@ -1,0 +1,7 @@
+An error was encountered processing the command (domain=IXUserPresentableErrorDomain, code=4):
+App installation failed: “AQA Fixture” Uygulamasının Güncellenmesi Gerekiyor
+Bu uygulama iOS’in bu sürümünde çalışması için geliştirici tarafından güncellenmelidir.
+The executable at "/Users/aqauser001/Library/Developer/CoreSimulator/Devices/F5DE19D7-2EB5-4EFC-A3ED-E6C3D7E6935B/data/Library/Caches/com.apple.mobile.installd.staging/temp.WznTQc/extracted/Payload/AQAAppsFixture.app/AQAAppsFixture" does not contain code for any platform and CPU architecture combination that is runnable on this device. The executable has code for these platforms and architectures: [iOS, arm64]. This device can run code for these platforms: iOS-simulator
+Underlying error (domain=IXUserPresentableErrorDomain, code=4):
+	“AQA Fixture” Uygulamasının Güncellenmesi Gerekiyor
+	Bu uygulama iOS’in bu sürümünde çalışması için geliştirici tarafından güncellenmelidir.

@@ -1,0 +1,136 @@
+com.google.android.networkstack.tethering
+[x] com.google.android.networkstack.tethering.emulator
+
+com.android.providers.telephony
+--- com.android.providers.telephony.auto_generated_characteristics_rro
+[x] com.android.providers.telephony.auto_generated_rro_product__
+
+com.android.companiondevicemanager
+--- com.android.companiondevicemanager.auto_generated_characteristics_rro
+
+com.android.simappdialog
+[x] com.android.simappdialog.auto_generated_rro_product__
+
+com.android.carrierconfig
+[x] com.android.carrierconfig.auto_generated_rro_vendor__
+[x] com.android.carrierconfig.auto_generated_rro_product__
+
+com.google.android.marvin.talkback
+[x] com.google.android.marvin.talkbackoverlay
+
+android
+[x] android.auto_generated_rro_vendor__
+[x] com.google.android.overlay.googleconfig
+[x] com.google.android.overlay.googlewebview
+--- android.auto_generated_characteristics_rro
+[x] com.google.android.overlay.largescreenconfig
+[x] com.google.android.overlay.pixelconfigcommon
+[x] android.auto_generated_rro_product__
+[x] com.android.internal.ranchu.commonoverlay
+[ ] com.android.internal.display.cutout.emulation.corner
+[ ] com.android.internal.display.cutout.emulation.double
+[ ] com.android.internal.emulation.pixel_3a_xl
+[ ] com.android.internal.emulation.pixel_6_pro
+[ ] com.android.internal.emulation.pixel_7_pro
+[ ] com.android.internal.emulation.pixel_8_pro
+[ ] com.android.internal.emulation.pixel_9_pro
+[ ] com.android.internal.emulation.pixel_3a
+[ ] com.android.internal.emulation.pixel_4a
+[ ] com.android.internal.emulation.pixel_6a
+[ ] com.android.internal.emulation.pixel_7a
+[ ] com.android.internal.emulation.pixel_8a
+[ ] com.android.internal.display.cutout.emulation.hole
+[ ] com.android.internal.display.cutout.emulation.tall
+[ ] com.android.internal.systemui.navbar.threebutton
+[ ] com.android.internal.systemui.navbar.twobutton
+[ ] com.android.internal.emulation.pixel_9_pro_fold
+[ ] com.android.internal.emulation.pixel_3
+[ ] com.android.internal.emulation.pixel_4
+[ ] com.android.internal.emulation.pixel_5
+[ ] com.android.internal.emulation.pixel_6
+[ ] com.android.internal.emulation.pixel_7
+[ ] com.android.internal.emulation.pixel_8
+[ ] com.android.internal.emulation.pixel_9
+[ ] com.android.internal.display.cutout.emulation.emu01
+[ ] com.android.theme.font.notoserifsource
+[ ] com.android.internal.display.cutout.emulation.waterfall
+[ ] com.android.internal.systemui.navbar.transparent
+[ ] com.android.role.notes.enabled
+[ ] com.android.internal.emulation.pixel_9_pro_xl
+[ ] com.android.internal.emulation.pixel_2_xl
+[ ] com.android.internal.emulation.pixel_3_xl
+[ ] com.android.internal.emulation.pixel_4_xl
+[ ] com.android.internal.emulation.pixel_fold
+[x] com.android.internal.systemui.navbar.gestural
+[x] com.android.systemui:neutral
+[x] com.android.systemui:accent
+[x] com.android.systemui:dynamic
+
+com.android.systemui.accessibility.accessibilitymenu
+[x] com.android.systemui.accessibility.accessibilitymenu.auto_generated_rro_product__
+
+com.google.android.permissioncontroller
+[x] com.google.android.overlay.permissioncontroller
+
+com.android.providers.settings
+[x] com.google.android.overlay.largescreensettingsprovider
+[x] com.android.providers.settings.auto_generated_rro_product__
+
+com.android.bips
+[x] com.android.bips.auto_generated_rro_product__
+
+com.android.server.telecom
+[x] com.android.server.telecom.auto_generated_rro_product__
+
+com.google.android.connectivity.resources
+[x] com.google.android.connectivity.resources.goldfish.overlay
+
+com.android.managedprovisioning
+--- com.android.managedprovisioning.auto_generated_rro_product__
+
+com.android.devicediagnostics
+[x] com.android.devicediagnostics.auto_generated_rro_product__
+
+com.android.storagemanager
+[x] com.android.storagemanager.auto_generated_rro_product__
+
+com.android.settings
+[x] com.android.settings.auto_generated_rro_product__
+
+com.android.phone
+[x] com.android.phone.auto_generated_rro_vendor__
+--- com.android.phone.auto_generated_characteristics_rro
+[x] com.android.phone.auto_generated_rro_product__
+
+com.android.systemui
+[x] com.android.systemui.auto_generated_rro_vendor__
+[x] com.android.systemui.auto_generated_rro_product__
+[ ] com.android.systemui.emulation.pixel_3_xl
+[ ] com.android.systemui.emulation.pixel_4_xl
+[ ] com.android.systemui.emulation.pixel_fold
+[ ] com.android.systemui.emulation.pixel_3
+[ ] com.android.systemui.emulation.pixel_4
+[ ] com.android.systemui.emulation.pixel_5
+[ ] com.android.systemui.emulation.pixel_6
+[ ] com.android.systemui.emulation.pixel_7
+[ ] com.android.systemui.emulation.pixel_8
+[ ] com.android.systemui.emulation.pixel_9
+[ ] com.android.systemui.emulation.pixel_3a_xl
+[ ] com.android.systemui.emulation.pixel_6_pro
+[ ] com.android.systemui.emulation.pixel_7_pro
+[ ] com.android.systemui.emulation.pixel_8_pro
+[ ] com.android.systemui.emulation.pixel_9_pro
+[ ] com.android.systemui.emulation.pixel_3a
+[ ] com.android.systemui.emulation.pixel_4a
+[ ] com.android.systemui.emulation.pixel_6a
+[ ] com.android.systemui.emulation.pixel_7a
+[ ] com.android.systemui.emulation.pixel_8a
+[ ] com.android.systemui.emulation.pixel_9_pro_xl
+[ ] com.android.systemui.emulation.pixel_9_pro_fold
+
+com.android.traceur
+--- com.android.traceur.auto_generated_rro_product__
+
+com.android.providers.contacts
+[x] com.android.providers.contacts.auto_generated_rro_product__
+

@@ -1,0 +1,32 @@
+Locale manager (locale) shell commands:
+  help
+    Print this help text.
+  set-app-locales <PACKAGE_NAME> [--user <USER_ID>] [--locales <LOCALE_INFO>][--delegate <FROM_DELEGATE>]
+    Set the locales for the specified app.
+    --user <USER_ID>: apply for the given user, the current user is used when unspecified.
+    --locales <LOCALE_INFO>: The language tags of locale to be included as a single String separated by commas.
+            eg. en,en-US,hi 
+            Empty locale list is used when unspecified.
+    --delegate <FROM_DELEGATE>: The locales are set from a delegate, the value could be true or false. false is the default when unspecified.
+  get-app-locales <PACKAGE_NAME> [--user <USER_ID>]
+    Get the locales for the specified app.
+    --user <USER_ID>: get for the given user, the current user is used when unspecified.
+  set-app-localeconfig <PACKAGE_NAME> [--user <USER_ID>] [--locales <LOCALE_INFO>]
+    Set the override LocaleConfig for the specified app.
+    --user <USER_ID>: apply for the given user, the current user is used when unspecified.
+    --locales <LOCALE_INFO>: The language tags of locale to be included as a single String separated by commas.
+            eg. en,en-US,hi 
+            Empty locale list is used when typing a 'empty' word
+            NULL is used when unspecified.
+  get-app-localeconfig <PACKAGE_NAME> [--user <USER_ID>]
+    Get the locales within the override LocaleConfig for the specified app.
+    --user <USER_ID>: get for the given user, the current user is used when unspecified.
+  set-device-locale
+    Set the locale of the device.
+    <LOCALE_NAME>: The BCP 47 language tag of the locale to set (e.g., en-US, es, fr-CA).
+  get-device-locale
+    Get the locale of the device.
+    Outputs the current primary device locale as a BCP 47 language tag.
+  list-device-locales
+    List the locales of the device.
+    Outputs a list of all BCP 47 language tags for locales supported by the device.

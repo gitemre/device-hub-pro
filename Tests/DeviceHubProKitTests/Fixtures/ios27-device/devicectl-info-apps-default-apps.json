@@ -1,0 +1,172 @@
+{
+  "info" : {
+    "arguments" : [
+      "devicectl",
+      "device",
+      "info",
+      "apps",
+      "--device",
+      "00000000-0000000000000000",
+      "--include-default-apps",
+      "--json-output",
+      "raw/info-apps-default.json",
+      "-q",
+      "-t",
+      "30"
+    ],
+    "commandType" : "devicectl.device.info.apps",
+    "environment" : {
+
+    },
+    "jsonVersion" : 5,
+    "outcome" : "success",
+    "version" : "642.16"
+  },
+  "result" : {
+    "apps" : [
+      {
+        "appClip" : false,
+        "builtByDeveloper" : true,
+        "bundleIdentifier" : "com.devicehubpro.verifier",
+        "bundleVersion" : "1",
+        "containerAccessible" : true,
+        "defaultApp" : false,
+        "hidden" : false,
+        "internalApp" : false,
+        "name" : "AQA Verifier",
+        "removable" : true,
+        "url" : "file:///private/var/containers/Bundle/Application/387C8851-EB2E-4627-A943-F2D86EE3AC9D/DeviceHubProVerifier.app/",
+        "version" : "1.0"
+      },
+      {
+        "appClip" : false,
+        "builtByDeveloper" : false,
+        "bundleIdentifier" : "com.apple.ActivityMessagesApp",
+        "bundleVersion" : "1",
+        "containerAccessible" : false,
+        "defaultApp" : true,
+        "hidden" : false,
+        "internalApp" : false,
+        "name" : "ActivityMessagesApp",
+        "removable" : false,
+        "url" : "file:///Applications/ActivityMessagesApp.app/",
+        "version" : "1.0"
+      },
+      {
+        "appClip" : false,
+        "builtByDeveloper" : true,
+        "bundleIdentifier" : "com.devicehubpro.agent.host",
+        "bundleVersion" : "1",
+        "containerAccessible" : true,
+        "defaultApp" : false,
+        "hidden" : false,
+        "internalApp" : false,
+        "name" : "Device Hub Pro Agent Host",
+        "removable" : true,
+        "url" : "file:///private/var/containers/Bundle/Application/5D5D4A2D-8554-4526-B446-49299BD69243/DeviceHubProAgentHost.app/",
+        "version" : "1.0"
+      },
+      {
+        "appClip" : false,
+        "builtByDeveloper" : true,
+        "bundleIdentifier" : "com.devicehubpro.agent.uitests.xctrunner",
+        "bundleVersion" : "1",
+        "containerAccessible" : true,
+        "defaultApp" : false,
+        "hidden" : false,
+        "internalApp" : false,
+        "name" : "DeviceHubProAgentUITests-Runner",
+        "removable" : true,
+        "url" : "file:///private/var/containers/Bundle/Application/60C2ACE1-E51D-44BA-85D4-9568ECFBC5FE/DeviceHubProAgentUITests-Runner.app/",
+        "version" : "1.0"
+      },
+      {
+        "appClip" : false,
+        "builtByDeveloper" : false,
+        "bundleIdentifier" : "com.apple.AppStore",
+        "bundleVersion" : "1",
+        "containerAccessible" : false,
+        "defaultApp" : true,
+        "hidden" : false,
+        "internalApp" : false,
+        "name" : "App Store",
+        "removable" : true,
+        "url" : "file:///private/var/containers/Bundle/Application/AAA74F7F-C517-4074-876E-B9902DD0495C/AppStore.app/",
+        "version" : "3.0"
+      },
+      {
+        "appClip" : false,
+        "builtByDeveloper" : false,
+        "bundleIdentifier" : "com.apple.BluetoothUIService",
+        "bundleVersion" : "1",
+        "containerAccessible" : false,
+        "defaultApp" : true,
+        "hidden" : false,
+        "internalApp" : false,
+        "name" : "BluetoothUIService",
+        "removable" : false,
+        "url" : "file:///System/Library/CoreServices/BluetoothUIService.app/",
+        "version" : "1.0"
+      },
+      {
+        "appClip" : false,
+        "builtByDeveloper" : false,
+        "bundleIdentifier" : "com.apple.calculator",
+        "bundleVersion" : "225",
+        "containerAccessible" : false,
+        "defaultApp" : true,
+        "hidden" : false,
+        "internalApp" : false,
+        "name" : "Calculator",
+        "removable" : true,
+        "url" : "file:///private/var/containers/Bundle/Application/0C131021-F8A8-4742-8930-C76810FCA80F/Calculator.app/",
+        "version" : "12.0"
+      },
+      {
+        "appClip" : false,
+        "builtByDeveloper" : false,
+        "bundleIdentifier" : "com.apple.camera",
+        "bundleVersion" : "4171.0.0.0.1",
+        "containerAccessible" : false,
+        "defaultApp" : true,
+        "hidden" : false,
+        "internalApp" : false,
+        "name" : "Camera",
+        "removable" : true,
+        "url" : "file:///private/var/containers/Bundle/Application/3626AC22-B920-4F7A-A51E-B2DAAFF3A37C/Camera.app/",
+        "version" : "2.0"
+      },
+      {
+        "appClip" : false,
+        "builtByDeveloper" : false,
+        "bundleIdentifier" : "com.example.app",
+        "bundleVersion" : "35393528846",
+        "containerAccessible" : false,
+        "defaultApp" : false,
+        "hidden" : false,
+        "internalApp" : false,
+        "name" : "Example",
+        "removable" : true,
+        "url" : "file:///private/var/containers/Bundle/Application/750BCC66-32B0-441D-B963-6575F5EE609C/Example.app/",
+        "version" : "1.2026.258"
+      },
+      {
+        "appClip" : false,
+        "builtByDeveloper" : false,
+        "bundleIdentifier" : "com.apple.ShortcutsActions",
+        "containerAccessible" : false,
+        "defaultApp" : true,
+        "hidden" : false,
+        "internalApp" : false,
+        "name" : "ShortcutsActions",
+        "removable" : false,
+        "url" : "file:///System/Library/CoreServices/ShortcutsActions.app/"
+      }
+    ],
+    "defaultAppsIncluded" : false,
+    "deviceIdentifier" : "00000000-0000-4000-8000-000000000001",
+    "hiddenAppsIncluded" : false,
+    "internalAppsIncluded" : false,
+    "removableAppsIncluded" : true
+  }
+}

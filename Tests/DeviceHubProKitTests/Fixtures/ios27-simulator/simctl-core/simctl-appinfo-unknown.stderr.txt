@@ -1,0 +1,6 @@
+An error was encountered processing the command (domain=NSPOSIXErrorDomain, code=3):
+Simulator device failed to lookup application properties for com.example.none.
+No application record found for that bundle identifier
+Underlying error (domain=NSPOSIXErrorDomain, code=3):
+	Application not found
+	No application record found for that bundle identifier

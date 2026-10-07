@@ -1,0 +1,35 @@
+parts {
+    portrait {
+        background {
+            image   device_bezel.png
+        }
+    }
+
+    device {
+        display {
+            width   402
+            height  476
+            x       0
+            y       0
+        }
+    }
+}
+
+layouts {
+    portrait {
+        width     466
+        height    540
+
+        part1 {
+            name    portrait
+            x       16
+            y       16
+        }
+
+        part2 {
+            name    device
+            x       32
+            y       32
+        }
+    }
+}

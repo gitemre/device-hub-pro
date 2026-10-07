@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<!--
+  The two entitlements the hardened runtime needs: the Camera and the audio
+  input. A connected iPhone's screen reaches the Mac as a capture device (the
+  public CoreMediaIO + AVFoundation screen capture path), and the
+  hardened runtime blocks capture devices without the Camera one; the same
+  muxed device carries the phone's audio, which the live view plays and the
+  hardened runtime blocks without the audio-input one. Scripts/package-app.sh signs with it by
+  default; the app is not sandboxed, so there is no com.apple.security.app-sandbox.
+-->
+<plist version="1.0">
+<dict>
+	<key>com.apple.security.device.audio-input</key>
+	<true/>
+	<key>com.apple.security.device.camera</key>
+	<true/>
+</dict>
+</plist>

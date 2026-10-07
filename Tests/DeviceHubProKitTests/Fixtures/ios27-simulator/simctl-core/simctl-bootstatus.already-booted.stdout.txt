@@ -1,0 +1,3 @@
+Monitoring boot status for DeviceHubPro-UI-core-renamed (425BD068-3D87-4F27-BE58-EB56A58B2C3A).
+Device already booted, nothing to do.
+

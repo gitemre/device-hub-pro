@@ -1,0 +1,6 @@
+An error was encountered processing the command (domain=NSPOSIXErrorDomain, code=22):
+Simulator device failed to complete the requested operation.
+Certificate is not a supported CER or PEM certificate file
+Underlying error (domain=NSPOSIXErrorDomain, code=22):
+	Failed to read certificate
+	Certificate is not a supported CER or PEM certificate file

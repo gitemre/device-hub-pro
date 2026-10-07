@@ -1,0 +1,2 @@
+An error was encountered processing the command (domain=com.apple.CoreSimulator.SimError, code=403):
+Incompatible device

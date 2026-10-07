@@ -1,0 +1,16 @@
+@@devicehubpro:app:api
+37
+@@devicehubpro:app:pids
+@@devicehubpro:app:process
+  *APP* UID 10179 ProcessRecord{3adf853 29437:com.example.docs/u0a179}
+    pid=29437 
+    trimMemoryLevel=0
+    curProcState=19 mRepProcState=19 setProcState=19 lastStateTime=-15m6s370ms
+    isPendingFreeze=false isFrozen=true 
+@@devicehubpro:app:exit
+        ApplicationExitInfo #0:
+          timestamp=2026-09-25 13:37:28.328 pid=29437 realUid=10179 packageUid=10179 definingUid=10179 user=0
+          process=com.example.docs reason=4 (APP CRASH(EXCEPTION)) subreason=0 (UNKNOWN) status=0
+          description=crash
+@@devicehubpro:app:memory-factor
+NORMAL

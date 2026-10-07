@@ -1,0 +1,13 @@
+@@devicehubpro:link:api
+37
+@@devicehubpro:link:resolve
+priority=0 preferredOrder=0 match=0x208000 specificIndex=-1 isDefault=true
+com.example.browser/com.example.browser.app.IntentDispatcher
+@@devicehubpro:link:candidates
+2 activities found:
+  Activity #0:
+    priority=0 preferredOrder=0 match=0x508000 specificIndex=-1 isDefault=true
+    com.example.video/.UrlActivity
+  Activity #1:
+    priority=0 preferredOrder=0 match=0x208000 specificIndex=-1 isDefault=true
+    com.example.browser/com.example.browser.app.IntentDispatcher

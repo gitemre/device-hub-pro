@@ -1,0 +1,4 @@
+INFO         | androidboot.qemu.virtiowifi=1 [...] androidboot.verifiedbootstate=orange
+HVF error: HV_UNSUPPORTED
+qemu-system-aarch64: failed to initialize HVF: Invalid argument
+WARNING      | QEMU main loop exits abnormally with code 1

@@ -1,0 +1,32 @@
+{
+  "info" : {
+    "arguments" : [
+      "devicectl",
+      "device",
+      "process",
+      "sendMemoryWarning",
+      "--pid",
+      "95894",
+      "--device",
+      "B3ECBA42-7A43-4A8C-924D-C13CC6658BA4",
+      "-j",
+      "-",
+      "-t",
+      "30"
+    ],
+    "commandType" : "devicectl.device.process.sendMemoryWarning",
+    "environment" : {
+
+    },
+    "jsonVersion" : 5,
+    "outcome" : "success",
+    "version" : "642.16"
+  },
+  "result" : {
+    "deviceIdentifier" : "B3ECBA42-7A43-4A8C-924D-C13CC6658BA4",
+    "deviceTimestamp" : "2026-09-26T15:11:25.289Z",
+    "process" : {
+      "processIdentifier" : 95894
+    }
+  }
+}

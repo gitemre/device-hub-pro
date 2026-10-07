@@ -1,0 +1,1 @@
+am start -W -a android.intent.action.VIEW -d 'aqa-nohandler://open/item?id=42' 2>&1; echo @@devicehubpro:link:exit=$?

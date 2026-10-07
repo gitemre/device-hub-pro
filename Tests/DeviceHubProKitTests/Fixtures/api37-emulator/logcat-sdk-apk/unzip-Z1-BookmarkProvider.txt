@@ -1,0 +1,6 @@
+classes.dex
+res/mipmap-hdpi-v4/ic_launcher_shortcut_browser_bookmark.png
+res/mipmap-mdpi-v4/ic_launcher_shortcut_browser_bookmark.png
+res/mipmap-xhdpi-v4/ic_launcher_shortcut_browser_bookmark.png
+resources.arsc
+AndroidManifest.xml

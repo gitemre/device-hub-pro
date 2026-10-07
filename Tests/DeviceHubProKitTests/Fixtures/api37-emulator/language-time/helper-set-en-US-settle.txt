@@ -1,0 +1,4 @@
+current zh-Hans-CN,he-IL,en-US-u-mu-celsius
+applied en-US,zh-Hans-CN
+current en-US,zh-Hans-CN
+applied en-US

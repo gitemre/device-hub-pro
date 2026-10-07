@@ -1,0 +1,5 @@
+qdisc noqueue 0: dev lo root refcnt 2 
+qdisc noqueue 0: dev dummy0 root refcnt 2 
+qdisc pfifo_fast 0: dev ifb0 root refcnt 2 bands 3 priomap  1 2 2 2 1 2 0 0 1 1 1 1 1 1 1 1
+qdisc netem 8007: dev wlan0 root refcnt 2 limit 5 delay 150.0ms loss 2.5% rate 14400bit
+qdisc clsact ffff: dev wlan0 parent ffff:fff1 

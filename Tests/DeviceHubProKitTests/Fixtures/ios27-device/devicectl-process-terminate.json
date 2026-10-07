@@ -1,0 +1,36 @@
+{
+  "info" : {
+    "arguments" : [
+      "devicectl",
+      "device",
+      "process",
+      "terminate",
+      "--device",
+      "00000000-0000000000000000",
+      "--pid",
+      "4924",
+      "--json-output",
+      "raw-write/process-terminate.json",
+      "-q"
+    ],
+    "commandType" : "devicectl.device.process.terminate",
+    "environment" : {
+
+    },
+    "jsonVersion" : 5,
+    "outcome" : "success",
+    "version" : "642.16"
+  },
+  "result" : {
+    "deviceIdentifier" : "00000000-0000-4000-8000-000000000001",
+    "deviceTimestamp" : "2026-09-28T21:45:37.805Z",
+    "process" : {
+      "executable" : "file:///Applications/Preferences.app/Preferences",
+      "processIdentifier" : 4924
+    },
+    "signal" : {
+      "name" : "SIGTERM",
+      "value" : 15
+    }
+  }
+}

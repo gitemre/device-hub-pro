@@ -1,0 +1,1 @@
+am start -W -a android.intent.action.VIEW -d https://example.com/ -c android.intent.category.BROWSABLE -p com.example.video 2>&1; echo @@devicehubpro:link:exit=$?

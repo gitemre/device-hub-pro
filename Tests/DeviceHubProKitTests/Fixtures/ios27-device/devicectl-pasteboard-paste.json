@@ -1,0 +1,28 @@
+{
+  "info" : {
+    "arguments" : [
+      "devicectl",
+      "device",
+      "pasteboard",
+      "paste",
+      "--device",
+      "00000000-0000000000000000",
+      "--json-output",
+      "raw/pasteboard-paste.json",
+      "-q"
+    ],
+    "commandType" : "devicectl.device.pasteboard.paste",
+    "environment" : {
+
+    },
+    "jsonVersion" : 5,
+    "outcome" : "success",
+    "version" : "642.16"
+  },
+  "result" : {
+    "contentSize" : 24,
+    "contentType" : "public.utf8-plain-text",
+    "deviceIdentifier" : "00000000-0000-4000-8000-000000000001",
+    "pasteboardName" : "general"
+  }
+}

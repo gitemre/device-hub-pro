@@ -1,0 +1,1 @@
+myapp://x/$(touch /data/local/tmp/aqa_pwned2)/`id`/${PATH}/$HOME

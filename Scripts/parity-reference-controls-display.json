@@ -1,0 +1,65 @@
+{
+  "comment": "Device Hub Pro Controls inspector — value-popup and slider geometry inside the Display & sound group (CT-06/CT-07). The group is collapsed by default, so this reference is evaluated against the saved capture a saved 2x capture, where the app ran with DHP_CONTROLS_EXPAND_ALL=1, the Controls inspector was open on the Pixel 9 Pro Fold emulator, the first seven groups (Network, Power & battery, Location, Sensors, Telephony, Advanced, Foldable) were collapsed and Display & sound was expanded at the top of the panel. Run: PARITY_IMAGE=a saved 2x capture PARITY_SCALE=2 PARITY_REFERENCE=Scripts/parity-reference-controls-display.json bash Scripts/parity-check.sh. Coordinates are window points from the capture's top-left; the audited values live in ParityMetrics.swift (CT-06/CT-07).",
+  "window": {
+    "width": 1920,
+    "height": 983
+  },
+  "checks": [
+    {
+      "name": "ct-popup-right",
+      "description": "Appearance value-popup circle trailing edge card − 13.5 pt (CT-07; DH circle 360–380 in a card ending 393.5), Appearance row at y = 488.",
+      "kind": "edge-x",
+      "appearance": "any",
+      "row": 488,
+      "from": 1908,
+      "to": 1860,
+      "delta": 6,
+      "expected": 1896.5,
+      "tolerance": 1.5
+    },
+    {
+      "name": "ct-popup-diameter",
+      "description": "Appearance value-popup circle 20 pt (CT-07; DH circle x 360.0–380.0).",
+      "kind": "band-height",
+      "appearance": "any",
+      "col": 1886.5,
+      "from": 468,
+      "to": 508,
+      "delta": 4,
+      "expected": 20,
+      "tolerance": 1.5
+    },
+    {
+      "name": "ct-popup-fill",
+      "description": "Appearance value-popup circle fill (CT-08; DH key state ≈#d5d5d6).",
+      "kind": "pixel-color-at-point",
+      "appearance": "light",
+      "x": 1879,
+      "y": 488,
+      "color": "#d4d4d5",
+      "tolerance": 3
+    },
+    {
+      "name": "ct-rail-height",
+      "description": "Text Size slider rail 6 pt tall (CT-06; DH rail 163.0–169.0), Text Size row at y = 531.",
+      "kind": "band-height",
+      "appearance": "any",
+      "col": 1850,
+      "from": 521,
+      "to": 541,
+      "delta": 4,
+      "expected": 6,
+      "tolerance": 1.5
+    },
+    {
+      "name": "ct-rail-fill",
+      "description": "Text Size slider unfilled rail (CT-08; DH key state ≈#d0d0d1).",
+      "kind": "pixel-color-at-point",
+      "appearance": "light",
+      "x": 1895,
+      "y": 531,
+      "color": "#cfcfd0",
+      "tolerance": 3
+    }
+  ]
+}

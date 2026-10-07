@@ -1,0 +1,1 @@
+am to-uri -a android.intent.action.VIEW -d 'myapp://x/'\''single'\''"double"\back|pipe>gt<lt!bang*glob~tilde{a,b}'
