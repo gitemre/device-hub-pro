@@ -165,6 +165,8 @@ final class DeviceModelCanvasView: NSView {
     private var renderer: RealityRenderer?
     private weak var scene: DeviceModelScene?
     private var mouseStart: CGPoint?
+    private var hoverArea: NSTrackingArea?
+    private var showsKeyCursor = false
     private var link: CADisplayLink?
     private var needsRender = true
     private var rendering = false
@@ -251,6 +253,31 @@ final class DeviceModelCanvasView: NSView {
         }
         let step = event.hasPreciseScrollingDeltas ? event.scrollingDeltaY / 200 : event.scrollingDeltaY / 20
         scene.zoom(by: 1 + step)
+    }
+
+    override func updateTrackingAreas() {
+        super.updateTrackingAreas()
+        if hoverArea == nil {
+            let area = NSTrackingArea(rect: .zero, options: [.mouseMoved, .mouseEnteredAndExited, .activeInKeyWindow, .inVisibleRect], owner: self)
+            addTrackingArea(area)
+            hoverArea = area
+        }
+    }
+
+    /// Over a hardware key the pointer becomes a pointing hand.
+    override func mouseMoved(with event: NSEvent) {
+        let point = convert(event.locationInWindow, from: nil)
+        let overKey = scene?.hover(at: point) ?? false
+        guard overKey != showsKeyCursor else { return }
+        showsKeyCursor = overKey
+        (overKey ? NSCursor.pointingHand : NSCursor.arrow).set()
+    }
+
+    override func mouseExited(with event: NSEvent) {
+        _ = scene?.hover(at: nil)
+        guard showsKeyCursor else { return }
+        showsKeyCursor = false
+        NSCursor.arrow.set()
     }
 
     override func mouseDown(with event: NSEvent) {
@@ -431,6 +458,17 @@ final class DeviceModelScene {
     /// The flat panels' bounds in the model's space (inner, outer): where a
     /// pointer lands on them is worked out from these and the fold.
     @ObservationIgnored private var panelBounds: (inner: (SIMD3<Float>, SIMD3<Float>), outer: (SIMD3<Float>, SIMD3<Float>))?
+    /// The model's hardware keys, nil when it shows none.
+    @ObservationIgnored private var keys: AppleDeviceModel.Keys?
+    /// The glow over the key under the pointer (brighter while it is held),
+    /// and what it shows.
+    @ObservationIgnored private var keyGlow: ModelEntity?
+    @ObservationIgnored private var glowing: KeyGlow?
+
+    private struct KeyGlow: Equatable {
+        var button: SimulatorHardwareButton
+        var pressed: Bool
+    }
     /// The session the lit panel shows, and its last frame's size and turn.
     @ObservationIgnored private var feedingSession: (any MirrorSessionProtocol)?
     @ObservationIgnored private var shownFrame: (width: Int, height: Int, turns: Int)?
@@ -439,9 +477,11 @@ final class DeviceModelScene {
     @ObservationIgnored private var lastTouch: (x: Int32, y: Int32)?
     @ObservationIgnored private var lastTurnClick: Date?
 
-    private enum PointerUse {
+    private enum PointerUse: Equatable {
         case touch
         case turn
+        /// A key held down on the simulator until the pointer comes up.
+        case key(SimulatorHardwareButton)
     }
 
     /// The longest a click's pointer may move, and the longest between the
@@ -540,6 +580,7 @@ final class DeviceModelScene {
         if let inner = flatBounds(panels.inner), let outer = flatBounds(panels.outer) {
             panelBounds = (inner, outer)
         }
+        keys = AppleDeviceModel.keys(in: parts)
         // The model lies flat, its inner panel facing up (+Y) with the
         // device's top edge away (-Z): stand it up to face the camera.
         let stand = Entity()
@@ -845,6 +886,10 @@ final class DeviceModelScene {
                 pointer = .touch
                 lastTouch = point
                 session.send(TouchCommand(phase: .down, x: point.x, y: point.y))
+            } else if let button = button(at: start), let sender = buttonSender {
+                pointer = .key(button)
+                sender.send(button: button, isDown: true)
+                glow(button, pressed: true)
             } else {
                 pointer = .turn
             }
@@ -857,7 +902,7 @@ final class DeviceModelScene {
             session.send(TouchCommand(phase: .move, x: point.x, y: point.y))
         case .turn:
             if hypot(translation.width, translation.height) >= Self.clickSlop { turn(by: translation) }
-        case nil:
+        case .key, nil:
             break
         }
     }
@@ -878,9 +923,78 @@ final class DeviceModelScene {
             } else {
                 lastTurnClick = Date()
             }
+        case .key(let button):
+            buttonSender?.send(button: button, isDown: false)
+            glow(self.button(at: location))
         case nil:
             break
         }
+    }
+
+    /// The session's button path, when it takes the device's buttons now.
+    private var buttonSender: (any SimulatorButtonSending)? {
+        guard let sender = feedingSession as? any SimulatorButtonSending, sender.acceptsButtons else { return nil }
+        return sender
+    }
+
+    /// The hardware key under `location` (view points), nil off the keys,
+    /// behind the device, or when the session takes no buttons.
+    func button(at location: CGPoint) -> SimulatorHardwareButton? {
+        guard let keys, let model = modelEntity, buttonSender != nil, let ray = ray(at: location) else { return nil }
+        let origin = model.convert(position: ray.origin, from: nil)
+        let direction = model.convert(direction: ray.direction, from: nil)
+        return keys.key(
+            alongRayFrom: origin, direction: direction,
+            opening: shownOpening, pivotY: panelBounds?.inner.1.y ?? 0
+        )?.button
+    }
+
+    /// The pointer moved to `location` (nil: it left the view) with no
+    /// button down: the key under it glows. Returns whether one does.
+    func hover(at location: CGPoint?) -> Bool {
+        guard pointer == nil else { return glowing != nil }
+        let button = location.flatMap(button(at:))
+        glow(button)
+        return button != nil
+    }
+
+    /// Lights the key that presses `button` (none for nil), brighter when
+    /// `pressed`: a rounded box a little larger than the key, in the
+    /// model's space (the keys' half never folds, so it stays on the key).
+    private func glow(_ button: SimulatorHardwareButton?, pressed: Bool = false) {
+        let next = button.map { KeyGlow(button: $0, pressed: pressed) }
+        guard next != glowing else { return }
+        glowing = next
+        keyGlow?.removeFromParent()
+        keyGlow = nil
+        if let next, let model = modelEntity, let key = keys?.keys.first(where: { $0.button == next.button }) {
+            var material = UnlitMaterial(color: pressed ? .controlAccentColor : .white)
+            material.blending = .transparent(opacity: .init(floatLiteral: pressed ? 0.6 : 0.35))
+            let size = key.upper - key.lower + SIMD3<Float>(repeating: Self.glowGrowth)
+            let entity = ModelEntity(
+                mesh: .generateBox(size: size, cornerRadius: min(size.x, size.y, size.z) / 2),
+                materials: [material]
+            )
+            entity.position = (key.lower + key.upper) / 2
+            model.addChild(entity)
+            keyGlow = entity
+        }
+        setNeedsRender()
+    }
+
+    /// How much larger than its key the glow is (the model's units).
+    static let glowGrowth: Float = 0.04
+
+    /// The camera's ray through `location` (view points), in the scene's
+    /// space.
+    private func ray(at location: CGPoint) -> (origin: SIMD3<Float>, direction: SIMD3<Float>)? {
+        guard viewSize.width > 0, viewSize.height > 0 else { return nil }
+        let tanHalf = tan(Self.fieldOfView * .pi / 180 / 2)
+        let aspect = Float(viewSize.width / viewSize.height)
+        let ndc = SIMD2<Float>(Float(location.x / viewSize.width) * 2 - 1, 1 - Float(location.y / viewSize.height) * 2)
+        let origin = camera.position(relativeTo: nil)
+        let direction = simd_normalize(camera.convert(direction: [ndc.x * tanHalf * aspect, ndc.y * tanHalf, -1], to: nil))
+        return (origin, direction)
     }
 
     /// The pixel of the lit panel's frame under `location` (view points),
@@ -890,13 +1004,9 @@ final class DeviceModelScene {
     /// to the view's by its entity, so turns, poses and the fold all count.
     func framePoint(at location: CGPoint) -> (x: Int32, y: Int32)? {
         guard let model = modelEntity, let bounds = panelBounds, let panel = feedingPanel, let frame = shownFrame,
-              viewSize.width > 0, viewSize.height > 0
+              let ray = ray(at: location)
         else { return nil }
-        let tanHalf = tan(Self.fieldOfView * .pi / 180 / 2)
-        let aspect = Float(viewSize.width / viewSize.height)
-        let ndc = SIMD2<Float>(Float(location.x / viewSize.width) * 2 - 1, 1 - Float(location.y / viewSize.height) * 2)
-        let origin = camera.position(relativeTo: nil)
-        let direction = simd_normalize(camera.convert(direction: [ndc.x * tanHalf * aspect, ndc.y * tanHalf, -1], to: nil))
+        let (origin, direction) = ray
 
         let regions = AppleDeviceModel.PanelHit.regions(
             of: panel, inner: bounds.inner, outer: bounds.outer, opening: shownOpening
@@ -1012,6 +1122,8 @@ final class DeviceModelScene {
         if pointer == .touch, let point = lastTouch {
             feedingSession?.send(TouchCommand(phase: .up, x: point.x, y: point.y))
         }
+        if case .key(let button) = pointer { buttonSender?.send(button: button, isDown: false) }
+        glow(nil)
         pointer = nil
         lastTouch = nil
         observation = nil

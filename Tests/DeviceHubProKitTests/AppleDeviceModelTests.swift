@@ -116,6 +116,68 @@ final class AppleDeviceModelTests: XCTestCase {
         .init(material: 3, lower: [1.5329525, -0.07725072, 5.825349], upper: [6.6693225, 0.061273247, 5.8255982]),
     ]
 
+    /// The key parts of the same file (measured 2026-10-10, same units; the
+    /// materials again arbitrary): on the right edge, the side button's body
+    /// and its two finishes, then the lower key's; on the top edge, the two
+    /// volume keys.
+    static let duoKeyParts: [AppleDeviceModel.Part] = [
+        .init(material: 9, lower: [5.0632024, -0.12569553, -5.931292], upper: [6.154453, 0.10966066, -5.826269]),
+        .init(material: 9, lower: [3.7214358, -0.12569553, -5.931292], upper: [4.812686, 0.10966066, -5.826269]),
+        .init(material: 25, lower: [8.225973, -0.11242536, 1.779989], upper: [8.252043, 0.09638606, 3.4452567]),
+        .init(material: 25, lower: [8.2635765, -0.13871315, -2.5095003], upper: [8.28965, 0.12267832, -0.6869396]),
+        .init(material: 9, lower: [8.184357, -0.16124693, -2.531995], upper: [8.28965, 0.14521207, -0.6644448]),
+        .init(material: 9, lower: [8.132927, -0.13491654, 1.757612], upper: [8.252042, 0.11887722, 3.4676335]),
+        .init(material: 31, lower: [8.2635765, -0.13871315, -2.5095003], upper: [8.28965, 0.12267832, -0.6869396]),
+        .init(material: 31, lower: [8.225972, -0.11242536, 1.779989], upper: [8.252042, 0.09638606, 3.4452567]),
+    ]
+
+    /// The side button is the upper key on the right edge (its body and
+    /// finishes as one box); volume down is the top key nearer the hinge.
+    func testTheKeysAreFoundOnTheEdges() throws {
+        let keys = try XCTUnwrap(AppleDeviceModel.keys(in: Self.duoParts + Self.duoKeyParts))
+        XCTAssertEqual(keys.keys.map(\.button), [.side, .volumeDown, .volumeUp])
+        XCTAssertEqual(keys.keys[0].lower, [8.184357, -0.16124693, -2.531995])
+        XCTAssertEqual(keys.keys[0].upper, [8.28965, 0.14521207, -0.6644448])
+        XCTAssertEqual(keys.keys[1].lower.x, 3.7214358)
+        XCTAssertEqual(keys.keys[2].lower.x, 5.0632024)
+        XCTAssertNil(AppleDeviceModel.keys(in: Self.duoParts))
+        XCTAssertNil(AppleDeviceModel.keys(in: Self.duoParts + Self.duoKeyParts.dropFirst()))
+    }
+
+    /// A click presses the key it lands on or just beside, from the front or
+    /// from its own side; not through the device, nor on the panel.
+    func testAKeyIsPressedWhereItShows() throws {
+        let keys = try XCTUnwrap(AppleDeviceModel.keys(in: Self.duoParts + Self.duoKeyParts))
+        func key(_ origin: SIMD3<Float>, _ direction: SIMD3<Float>) -> SimulatorHardwareButton? {
+            keys.key(alongRayFrom: origin, direction: direction)?.button
+        }
+        XCTAssertEqual(key([8.25, 10, -1.6], [0, -1, 0]), .side)
+        XCTAssertEqual(key([8.38, 10, -1.6], [0, -1, 0]), .side, "beside it")
+        XCTAssertEqual(key([20, 0, -1.6], [-1, 0, 0]), .side)
+        XCTAssertEqual(key([8.25, -10, -1.6], [0, 1, 0]), .side, "from the back")
+        XCTAssertEqual(key([4.2, 10, -5.9], [0, -1, 0]), .volumeDown)
+        XCTAssertEqual(key([5.6, 0, -20], [0, 0, 1]), .volumeUp)
+        XCTAssertNil(key([-20, 0, -1.6], [1, 0, 0]), "through the device")
+        XCTAssertNil(key([4.2, 0, 20], [0, 0, -1]), "through the device")
+        XCTAssertNil(key([8.25, 10, 2.6], [0, -1, 0]), "the lower key has no input")
+        XCTAssertNil(key([4, 10, 0], [0, -1, 0]), "the panel")
+    }
+
+    /// Closed, the other half lies over the keys' half: a ray from the far
+    /// side that reaches the side button over the open device's face meets
+    /// that half first. Straight on, the keys stand clear of it.
+    func testTheHalfFoldedOverHidesAKeyBehindIt() throws {
+        let keys = try XCTUnwrap(AppleDeviceModel.keys(in: Self.duoParts + Self.duoKeyParts))
+        let origin: SIMD3<Float> = [-5, 10, -1.6]
+        let toward = SIMD3<Float>(8.25, 0.1, -1.6) - origin
+        let direction = toward / (toward * toward).sum().squareRoot()
+        let pivot: Float = 0.2493647
+        XCTAssertEqual(keys.key(alongRayFrom: origin, direction: direction, opening: 180, pivotY: pivot)?.button, .side)
+        XCTAssertNil(keys.key(alongRayFrom: origin, direction: direction, opening: 0, pivotY: pivot))
+        XCTAssertEqual(keys.key(alongRayFrom: [8.25, 10, -1.6], direction: [0, -1, 0], opening: 0, pivotY: pivot)?.button, .side)
+        XCTAssertEqual(keys.key(alongRayFrom: [4.2, 10, -5.9], direction: [0, -1, 0], opening: 0, pivotY: pivot)?.button, .volumeDown)
+    }
+
     func testThePanelsAreFoundByTheirShape() throws {
         let panels = try XCTUnwrap(AppleDeviceModel.panels(in: Self.duoParts))
         XCTAssertEqual(panels.inner, 7)

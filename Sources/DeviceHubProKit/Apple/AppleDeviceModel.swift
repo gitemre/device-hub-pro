@@ -122,6 +122,148 @@ public struct AppleDeviceModel: Sendable, Hashable {
         return PanelMaterials(inner: inner.material, outer: outer.material)
     }
 
+    /// A hardware key on the model's edge: the button it presses and the box
+    /// it takes in the model's own space.
+    public struct Key: Sendable, Equatable {
+        public var button: SimulatorHardwareButton
+        public var lower: SIMD3<Float>
+        public var upper: SIMD3<Float>
+
+        public init(button: SimulatorHardwareButton, lower: SIMD3<Float>, upper: SIMD3<Float>) {
+            self.button = button
+            self.lower = lower
+            self.upper = upper
+        }
+    }
+
+    /// The model's keys, and the body of the half they sit on.
+    public struct Keys: Sendable, Equatable {
+        public var keys: [Key]
+        /// The half's body inside its edges: a ray that enters it before a
+        /// key's box reaches that key through the device, so misses it.
+        public var bodyLower: SIMD3<Float>
+        public var bodyUpper: SIMD3<Float>
+
+        /// How far round each key a click still presses it (the model's
+        /// units, centimetres): a key stands only 0.04 proud of the edge.
+        public static let margin: Float = 0.15
+
+        /// The key a ray from `origin` along `direction` (the model's space)
+        /// meets first, nil when it meets none, or a body first: the keys'
+        /// half, or the other half folded towards it by `opening` degrees
+        /// (180 flat) about the hinge at `pivotY` (`PanelHit.folded`).
+        public func key(
+            alongRayFrom origin: SIMD3<Float>, direction: SIMD3<Float>,
+            opening: Double = 180, pivotY: Float = 0
+        ) -> Key? {
+            let grow = SIMD3<Float>(repeating: Self.margin)
+            let hit = keys.compactMap { key in
+                Keys.entry(origin: origin, direction: direction, lower: key.lower - grow, upper: key.upper + grow)
+                    .map { (key: key, distance: $0) }
+            }.min { $0.distance < $1.distance }
+            guard let hit else { return nil }
+            if let body = Keys.entry(origin: origin, direction: direction, lower: bodyLower, upper: bodyUpper),
+               body < hit.distance {
+                return nil
+            }
+            // The other half is this body mirrored across the hinge, then
+            // folded: the ray is unfolded into its frame instead.
+            let degrees = min(max(opening.isFinite ? opening : 180, 0), 180)
+            let fold = Float((180 - degrees) * .pi / 180)
+            func unfolded(_ vector: SIMD3<Float>, about pivot: Float) -> SIMD3<Float> {
+                let dx = vector.x, dy = vector.y - pivot
+                return [dx * cos(fold) - dy * sin(fold), pivot + dx * sin(fold) + dy * cos(fold), vector.z]
+            }
+            let otherLower = SIMD3<Float>(-bodyUpper.x, bodyLower.y, bodyLower.z)
+            let otherUpper = SIMD3<Float>(-bodyLower.x, bodyUpper.y, bodyUpper.z)
+            if let other = Keys.entry(
+                origin: unfolded(origin, about: pivotY), direction: unfolded(direction, about: 0),
+                lower: otherLower, upper: otherUpper
+            ), other < hit.distance {
+                return nil
+            }
+            return hit.key
+        }
+
+        /// Where a ray enters the box `lower`…`upper` (0 when it starts
+        /// inside), in lengths of `direction`; nil when it misses it.
+        static func entry(origin: SIMD3<Float>, direction: SIMD3<Float>, lower: SIMD3<Float>, upper: SIMD3<Float>) -> Float? {
+            var near = -Float.infinity, far = Float.infinity
+            for axis in 0..<3 {
+                if abs(direction[axis]) < 1e-9 {
+                    guard (lower[axis]...upper[axis]).contains(origin[axis]) else { return nil }
+                    continue
+                }
+                let first = (lower[axis] - origin[axis]) / direction[axis]
+                let second = (upper[axis] - origin[axis]) / direction[axis]
+                near = max(near, min(first, second))
+                far = min(far, max(first, second))
+            }
+            guard near <= far, far > 0 else { return nil }
+            return max(near, 0)
+        }
+    }
+
+    /// The keys among `parts`, laid out as on iPhone Duo's model (established
+    /// against Xcode 27.1 RC's V68): on the half that stays flat (x > 0), so
+    /// no fold moves them, two keys on its outer side edge, the upper (−z)
+    /// one the side button (the lower one has no input in the device's
+    /// chrome), and two on its top edge, volume down nearer the hinge: as the
+    /// outer panel's chrome draws them (volume on top, power on the right). A
+    /// key is the union of the parts that overlap along its edge (its body
+    /// and its finish). Nil when the parts show another layout.
+    public static func keys(in parts: [Part]) -> Keys? {
+        guard let right = parts.map(\.upper.x).max(), let top = parts.map(\.lower.z).min(),
+              let bottom = parts.map(\.upper.z).max()
+        else { return nil }
+        let side = parts.filter {
+            $0.lower.x > 0 && $0.upper.x > right - keyReach && $0.upper.x - $0.lower.x < keyDepth
+                && sideKeyLength.contains($0.upper.z - $0.lower.z)
+        }
+        let upper = parts.filter {
+            $0.lower.x > 0 && $0.lower.z < top + keyReach && $0.upper.z - $0.lower.z < keyDepth
+                && topKeyLength.contains($0.upper.x - $0.lower.x)
+        }
+        let sideKeys = merged(side, along: 2), topKeys = merged(upper, along: 0)
+        guard sideKeys.count == 2, topKeys.count == 2 else { return nil }
+        let keys = [
+            Key(button: .side, lower: sideKeys[0].lower, upper: sideKeys[0].upper),
+            Key(button: .volumeDown, lower: topKeys[0].lower, upper: topKeys[0].upper),
+            Key(button: .volumeUp, lower: topKeys[1].lower, upper: topKeys[1].upper),
+        ]
+        // The edge band the keys sit in, from the keys' own thickness.
+        let bandLower = keys.map(\.lower.y).min() ?? 0, bandUpper = keys.map(\.upper.y).max() ?? 0
+        return Keys(
+            keys: keys,
+            bodyLower: [0, bandLower + bodyInset, top + keyReach],
+            bodyUpper: [right - keyReach, bandUpper - bodyInset, bottom - keyReach]
+        )
+    }
+
+    /// How far in from the device's edge a key's part may start, how deep
+    /// it may be across the edge, and how long it is along it.
+    static let keyReach: Float = 0.25
+    static let keyDepth: Float = 0.3
+    static let sideKeyLength: ClosedRange<Float> = 1.0...2.5
+    static let topKeyLength: ClosedRange<Float> = 0.8...1.5
+    /// How far inside the edge band the body starts, so a ray grazing the
+    /// band on its way to a key is not taken for one through the device.
+    static let bodyInset: Float = 0.05
+
+    /// `parts` grouped where they overlap along `axis`, each group's box,
+    /// ordered along it.
+    private static func merged(_ parts: [Part], along axis: Int) -> [(lower: SIMD3<Float>, upper: SIMD3<Float>)] {
+        var groups: [(lower: SIMD3<Float>, upper: SIMD3<Float>)] = []
+        for part in parts.sorted(by: { $0.lower[axis] < $1.lower[axis] }) {
+            if let last = groups.last, part.lower[axis] <= last.upper[axis] {
+                groups[groups.count - 1] = (simd_min(last.lower, part.lower), simd_max(last.upper, part.upper))
+            } else {
+                groups.append((part.lower, part.upper))
+            }
+        }
+        return groups
+    }
+
     /// How the 3D stage poses a device open by `opening` degrees (0 closed,
     /// 180 flat), from its flat size (the width across both halves, the
     /// height along the hinge, the thickness of one half).
