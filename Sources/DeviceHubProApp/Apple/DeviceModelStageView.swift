@@ -958,8 +958,9 @@ final class DeviceModelScene {
         return button != nil
     }
 
-    /// Lights the key that presses `button` (none for nil), brighter when
-    /// `pressed`: a rounded box a little larger than the key, in the
+    /// Lights the key that presses `button` (none for nil), stronger when
+    /// `pressed`: a rounded box over the area a click presses it in (a key
+    /// stands only 0.04 proud of the edge, a sliver seen face on), in the
     /// model's space (the keys' half never folds, so it stays on the key).
     private func glow(_ button: SimulatorHardwareButton?, pressed: Bool = false) {
         let next = button.map { KeyGlow(button: $0, pressed: pressed) }
@@ -968,9 +969,9 @@ final class DeviceModelScene {
         keyGlow?.removeFromParent()
         keyGlow = nil
         if let next, let model = modelEntity, let key = keys?.keys.first(where: { $0.button == next.button }) {
-            var material = UnlitMaterial(color: pressed ? .controlAccentColor : .white)
-            material.blending = .transparent(opacity: .init(floatLiteral: pressed ? 0.6 : 0.35))
-            let size = key.upper - key.lower + SIMD3<Float>(repeating: Self.glowGrowth)
+            var material = UnlitMaterial(color: .controlAccentColor)
+            material.blending = .transparent(opacity: .init(floatLiteral: pressed ? 0.75 : 0.4))
+            let size = key.upper - key.lower + SIMD3<Float>(repeating: 2 * AppleDeviceModel.Keys.margin)
             let entity = ModelEntity(
                 mesh: .generateBox(size: size, cornerRadius: min(size.x, size.y, size.z) / 2),
                 materials: [material]
@@ -982,8 +983,6 @@ final class DeviceModelScene {
         setNeedsRender()
     }
 
-    /// How much larger than its key the glow is (the model's units).
-    static let glowGrowth: Float = 0.04
 
     /// The camera's ray through `location` (view points), in the scene's
     /// space.
