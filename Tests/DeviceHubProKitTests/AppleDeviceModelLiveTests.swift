@@ -32,21 +32,65 @@ final class AppleDeviceModelLiveTests: XCTestCase {
         return model
     }
 
-    /// The panels are found by shape, and the pinned fold lies within the
-    /// file's animation.
+    /// The panels are found by shape, the animation runs as long as
+    /// measured, and the pinned fold lies within it.
     func testTheInstalledModelHasTheLayoutTheStageNeeds() async throws {
         let model = try installedModel()
         let entity = try await Entity(contentsOf: model.url)
         let animation = try XCTUnwrap(entity.availableAnimations.first, "no animation")
         XCTAssertLessThanOrEqual(model.spec.closedTime, animation.definition.duration)
+        if model.isChecked {
+            XCTAssertEqual(animation.definition.duration, model.spec.duration, accuracy: 0.001)
+        }
+        XCTAssertTrue(model.fits(animationDuration: animation.definition.duration))
+        let panels = try XCTUnwrap(Self.panels(of: entity), "no panel layout")
+        XCTAssertNotEqual(panels.inner, panels.outer)
+    }
 
+    /// Another build of the model, made here from the installed file by
+    /// giving its zip archive another comment (a new digest, the same
+    /// content), in a temporary Xcode layout: found unchecked, and it loads
+    /// with the shape the stage needs.
+    func testAnotherBuildOfTheSameShapeIsUsed() async throws {
+        let installed = try installedModel()
+        var data = try Data(contentsOf: installed.url)
+        // The end of central directory record ends with the comment's length
+        // and the comment.
+        let end = try XCTUnwrap(data.range(of: Data([0x50, 0x4B, 0x05, 0x06]), options: .backwards))
+        data = data.prefix(end.lowerBound + 20) + Data([4, 0]) + Data("test".utf8)
+        let root = FileManager.default.temporaryDirectory
+            .appendingPathComponent("AppleDeviceModelLiveTests-\(UUID().uuidString)", isDirectory: true)
+        addTeardownBlock { try? FileManager.default.removeItem(at: root) }
+        let contents = root.appendingPathComponent("Xcode.app/Contents", isDirectory: true)
+        let resources = contents.appendingPathComponent(
+            "SharedFrameworks/DeviceKit.framework/Versions/A/PlugIns/Fold.devicekitplugin/Contents/Resources",
+            isDirectory: true
+        )
+        try FileManager.default.createDirectory(at: resources, withIntermediateDirectories: true)
+        try FileManager.default.createDirectory(
+            at: contents.appendingPathComponent("Developer", isDirectory: true), withIntermediateDirectories: true
+        )
+        try data.write(to: resources.appendingPathComponent("V68.usdz"))
+
+        let copy = try XCTUnwrap(AppleDeviceModel.locate(
+            productClass: "V68", developerDir: contents.appendingPathComponent("Developer"), environment: [:]
+        ))
+        XCTAssertFalse(copy.isChecked)
+        let entity = try await Entity(contentsOf: copy.url)
+        let animation = try XCTUnwrap(entity.availableAnimations.first, "no animation")
+        XCTAssertTrue(copy.fits(animationDuration: animation.definition.duration))
+        XCTAssertNotNil(Self.panels(of: entity))
+    }
+
+    /// The panels of a loaded model, found as the stage finds them.
+    private static func panels(of entity: Entity) -> AppleDeviceModel.PanelMaterials? {
         var found: ModelEntity?
         func find(_ node: Entity) {
             if let candidate = node as? ModelEntity, candidate.components[ModelComponent.self] != nil { found = candidate }
             node.children.forEach(find)
         }
         find(entity)
-        let component = try XCTUnwrap(found?.components[ModelComponent.self])
+        guard let component = found?.components[ModelComponent.self] else { return nil }
         var parts: [AppleDeviceModel.Part] = []
         for mesh in component.mesh.contents.models {
             for part in mesh.parts {
@@ -58,7 +102,6 @@ final class AppleDeviceModelLiveTests: XCTestCase {
                 parts.append(AppleDeviceModel.Part(material: part.materialIndex, lower: lower, upper: upper))
             }
         }
-        let panels = try XCTUnwrap(AppleDeviceModel.panels(in: parts), "no panel layout")
-        XCTAssertNotEqual(panels.inner, panels.outer)
+        return AppleDeviceModel.panels(in: parts)
     }
 }

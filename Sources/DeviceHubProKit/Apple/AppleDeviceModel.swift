@@ -12,9 +12,11 @@ import simd
 /// joint names are scrambled, and RealityKit numbers its materials in a
 /// different order on every load, so the panels are found by their shape
 /// (`panels(in:)`) and the stretch of its animation that folds the device is
-/// pinned per file, by SHA-256, in `known`: an Xcode that ships another file
-/// shows the 2D chrome until that file is checked and listed.
-/// `DHP_DISABLE_DEVICE_MODEL=1` turns the model off.
+/// pinned per file, by SHA-256, in `known`. Another build's file (an Xcode
+/// release after the one measured) is used on the listed file's numbers when
+/// it loads with the same shape: the same product class, an animation as
+/// long (`fits`) and both panels found; otherwise the stage keeps the 2D
+/// chrome. `DHP_DISABLE_DEVICE_MODEL=1` turns the model off.
 public struct AppleDeviceModel: Sendable, Hashable {
     public static let disableVariable = "DHP_DISABLE_DEVICE_MODEL"
 
@@ -24,8 +26,13 @@ public struct AppleDeviceModel: Sendable, Hashable {
 
     /// What one checked file holds.
     public struct Spec: Sendable, Hashable {
+        /// The device type's `productClass` the file is named after ("V68").
+        public var productClass: String
         /// The file's SHA-256, lowercase hex.
         public var sha256: String
+        /// How long the file's animation runs (RealityKit's
+        /// `AnimationDefinition.duration`, seconds).
+        public var duration: Double
         /// The stretch of the model's animation that folds the outer panel's
         /// half over the other, so a closed device shows its outer panel: at
         /// `openTime` the device is flat (180°), at `closedTime` closed (0°),
@@ -43,10 +50,14 @@ public struct AppleDeviceModel: Sendable, Hashable {
 
     /// The checked files. Xcode 27.1 RC (27A9275), established 2026-10-09:
     /// the second of the animation's three folds turns the outer panel's half
-    /// 36° a second from 5.4167 s (flat) to 10.4167 s (closed).
+    /// 36° a second from 5.4167 s (flat) to 10.4167 s (closed); the whole
+    /// animation runs 37.5 s (both of the file's animations, measured
+    /// 2026-10-10).
     public static let known: [Spec] = [
         Spec(
+            productClass: "V68",
             sha256: "fd315e57c38fde5666d50de6e19b444e3d145450008126e85838119b682b7940",
+            duration: 37.5,
             openTime: 5.0 + 5.0 / 12.0,
             closedTime: 10.0 + 5.0 / 12.0
         ),
@@ -54,6 +65,17 @@ public struct AppleDeviceModel: Sendable, Hashable {
 
     public let url: URL
     public let spec: Spec
+    /// Whether the file is one of `known`; otherwise it carries the numbers
+    /// of the known file of its product class and is used only if it `fits`.
+    public let isChecked: Bool
+
+    /// Whether a loaded file can be shown: a checked one always; another
+    /// build's only when its animation runs as long as the checked file's,
+    /// so its fold is taken to lie where that file's does. The panels are
+    /// found by shape on every load either way.
+    public func fits(animationDuration: Double) -> Bool {
+        isChecked || abs(animationDuration - spec.duration) < 0.001
+    }
 
     /// One mesh part as loaded: its material index and its bounds in the
     /// model's space (y up from the open device's inner face).
@@ -235,10 +257,11 @@ public struct AppleDeviceModel: Sendable, Hashable {
         }
     }
 
-    /// The model `productClass` names in the Xcode at `developerDir`, when
-    /// its file is one of the `known` ones; nil otherwise, or when turned
-    /// off. Reads and hashes the file (a few megabytes): call it off the main
-    /// thread.
+    /// The model `productClass` names in the Xcode at `developerDir`: a
+    /// `known` file checked; else, when a known file has that product class,
+    /// the file on that one's numbers, unchecked (`fits`). Nil without a
+    /// file, or when turned off. Reads and hashes the file (a few megabytes):
+    /// call it off the main thread.
     public static func locate(
         productClass: String,
         developerDir: URL,
@@ -250,15 +273,18 @@ public struct AppleDeviceModel: Sendable, Hashable {
             .deletingLastPathComponent()
             .appendingPathComponent("SharedFrameworks/DeviceKit.framework/Versions/A/PlugIns", isDirectory: true)
         let bundles = (try? FileManager.default.contentsOfDirectory(at: plugIns, includingPropertiesForKeys: nil)) ?? []
+        var unchecked: URL?
         for bundle in bundles.sorted(by: { $0.lastPathComponent < $1.lastPathComponent })
         where bundle.pathExtension == "devicekitplugin" {
             let file = bundle.appendingPathComponent("Contents/Resources/\(productClass).usdz")
             guard let data = try? Data(contentsOf: file, options: .mappedIfSafe) else { continue }
             let digest = SHA256.hash(data: data).map { String(format: "%02x", $0) }.joined()
             if let spec = known.first(where: { $0.sha256 == digest }) {
-                return AppleDeviceModel(url: file, spec: spec)
+                return AppleDeviceModel(url: file, spec: spec, isChecked: true)
             }
+            if unchecked == nil { unchecked = file }
         }
-        return nil
+        guard let unchecked, let template = known.first(where: { $0.productClass == productClass }) else { return nil }
+        return AppleDeviceModel(url: unchecked, spec: template, isChecked: false)
     }
 }

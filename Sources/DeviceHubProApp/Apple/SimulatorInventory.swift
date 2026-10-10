@@ -66,6 +66,8 @@ final class SimulatorInventory {
     /// and display (the outer panel's are `chromeFrames` and
     /// `displayShapes`, the device type's main display).
     private(set) var foldables: [String: SimulatorFoldable] = [:]
+    /// The 3D models that failed to load in this run (`setDeviceModelUnusable`).
+    private(set) var unusableDeviceModels: Set<URL> = []
     /// The fold Device Hub Pro last put each booted foldable simulator in,
     /// by UDID. A simulator boots closed, so one missing here is closed; a
     /// simulator that shuts down or boots again is forgotten. Kept in the
@@ -229,9 +231,20 @@ final class SimulatorInventory {
         return panels.profile(of: litPanel(of: entry)).screenID
     }
 
-    /// The 3D model of `entry`'s device type, when Xcode ships a checked one.
+    /// The 3D model of `entry`'s device type, when Xcode ships one that has
+    /// not failed to load (`AppleDeviceModel.locate`).
     func deviceModel(for entry: SimulatorEntry) -> AppleDeviceModel? {
-        entry.deviceTypeIdentifier.flatMap { foldables[$0]?.model }
+        guard let model = entry.deviceTypeIdentifier.flatMap({ foldables[$0]?.model }),
+              !unusableDeviceModels.contains(model.url)
+        else { return nil }
+        return model
+    }
+
+    /// The 3D stage could not show `model` (it did not load with the shape
+    /// the scene needs): the stage and the fold strip go back to the 2D
+    /// chrome for the rest of the run.
+    func setDeviceModelUnusable(_ model: AppleDeviceModel) {
+        unusableDeviceModels.insert(model.url)
     }
 
     /// `productClass` of a device type's `profile.plist` ("V68").
@@ -696,6 +709,7 @@ struct SimulatorFoldable: Equatable {
     let panels: SimulatorFoldPanels
     let innerChrome: AppleChromeFrame?
     let innerShape: DisplayShape?
-    /// Its 3D model in the user's Xcode, when that file is a checked one.
+    /// Its 3D model in the user's Xcode, when it ships one
+    /// (`AppleDeviceModel.locate`).
     let model: AppleDeviceModel?
 }
