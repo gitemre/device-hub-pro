@@ -378,4 +378,28 @@ NS_SWIFT_NAME(SimBridgePurple)
 
 @end
 
+/// The simulator's hardware keyboard, as Simulator and Device Hub connect it
+/// (Simulate Hardware Keyboard): connected, iOS takes typing as a hardware
+/// keyboard's and hides the software keyboard; disconnected, the software
+/// keyboard shows.
+NS_SWIFT_NAME(SimBridgeHardwareKeyboard)
+@interface AQSBHardwareKeyboard : NSObject
+
+- (instancetype)init NS_UNAVAILABLE;
++ (instancetype)new NS_UNAVAILABLE;
+
+/// `-[SimDevice setHardwareKeyboardEnabled:keyboardType:error:]` on the
+/// booted simulator `udid`. `keyboardType` is the byte that method takes.
+/// Fails with AQSBErrorAPIUnavailable when this CoreSimulator has no such
+/// method; it has no getter, so the caller keeps what it set.
++ (BOOL)setConnected:(BOOL)connected
+        keyboardType:(uint8_t)keyboardType
+                udid:(NSString *)udid
+       deviceSetPath:(nullable NSString *)deviceSetPath
+        developerDir:(NSString *)developerDir
+               error:(NSError **)error
+    NS_SWIFT_NAME(setConnected(_:keyboardType:udid:deviceSetPath:developerDir:));
+
+@end
+
 NS_ASSUME_NONNULL_END

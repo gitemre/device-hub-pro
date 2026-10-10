@@ -48,6 +48,12 @@ static const uint64_t AQSBSimDeviceStateBooted = 3;
 - (mach_port_t)lookup:(NSString *)serviceName error:(NSError **)error;
 @end
 
+/// The hardware keyboard switch Simulator uses (CoreSimulator 1171 and 1174
+/// answer it; there is no getter).
+@protocol AQSBSimDeviceHardwareKeyboard <NSObject>
+- (BOOL)setHardwareKeyboardEnabled:(BOOL)enabled keyboardType:(unsigned char)keyboardType error:(NSError **)error;
+@end
+
 @protocol AQSBSimDeviceIO <NSObject>
 - (nullable NSArray *)ioPorts;
 @end

@@ -640,6 +640,9 @@ final class DeviceWorkspace {
     /// sessions through the session hubs, and the mirror hands it a stopped
     /// session and asks the simulators for the simulator's display.
     private func wireSimulatorCanvasSession() {
+        simulatorCanvas.onLiveCanvasStarted = { [weak keyboard = services.simulatorHardwareKeyboard] udid in
+            keyboard?.liveCanvasStarted(udid: udid)
+        }
         simulatorCanvas.beginSession = { [weak self] session, device, capabilities in
             self?.beginMirrorSession(session, device: device, port: nil, capabilities: capabilities)
         }

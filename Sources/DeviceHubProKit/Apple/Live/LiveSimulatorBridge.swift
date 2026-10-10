@@ -61,6 +61,21 @@ public struct LiveSimulatorBridge: SimulatorBridging {
         return LiveSimulatorGSEvents(address: address, developerDir: developerDir)
     }
 
+    /// `-[SimDevice setHardwareKeyboardEnabled:keyboardType:error:]` with
+    /// keyboard type 0 (what Simulator's own switch was seen to change, see
+    /// PROVENANCE.md).
+    public func setHardwareKeyboard(connected: Bool, for address: SimulatorAddress) throws {
+        dispatchPrecondition(condition: .notOnQueue(.main))
+        do {
+            try SimBridgeHardwareKeyboard.setConnected(
+                connected, keyboardType: 0, udid: address.udid,
+                deviceSetPath: address.deviceSetPath, developerDir: developerDir
+            )
+        } catch {
+            throw SimulatorBridgeError(bridging: error)
+        }
+    }
+
     /// The `CFBundleVersion` of the CoreSimulator this process loaded (read
     /// from the loaded framework's bundle, as `load()` reports it), nil
     /// before the first load. Never waits and reaches no service: safe on

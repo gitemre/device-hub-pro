@@ -74,6 +74,13 @@ struct SettingsView: View {
                 Text("While Keyboard Capture sends your keys to a device, other apps on this Mac cannot read them.")
                     .font(.caption)
                     .foregroundStyle(.secondary)
+                Toggle("Simulate hardware keyboard by default", isOn: Binding(
+                    get: { model.preferences.simulateHardwareKeyboardByDefault },
+                    set: { model.preferences.setSimulateHardwareKeyboardByDefault($0) }
+                ))
+                Text("A simulator shown live starts with a hardware keyboard connected, so iOS hides its software keyboard. Device ▸ Keyboard ▸ Simulate Hardware Keyboard changes it for one simulator.")
+                    .font(.caption)
+                    .foregroundStyle(.secondary)
             }
 
             Section("Screenshots") {
