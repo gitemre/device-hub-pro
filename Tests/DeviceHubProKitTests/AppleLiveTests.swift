@@ -79,7 +79,8 @@ final class AppleLiveTests: XCTestCase {
         let bootStarted = ContinuousClock.now
         try await simctl.boot(udid: udid)
         let finished = try await simctl.bootStatus(udid: udid)
-        XCTAssertEqual(finished?.isFinished, true)
+        // Ended: Finished, or iPhone Duo's "Data Migration Failed" on iOS 27.1.
+        XCTAssertEqual(finished?.isTerminal, true)
         print("AppleLive: boot → Finished in \(ContinuousClock.now - bootStarted)")
 
         // The rest of the ready signal: SpringBoard runs once the boot
@@ -91,10 +92,14 @@ final class AppleLiveTests: XCTestCase {
         let again = try await simctl.bootStatus(udid: udid, timeout: .seconds(30))
         XCTAssertTrue(SimulatorReadiness.bootFinished(lastUpdate: again), "\(String(describing: again))")
         let screen = session.setDirectory.appendingPathComponent("screen.png")
+        // A foldable shows its outer panel closed; simctl's default display
+        // is its inner one.
+        let display = try await LiveTestSimulators.displays(ofDeviceType: device.deviceTypeIdentifier, simctl: simctl)
+            .panels?.outer.screenID
         var shown = false
-        let homeDeadline = ContinuousClock.now + .seconds(60)
+        let homeDeadline = ContinuousClock.now + .seconds(120)
         while !shown, ContinuousClock.now < homeDeadline {
-            try await simctl.screenshot(udid: udid, to: screen, timeout: .seconds(20))
+            try await simctl.screenshot(udid: udid, to: screen, timeout: .seconds(20), display: display)
             shown = SimulatorReadiness.showsHomeScreen(imageAt: screen) == true
         }
         XCTAssertTrue(SimulatorReadiness.isReady(bootFinished: true, homeScreenPID: springBoard, showsHomeScreen: shown))

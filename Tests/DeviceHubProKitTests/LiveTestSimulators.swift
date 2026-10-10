@@ -23,6 +23,24 @@ enum LiveTestSimulators {
         ProcessInfo.processInfo.environment["DHP_IOS_LIVE"] == "1"
     }
 
+    /// The displays of a device type, read from its bundle as the app reads
+    /// them: its main display, and both panels when it is a foldable (iPhone
+    /// Duo, whose live session's main screen is the outer panel while
+    /// `simctl io screenshot` without `--display` captures the inner one).
+    static func displays(
+        ofDeviceType identifier: String?,
+        simctl: SimctlClient
+    ) async throws -> (main: SimulatorDisplayProfile?, panels: SimulatorFoldPanels?) {
+        guard let identifier,
+              let bundle = try await simctl.listDeviceTypes().first(where: { $0.identifier == identifier })?.bundlePath
+        else { return (nil, nil) }
+        let url = URL(fileURLWithPath: bundle, isDirectory: true)
+        return (
+            SimulatorDisplayProfile.read(deviceTypeBundle: url),
+            SimulatorFoldPanels(panels: SimulatorDisplayProfile.readPanels(deviceTypeBundle: url))
+        )
+    }
+
     /// The folder CoreSimulator writes every device's logs into.
     static var logsDirectory: URL {
         FileManager.default.homeDirectoryForCurrentUser
@@ -61,17 +79,27 @@ enum LiveTestSimulators {
         }
 
         /// Creates an iPhone 17 Pro on the newest available iOS runtime that
-        /// supports it (or that runtime's first iPhone).
+        /// supports it (or that runtime's first iPhone); with
+        /// `DHP_IOS_LIVE_DEVICE_TYPE` set, that device type, skipping when
+        /// the newest runtime does not support it (iPhone Duo needs iOS 27.1).
         func createDevice(name: String) async throws -> SimulatorDevice {
             precondition(udid == nil, "one device per session")
             let runtimes = try await simctl.listRuntimes()
                 .filter { $0.platform == "iOS" && $0.isAvailable }
                 .sorted { AppleToolchain.compareVersions($0.version, $1.version) == .orderedAscending }
             guard let runtime = runtimes.last else { throw XCTSkip("no iOS simulator runtime installed") }
-            let preferred = "com.apple.CoreSimulator.SimDeviceType.iPhone-17-Pro"
-            let deviceType = runtime.supportedDeviceTypeIdentifiers.contains(preferred)
-                ? preferred
-                : try XCTUnwrap(runtime.supportedDeviceTypeIdentifiers.first { $0.contains("iPhone") })
+            let deviceType: String
+            if let wanted = ProcessInfo.processInfo.environment["DHP_IOS_LIVE_DEVICE_TYPE"], !wanted.isEmpty {
+                guard runtime.supportedDeviceTypeIdentifiers.contains(wanted) else {
+                    throw XCTSkip("iOS \(runtime.version) does not support \(wanted)")
+                }
+                deviceType = wanted
+            } else {
+                let preferred = "com.apple.CoreSimulator.SimDeviceType.iPhone-17-Pro"
+                deviceType = runtime.supportedDeviceTypeIdentifiers.contains(preferred)
+                    ? preferred
+                    : try XCTUnwrap(runtime.supportedDeviceTypeIdentifiers.first { $0.contains("iPhone") })
+            }
             let created = try await simctl.create(
                 name: name,
                 deviceTypeIdentifier: deviceType,

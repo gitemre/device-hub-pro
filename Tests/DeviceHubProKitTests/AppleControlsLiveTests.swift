@@ -46,6 +46,14 @@ final class AppleControlsLiveTests: XCTestCase {
         XCTAssertTrue(backend.hasDevicectl)
         let app = try await iosVerifierApp(toolchain: toolchain)
         let udid = device.udid
+        // iPhone Duo is held through its orientation picker, as the app holds
+        // it (`SimulatorFoldController.setHeldPose`): devicectl's
+        // `orientation set` does not turn it.
+        let holdFoldable: (@Sendable (SimulatorDevicePose) -> Void)? = try await LiveTestSimulators
+            .displays(ofDeviceType: device.deviceTypeIdentifier, simctl: simctl).panels.map { _ in
+                let sender = SimulatorFoldSender(bridge: LiveSimulatorBridge())
+                return { pose in sender.send([.pose(pose)], to: SimulatorAddress(udid: udid, deviceSetPath: nil)) }
+            }
         let verifier = VerifierReader(simctl: simctl, udid: udid)
         let hadVerifier = (try? await simctl.appInfo(udid: udid, bundleIdentifier: Self.bundle)) != nil
         let snapshot = try await Snapshot.take(backend)
@@ -54,14 +62,14 @@ final class AppleControlsLiveTests: XCTestCase {
             try await simctl.checked(["privacy", udid, "grant", "location", Self.bundle])
             let pid = try await simctl.launch(udid: udid, bundleIdentifier: Self.bundle, terminateRunning: true)
             _ = try await verifier.waitForDocument(timeout: .seconds(60))
-            try await roundTrips(backend, verifier: verifier, snapshot: snapshot, verifierPID: pid)
+            try await roundTrips(backend, verifier: verifier, snapshot: snapshot, verifierPID: pid, holdFoldable: holdFoldable)
         } catch {
             await verifier.keepEvidence(name: "controls")
-            await snapshot.restore(backend)
+            await snapshot.restore(backend, holdFoldable: holdFoldable)
             if !hadVerifier { try? await simctl.uninstall(udid: udid, bundleIdentifier: Self.bundle) }
             throw error
         }
-        await snapshot.restore(backend)
+        await snapshot.restore(backend, holdFoldable: holdFoldable)
         if !hadVerifier { try await simctl.uninstall(udid: udid, bundleIdentifier: Self.bundle) }
         printTimings()
     }
@@ -70,7 +78,8 @@ final class AppleControlsLiveTests: XCTestCase {
         _ backend: AppleControlsBackend,
         verifier: VerifierReader,
         snapshot: Snapshot,
-        verifierPID: Int
+        verifierPID: Int,
+        holdFoldable: (@Sendable (SimulatorDevicePose) -> Void)?
     ) async throws {
         let udid = backend.udid
         // Display & sound.
@@ -123,7 +132,11 @@ final class AppleControlsLiveTests: XCTestCase {
         }
         for pose in [SimulatorDevicePose.landscapeLeft, .faceUp, .portrait] {
             try await roundTrip("orientation \(pose.rawValue)", verifier, "sensors.orientation", pose.rawValue) {
-                try await backend.apply(.orientation(pose))
+                if let holdFoldable {
+                    holdFoldable(pose)
+                } else {
+                    try await backend.apply(.orientation(pose))
+                }
             }
         }
         let biometrics = try await verifier.raw("advanced.biometrics")
@@ -360,7 +373,7 @@ private struct Snapshot: Sendable {
 
     /// Best effort, each step on its own: a failed step is reported, the
     /// others still run.
-    func restore(_ backend: AppleControlsBackend) async {
+    func restore(_ backend: AppleControlsBackend, holdFoldable: (@Sendable (SimulatorDevicePose) -> Void)? = nil) async {
         var changes: [AppleControlChange] = []
         if let style = appearance.userInterfaceStyle { changes.append(.appearance(dark: style == "dark")) }
         if let on = appearance.reduceMotion { changes.append(.reduceMotion(on)) }
@@ -372,8 +385,14 @@ private struct Snapshot: Sendable {
         changes.append(.voiceOver(voiceOver))
         if let volume { changes.append(.volume(volume)) }
         if let biometricsEnrolled { changes.append(.biometricsEnrolled(biometricsEnrolled)) }
-        // An iPhone that never rotated reads "unknown": upright.
-        changes.append(.orientation(pose ?? .portrait))
+        // An iPhone that never rotated reads "unknown": upright. A foldable
+        // is held upright again through its orientation picker (devicectl
+        // does not read its pose either).
+        if let holdFoldable {
+            holdFoldable(.portrait)
+        } else {
+            changes.append(.orientation(pose ?? .portrait))
+        }
         changes.append(.clearLocation)
         if statusBarWasClear { changes.append(.statusBar(nil)) }
         changes.append(.timeFormat(preferences?.timeFormat ?? .localeDefault))
