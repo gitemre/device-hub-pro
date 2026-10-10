@@ -38,6 +38,9 @@ public enum AppleControlChange: Sendable, Equatable {
     case timeFormat(TimeFormatSetting)
     /// nil clears the override.
     case statusBar(SimulatorStatusBarState?)
+    /// Only the status bar's battery (Device ▸ Battery); the rest of the
+    /// override stays.
+    case statusBarBattery(level: Int, state: SimulatorBatteryState)
     /// Restarts SpringBoard (the language's home screen part).
     case respring
 
@@ -63,7 +66,7 @@ public enum AppleControlChange: Sendable, Equatable {
         case .pasteboard: .clipboard
         case .language, .respring: .language
         case .timeFormat: .timeFormat24
-        case .statusBar: .statusBar
+        case .statusBar, .statusBarBattery: .statusBar
         }
     }
 }
@@ -395,6 +398,9 @@ public final class AppleControlsBackend: AppleControlsBacking {
             } else {
                 try await simctl.clearStatusBar(udid: udid)
             }
+            return nil
+        case .statusBarBattery(let level, let state):
+            try await simctl.overrideStatusBarBattery(udid: udid, level: level, state: state)
             return nil
         case .respring:
             try await simctl.respring(udid: udid)

@@ -489,6 +489,22 @@ final class AppleControlsControllerTests: XCTestCase {
         XCTAssertEqual(controller.statusBarActive, false)
     }
 
+    /// Device ▸ Battery, as Device Hub's: only the status bar's battery is
+    /// overridden, at the level, discharging (the time and the rest stay);
+    /// the menu checks 100 without an override and the level once set.
+    func testBatteryMenuSetsTheStatusBarBattery() async throws {
+        let simctl = try simctl()
+        let (controller, _, _) = try await controller(simctl: simctl, devicectl: nil)
+        await controller.attach(Self.booted)
+        XCTAssertEqual(controller.batteryMenuLevel, 100)
+        await controller.setBatteryLevel(75)
+        XCTAssertTrue(simctl.calls.contains("status_bar \(Self.booted) override --batteryState discharging --batteryLevel 75"),
+                      "\(simctl.calls.suffix(3))")
+        XCTAssertEqual(controller.statusBarActive, true)
+        XCTAssertEqual(controller.batteryMenuLevel, 75)
+        XCTAssertEqual(AppleControlsController.batteryMenuLevels, [100, 75, 50, 25])
+    }
+
     /// A write that ends after the user selected another simulator changes
     /// only the simulator it was for: the other's Override stays as read,
     /// and its rows are not held busy by the first one's write.

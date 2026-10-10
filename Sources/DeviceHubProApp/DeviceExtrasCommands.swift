@@ -115,6 +115,8 @@ struct AppleSettingsMenuPlan {
 
     var showsAccessibility: Bool { !accessibilityGroups.isEmpty }
     var showsAppearance: Bool { shows(.appearance) }
+    /// Battery sets the status bar's battery, as in Device Hub.
+    var showsBattery: Bool { shows(.statusBar) }
     var showsLocation: Bool { shows(.location) }
     var showsSound: Bool { shows(.volume) }
     /// Orientation is also hidden while the simulator is off (as Device Hub does).
@@ -549,6 +551,17 @@ private struct AppleDeviceSettingsMenus: View {
             }
         }
 
+
+        if plan.showsBattery {
+            IconMenu("Battery", "battery.75percent", disabled: !isRunning) {
+                ForEach(AppleControlsController.batteryMenuLevels, id: \.self) { level in
+                    Toggle("\(level)%", isOn: Binding(
+                        get: { controls.udid == udid && controls.batteryMenuLevel == level },
+                        set: { if $0 { act { await $0.setBatteryLevel(level) } } }
+                    ))
+                }
+            }
+        }
 
         if let title = plan.biometricMenuTitle {
             biometricMenu(title, symbol: Self.biometricSymbol(title))

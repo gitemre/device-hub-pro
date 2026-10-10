@@ -502,6 +502,8 @@ final class AppleControlsController {
         case .statusBar(let model):
             if let model { memory.statusBars[udid] = model }
             if self.udid == udid { statusBarActive = model != nil }
+        case .statusBarBattery:
+            if self.udid == udid { statusBarActive = true }
         default:
             break
         }
@@ -784,6 +786,31 @@ final class AppleControlsController {
             // The flag is the attached simulator's; another may be attached now.
             if self.udid == udid { statusBarActive = on }
         }
+    }
+
+    /// Device ▸ Battery's levels, as Device Hub offers them.
+    static let batteryMenuLevels = [100, 75, 50, 25]
+
+    /// The level Device ▸ Battery checks: the status bar override's, 100
+    /// without one (what the simulator shows), as in Device Hub.
+    var batteryMenuLevel: Int { statusBarActive == true ? statusBar.batteryLevel : 100 }
+
+    /// Device ▸ Battery: only the status bar's battery, at `level` %,
+    /// discharging (the override Device Hub's menu sets); the time and the
+    /// rest stay as they are. The model is read back for the panel.
+    func setBatteryLevel(_ level: Int) async {
+        guard let udid else { return }
+        guard await perform(.statusBarBattery(level: level, state: .discharging), "set the battery") else { return }
+        var model = statusBar
+        model.batteryLevel = level
+        model.batteryState = .discharging
+        if let backend, backend.udid == udid,
+           let list = try? await backend.simctl.statusBarOverrides(udid: udid),
+           let read = SimulatorStatusBarState.fromList(list, over: model) {
+            model = read
+        }
+        memory.statusBars[udid] = model
+        if self.udid == udid { statusBarActive = true }
     }
 
     /// Clean status bar: on applies the Screenshot look over a fresh model
