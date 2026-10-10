@@ -528,7 +528,9 @@ public enum SimctlParsing {
     // MARK: status_bar
 
     /// `simctl status_bar <udid> list`: the header, a rule, then one line per
-    /// overridden group (`WiFi Mode: 3, WiFi Bars: 3`).
+    /// overridden group (`WiFi Mode: 3, WiFi Bars: 3`). Values are trimmed:
+    /// iOS 27.1 prints the time with a narrow no-break space after it
+    /// (`Time: 9:41\u{202F}`).
     public static func statusBarOverrides(from text: String) -> SimulatorStatusBarOverrides {
         var result = SimulatorStatusBarOverrides()
         for line in text.split(whereSeparator: \.isNewline) {
@@ -537,7 +539,7 @@ public enum SimctlParsing {
             for field in line.components(separatedBy: ", ") {
                 guard let separator = field.range(of: ": ") else { continue }
                 let key = field[..<separator.lowerBound].trimmingCharacters(in: .whitespaces)
-                let value = String(field[separator.upperBound...])
+                let value = field[separator.upperBound...].trimmingCharacters(in: .whitespaces)
                 switch key {
                 case "Time": result.time = value
                 case "DataNetworkType": result.dataNetworkCode = Int(value)

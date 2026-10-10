@@ -412,6 +412,20 @@ final class AppleControlsTests: XCTestCase {
         XCTAssertNil(SimulatorStatusBarState.fromList(SimctlParsing.statusBarOverrides(from: empty), over: state))
     }
 
+    /// iOS 27.1 prints the overridden time with a narrow no-break space
+    /// after it (`9:41` + U+202F; captured 2026-10-10 on iPhone Duo, iOS 27.1
+    /// 24A94232): the list reads it back trimmed, as a clock time.
+    func testTheListTrimsIOS271sTime() throws {
+        let text = try String(contentsOf: Self.controlsURL("simctl-status_bar-list.ios27.1.stdout.txt"), encoding: .utf8)
+        XCTAssertTrue(text.contains("9:41\u{202F}"))
+        let list = SimctlParsing.statusBarOverrides(from: text)
+        XCTAssertEqual(list.time, "9:41")
+        XCTAssertEqual(list.batteryLevel, 100)
+        let state = try XCTUnwrap(SimulatorStatusBarState.fromList(list, over: SimulatorStatusBarState()))
+        XCTAssertEqual(state.time, "9:41")
+        XCTAssertTrue(SimulatorStatusBarState.isClockTime(state.time))
+    }
+
     func testPresets() {
         let base = SimulatorStatusBarState(time: "10:10", operatorName: "Carrier")
         let low = SimulatorStatusBarPreset.lowBattery.applied(to: base)

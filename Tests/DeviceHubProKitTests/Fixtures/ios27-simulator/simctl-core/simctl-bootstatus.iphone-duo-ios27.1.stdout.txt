@@ -1,0 +1,4 @@
+Monitoring boot status for CaptureDuo (00000000-0000-0000-0000-00000000D0D0).
+[2026-10-10 11:51:32 +0000] Status=3, isTerminal=YES, Elapsed=00:02.
+	Data Migration Failed
+
