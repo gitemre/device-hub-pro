@@ -157,7 +157,8 @@ When the tools are installed, the app offers to create your first emulator.
   Device Hub's angle; Device ▸ Orientation holds it portrait, upside down, landscape left or right,
   face up or face down, and the stage's rotate turns it. The stage follows the lit panel: the outer one closed,
   the inner one open. The app remembers the fold while the simulator stays booted, so quitting and
-  opening it again shows the device as it was left. Where the selected Xcode ships Apple's 3D model of the device, the strip's
+  opening it again shows the device as it was left; a simulator something else opened (Device Hub, a
+  test) is read off its two panels' screenshots, and the stage shows the lit one. Where the selected Xcode ships Apple's 3D model of the device, the strip's
   **3D** button shows it in that model: the hinge folds on screen (its angle beside it), the lit
   panel shows the live simulator and takes clicks, drags and, with Keyboard Capture, typing;
   dragging anywhere else turns the device, a pinch or a scroll off the panel zooms, a double

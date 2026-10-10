@@ -99,6 +99,9 @@ final class SimulatorCanvasController {
     @ObservationIgnored var onLiveCanvasStarted: (@MainActor (_ udid: String) -> Void)?
     /// The simulator the last session started for, and the panel it shows.
     @ObservationIgnored private var startedPanel: (udid: String, panel: SimulatorSessionPanel)?
+    /// Foldables whose lit panel is being read off their screenshots
+    /// (`readLitPanel`).
+    @ObservationIgnored private var readingLitPanel: Set<String> = []
     /// Whether dtuhidd was already connected in the simulator's boot when
     /// its live session last started, by UDID
     /// (`SimulatorCanvasMemory.dtuhiddWasActive`).
@@ -187,12 +190,40 @@ final class SimulatorCanvasController {
         }
     }
 
+    /// A booted foldable Device Hub Pro has not moved in this boot is taken
+    /// as closed, but something else may have opened it (Device Hub, a test,
+    /// another copy of the app): the session would then show the dark outer
+    /// panel. The two panels' screenshots tell which one is lit
+    /// (`SimulatorFold.litPanel`); the fold is noted, and an open one moves
+    /// the session to the inner panel. Once per boot: the noted fold holds.
+    private func readLitPanel(_ udid: String) {
+        guard simulators.folds.records[udid] == nil, !readingLitPanel.contains(udid),
+              let entry = simulators.entry(udid: udid), entry.state == .booted,
+              let panels = simulators.foldPanels(for: entry), let simctl = simulators.simctl
+        else { return }
+        readingLitPanel.insert(udid)
+        let outerScreen = panels.profile(of: .outer).screenID
+        let innerScreen = panels.profile(of: .inner).screenID
+        Task { [weak self] in
+            async let outer = SimulatorLifecycleController.screenshotContent(udid, simctl, display: outerScreen)
+            async let inner = SimulatorLifecycleController.screenshotContent(udid, simctl, display: innerScreen)
+            let lit = await SimulatorFold.litPanel(outer: outer, inner: inner)
+            guard let self else { return }
+            self.readingLitPanel.remove(udid)
+            // A fold made in the meantime is newer than the screenshots.
+            guard let lit, self.simulators.folds.records[udid] == nil else { return }
+            let angle = SimulatorFold.angle(for: lit == .inner ? .opened : .closed)
+            if self.simulators.noteFold(udid: udid, angle: angle) { self.followFold(udid) }
+        }
+    }
+
     /// The panels of the mirrored simulator's device type were read. A
     /// session that started before shows the main screen, the outer panel:
     /// when the fold kept from the app's last run lit the inner one (the
     /// simulator stayed open while the app quit), it restarts there;
     /// otherwise the device is held as its lit panel rests.
     private func foldablesRead(_ udid: String) {
+        readLitPanel(udid)
         if let entry = simulators.entry(udid: udid),
            simulators.litPanel(of: entry) == .inner,
            let started = startedPanel, started.udid == udid, started.panel == .main {
@@ -500,6 +531,7 @@ final class SimulatorCanvasController {
         // simulator of this set (it never does in a private set).
         let capabilities = Self.capabilities(liveCanvas: canvas.isLive, devicectlReady: simulators.devicectlReady)
         beginSession(session, .apple(entry.udid), capabilities)
+        if !awaitingBoot { readLitPanel(entry.udid) }
         guard canvas.isLive else { return }
         onLiveCanvasStarted?(entry.udid)
         readInputFlag(entry.udid, simctl: simctl)
