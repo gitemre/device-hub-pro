@@ -1253,11 +1253,25 @@ final class PanelRenderer: @unchecked Sendable {
     private var cache: CVMetalTextureCache?
     private let queue = DispatchQueue(label: "com.devicehubpro.device-model.panels", qos: .userInteractive)
     /// Runs on the drawing queue after each frame reached its texture.
-    private let presented = Mutex<(@Sendable () -> Void)?>(nil)
+    /// Boxed: a closure held in a `Mutex` is reabstracted and written back
+    /// by every `withLock { $0 }`, its thunk chain two frames deeper each
+    /// read, until a drawing thread's stack overflows (measured: 2,232
+    /// frames after 1,111 reads).
+    private let presented = Mutex<PresentedHandler?>(nil)
+
+    final class PresentedHandler: Sendable {
+        let call: @Sendable () -> Void
+        init(_ call: @escaping @Sendable () -> Void) { self.call = call }
+    }
     private let state = Mutex<(waiting: [SimulatorFoldPanel: Job], drawing: Set<SimulatorFoldPanel>)>(([:], []))
 
     func setPresented(_ handler: @escaping @Sendable () -> Void) {
-        presented.withLock { $0 = handler }
+        presented.withLock { $0 = PresentedHandler(handler) }
+    }
+
+    /// Calls the handler, as a drawn frame does.
+    func notifyPresented() {
+        presented.withLock { $0 }?.call()
     }
 
     init() {
@@ -1390,6 +1404,6 @@ final class PanelRenderer: @unchecked Sendable {
         commands.commit()
         commands.waitUntilScheduled()
         drawable.present()
-        presented.withLock { $0 }?()
+        notifyPresented()
     }
 }
