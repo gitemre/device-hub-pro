@@ -118,6 +118,25 @@ final class SimulatorLifecycleFixtureTests: XCTestCase {
         XCTAssertEqual(phases.last, .waitingOnHomeScreen, "Finished leaves the home screen to wait for")
     }
 
+    /// iPhone Duo on iOS 27.1 (24A94232, Xcode 27.1 RC, CoreSimulator
+    /// 1174.9.2) ends every boot with "Data Migration Failed", Status=3, and
+    /// comes up all the same; captured 2026-10-10 on a second boot of a
+    /// scratch Duo (its UDID replaced). The boot counts as ended, and the
+    /// stage waits for the home screen rather than showing the failure.
+    func testAnIPhoneDuoBootEndsInDataMigrationFailed() throws {
+        let updates = SimctlParsing.bootStatuses(from: try Self.text("simctl-bootstatus.iphone-duo-ios27.1.stdout.txt"))
+        let last = try XCTUnwrap(updates.last)
+        XCTAssertEqual(updates.count, 1)
+        XCTAssertEqual(last.status, 3)
+        XCTAssertTrue(last.isTerminal)
+        XCTAssertEqual(last.phase, .other("Data Migration Failed"))
+        XCTAssertFalse(last.isFinished)
+        XCTAssertTrue(SimulatorReadiness.bootFinished(lastUpdate: last))
+        XCTAssertEqual(DeviceBootPhase(update: last), .waitingOnHomeScreen)
+        XCTAssertFalse(SimulatorReadiness.isReady(bootFinished: true, homeScreenPID: nil, showsHomeScreen: false),
+                       "the home screen still decides")
+    }
+
     /// `bootstatus` on a device whose boot had finished prints one notice
     /// and no update (exit 0): the boot counts as finished.
     func testABootThatHadFinishedReportsNoUpdate() throws {

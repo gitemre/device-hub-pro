@@ -893,8 +893,13 @@ final class AppModel {
                     return content
                 }
             }
+            // A foldable's lit panel is the display to look at (simctl's
+            // default is iPhone Duo's inner one, dark while it is closed): its
+            // panels are read here when no stage has drawn the device yet.
+            let simulators = self.services.simulators
+            if let entry = simulators.entry(udid: udid) { await simulators.loadDisplayShape(for: entry) }
             return await SimulatorLifecycleController.screenshotContent(
-                udid, simctl, display: self.services.simulators.captureDisplay(udid: udid)
+                udid, simctl, display: simulators.captureDisplay(udid: udid)
             )
         }
         // The canvas's session half (its begin and teardown hooks, the

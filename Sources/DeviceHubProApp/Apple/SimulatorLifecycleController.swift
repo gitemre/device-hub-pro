@@ -672,8 +672,8 @@ final class SimulatorLifecycleController {
         let (updates, continuation) = AsyncStream.makeStream(of: SimulatorBootStatus.self)
         let relay = Task { [weak self] in
             for await update in updates {
-                if let phase = update.phase {
-                    self?.advance(udid, to: DeviceBootPhase(phase))
+                if let phase = DeviceBootPhase(update: update) {
+                    self?.advance(udid, to: phase)
                 }
             }
         }

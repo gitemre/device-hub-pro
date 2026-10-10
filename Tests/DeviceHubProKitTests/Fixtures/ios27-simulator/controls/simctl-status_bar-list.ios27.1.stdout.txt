@@ -1,0 +1,4 @@
+Current Status Bar Overrides:
+=============================
+Time: 9:41 
+Battery State: 2, Battery Level: 100, Not Charging: 0

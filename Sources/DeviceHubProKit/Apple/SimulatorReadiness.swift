@@ -20,6 +20,20 @@ public struct SimulatorLaunchdJob: Sendable, Equatable {
 }
 
 extension DeviceBootPhase {
+    /// The phase a `simctl bootstatus` update shows: one that ends the boot
+    /// leaves the home screen to wait for, whatever it reads (iPhone Duo on
+    /// iOS 27.1 ends every boot with "Data Migration Failed", then comes up);
+    /// nil for an update without a phase line.
+    public init?(update: SimulatorBootStatus) {
+        if update.isTerminal {
+            self = .waitingOnHomeScreen
+        } else if let phase = update.phase {
+            self.init(phase)
+        } else {
+            return nil
+        }
+    }
+
     /// The phase a `simctl bootstatus` update reports. Finished leaves the
     /// home screen to wait for.
     public init(_ phase: SimulatorBootStatus.Phase) {
@@ -98,12 +112,14 @@ public enum SimulatorReadiness {
         jobs.first { $0.label == label }?.pid
     }
 
-    /// Whether a `bootstatus` run that exited 0 saw the boot finish: its last
-    /// update is Finished, or it printed none because the boot had already
+    /// Whether a `bootstatus` run that exited 0 saw the boot end: its last
+    /// update is terminal, or it printed none because the boot had already
     /// finished (simctl then prints only "Device already booted, nothing to
-    /// do.").
+    /// do."). Terminal is usually Finished; iPhone Duo on iOS 27.1 ends every
+    /// boot with "Data Migration Failed" (Status=3) and comes up all the
+    /// same, so the home screen process and the screen decide (`isReady`).
     public static func bootFinished(lastUpdate: SimulatorBootStatus?) -> Bool {
-        lastUpdate.map(\.isFinished) ?? true
+        lastUpdate.map(\.isTerminal) ?? true
     }
 
     /// All three: the boot finished, the home screen process runs, and the
