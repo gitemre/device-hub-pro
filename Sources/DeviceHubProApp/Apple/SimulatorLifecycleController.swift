@@ -175,6 +175,15 @@ final class SimulatorLifecycleController {
     @ObservationIgnored var screenOffGrace: Duration = .seconds(10)
     /// The bound on one `bootstatus` run (a first boot migrates data).
     @ObservationIgnored var bootStatusTimeout: Duration = SimctlClient.bootTimeout
+    /// A simulator that read as not responding is looked at again on its own
+    /// after these waits (the last repeats), quietly: it keeps reading as not
+    /// responding while it is looked at, and becomes ready as soon as it
+    /// answers. Without this a boot slowed past `homeScreenTimeout` (a Mac,
+    /// or a VM, under heavy load) stayed "Not Responding" until a Refresh or
+    /// a relaunch, long after the simulator had come up.
+    @ObservationIgnored var unresponsiveRecheckDelays: [Duration] = [.seconds(5), .seconds(10), .seconds(15), .seconds(30)]
+    /// How long one such look waits for the home screen.
+    @ObservationIgnored var unresponsiveRecheckTimeout: Duration = .seconds(15)
 
     @ObservationIgnored private let status: StatusCenter
     /// The claim behind each operation, so an interrupted one cannot end its
@@ -183,6 +192,10 @@ final class SimulatorLifecycleController {
     @ObservationIgnored private var nextClaim = 0
     /// The readiness waits running, per UDID.
     @ObservationIgnored private var readinessWaits: [String: Task<Readiness?, Never>] = [:]
+    /// The next quiet look at a simulator that reads as not responding, and
+    /// how many it had (`unresponsiveRecheckDelays`).
+    @ObservationIgnored private var recheckTasks: [String: Task<Void, Never>] = [:]
+    @ObservationIgnored private var recheckCounts: [String: Int] = [:]
     /// Set for good by `stop()` (quit): no listing or boot starts a wait
     /// after it.
     @ObservationIgnored private var isStopped = false
@@ -506,6 +519,10 @@ final class SimulatorLifecycleController {
             wait.cancel()
         }
         readinessWaits = [:]
+        for recheck in recheckTasks.values {
+            recheck.cancel()
+        }
+        recheckTasks = [:]
     }
 
     // MARK: - Internals
@@ -614,14 +631,23 @@ final class SimulatorLifecycleController {
     }
 
     /// Registers the wait at once, so a listing that arrives before it runs
-    /// does not start a second one, and drops it when it ends.
+    /// does not start a second one, and drops it when it ends. A `quiet`
+    /// wait (a not-responding simulator looked at again) leaves the
+    /// readiness as it is until it settles, and waits `homeScreenTimeout`
+    /// for the home screen when given.
     @discardableResult
-    private func startReadinessWait(_ udid: String, simctl: SimctlClient, startedHere: Bool) -> Task<Readiness?, Never> {
+    private func startReadinessWait(
+        _ udid: String,
+        simctl: SimctlClient,
+        startedHere: Bool,
+        quiet: Bool = false,
+        homeScreenTimeout: Duration? = nil
+    ) -> Task<Readiness?, Never> {
         guard !isStopped else { return Task { nil } }
         cancelReadinessWait(udid)
-        readiness[udid] = .waiting(.launching)
+        if !quiet { readiness[udid] = .waiting(.launching) }
         let wait = Task { [weak self] () -> Readiness? in
-            await self?.awaitReady(udid, simctl: simctl, startedHere: startedHere)
+            await self?.awaitReady(udid, simctl: simctl, startedHere: startedHere, homeScreenTimeout: homeScreenTimeout)
         }
         readinessWaits[udid] = wait
         Task { [weak self] in
@@ -637,7 +663,12 @@ final class SimulatorLifecycleController {
     /// shown as they come), then the home screen process's pid, then the
     /// home screen on the screen — or a screen that stays dark, which is
     /// off. Runs inside a readiness wait.
-    private func awaitReady(_ udid: String, simctl: SimctlClient, startedHere: Bool) async -> Readiness? {
+    private func awaitReady(
+        _ udid: String,
+        simctl: SimctlClient,
+        startedHere: Bool,
+        homeScreenTimeout: Duration? = nil
+    ) async -> Readiness? {
         let (updates, continuation) = AsyncStream.makeStream(of: SimulatorBootStatus.self)
         let relay = Task { [weak self] in
             for await update in updates {
@@ -663,7 +694,7 @@ final class SimulatorLifecycleController {
         guard finished else { return settle(udid, .unresponsive, startedHere: startedHere) }
         advance(udid, to: .waitingOnHomeScreen)
 
-        let deadline = ContinuousClock.now + homeScreenTimeout
+        let deadline = ContinuousClock.now + (homeScreenTimeout ?? self.homeScreenTimeout)
         // Without a known home screen process (watchOS, visionOS) the screen
         // alone decides.
         let label = SimulatorReadiness.homeScreenLabel(platform: entrySource(udid)?.platform)
@@ -762,19 +793,51 @@ final class SimulatorLifecycleController {
         guard !Task.isCancelled else { return nil }
         readiness[udid] = outcome
         firstBoots.remove(udid)
-        if outcome == .ready {
+        switch outcome {
+        case .ready:
+            recheckCounts[udid] = nil
             becameReady(udid, startedHere)
+        case .unresponsive:
+            scheduleRecheck(udid, startedHere: startedHere)
+        case .waiting:
+            break
         }
         return outcome
     }
 
+    /// Looks at a not-responding simulator again after the next of
+    /// `unresponsiveRecheckDelays`, unless meanwhile it answered, shut down,
+    /// an operation took it, a Refresh followed it, or the app quit.
+    private func scheduleRecheck(_ udid: String, startedHere: Bool) {
+        guard !isStopped, !unresponsiveRecheckDelays.isEmpty else { return }
+        recheckTasks.removeValue(forKey: udid)?.cancel()
+        let count = recheckCounts[udid] ?? 0
+        recheckCounts[udid] = count + 1
+        let delay = unresponsiveRecheckDelays[min(count, unresponsiveRecheckDelays.count - 1)]
+        recheckTasks[udid] = Task { [weak self] in
+            // Cancelled: the sleep throws and the guard below ends it.
+            try? await Task.sleep(for: delay)
+            guard let self, !Task.isCancelled, !self.isStopped,
+                  self.readiness[udid] == .unresponsive, self.operations[udid] == nil,
+                  self.readinessWaits[udid] == nil, let simctl = self.simctlSource()
+            else { return }
+            self.recheckTasks[udid] = nil
+            self.startReadinessWait(
+                udid, simctl: simctl, startedHere: startedHere,
+                quiet: true, homeScreenTimeout: self.unresponsiveRecheckTimeout
+            )
+        }
+    }
+
     private func cancelReadinessWait(_ udid: String) {
         readinessWaits.removeValue(forKey: udid)?.cancel()
+        recheckTasks.removeValue(forKey: udid)?.cancel()
     }
 
     /// Drops everything known about a simulator that is gone.
     private func forget(_ udid: String) {
         cancelReadinessWait(udid)
+        recheckCounts[udid] = nil
         readiness[udid] = nil
         transitions[udid] = nil
         firstBoots.remove(udid)

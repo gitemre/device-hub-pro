@@ -312,6 +312,64 @@ final class SimulatorLifecycleControllerTests: XCTestCase {
         XCTAssertEqual(h.ready.calls, ["followed"], "a Refresh starts no boot: the kept location is not sent")
     }
 
+    /// A simulator that read as not responding is looked at again on its
+    /// own (a boot slowed past the bound under load): it keeps reading as
+    /// not responding while it is looked at, and is ready once it answers,
+    /// with no Refresh and no restart.
+    func testANotRespondingSimulatorIsLookedAtAgainOnItsOwn() async throws {
+        let stubFolder = try makeTemporaryFolder("state")
+        let marker = stubFolder.appendingPathComponent("answers").path
+        let launchctl = """
+        if [ -f \(SimulatorFixtures.quoted(marker)) ]; then \(SimulatorFixtures.cat("simctl-spawn-launchctl-list.ready.stdout.txt")); else exit 1; fi
+        """
+        let h = try harness(arms: Self.arms(launchctl: launchctl), entries: [try shutDownEntry()])
+        h.controller.homeScreenTimeout = .milliseconds(300)
+        h.controller.unresponsiveRecheckTimeout = .milliseconds(200)
+        h.controller.unresponsiveRecheckDelays = [.milliseconds(100)]
+
+        let ready = await h.controller.boot(u)
+        XCTAssertFalse(ready)
+        XCTAssertEqual(h.controller.readiness[u], .unresponsive)
+
+        // Looked at again and again, quietly: never back to Starting.
+        var sawWaiting = false
+        let deadline = ContinuousClock.now + .seconds(1)
+        while ContinuousClock.now < deadline {
+            if case .waiting? = h.controller.readiness[u] { sawWaiting = true }
+            try await Task.sleep(for: .milliseconds(10))
+        }
+        XCTAssertFalse(sawWaiting, "a quiet look does not show Starting")
+        XCTAssertGreaterThan(h.stub.calls.filter { $0.hasSuffix("launchctl list") }.count, 2, "looked at again")
+
+        FileManager.default.createFile(atPath: marker, contents: Data())
+        await waitUntil(timeout: 10, "ready") { h.controller.isReady(self.u) }
+        XCTAssertEqual(h.ready.calls, ["started"], "the boot this controller started")
+        XCTAssertFalse(h.stub.calls.dropFirst().contains("boot \(u)"), "no second boot")
+    }
+
+    /// A shutdown, an operation or a quit ends the looking.
+    func testTheLookingStopsWhenTheSimulatorShutsDownOrTheAppQuits() async throws {
+        let h = try harness(arms: Self.arms(launchctl: "exit 1"), entries: [try bootedEntry()])
+        h.controller.homeScreenTimeout = .milliseconds(200)
+        h.controller.unresponsiveRecheckTimeout = .milliseconds(100)
+        h.controller.unresponsiveRecheckDelays = [.milliseconds(100)]
+        h.controller.noteSnapshot([try bootedEntry()])
+        await waitUntil(timeout: 10, "not responding") { h.controller.readiness[self.u] == .unresponsive }
+
+        h.controller.noteSnapshot([try shutDownEntry()])
+        XCTAssertNil(h.controller.readiness[u])
+        let calls = h.stub.calls.count
+        try await Task.sleep(for: .milliseconds(600))
+        XCTAssertEqual(h.stub.calls.count, calls, "a shut-down simulator is not looked at")
+
+        h.controller.noteSnapshot([try bootedEntry()])
+        await waitUntil(timeout: 10, "not responding again") { h.controller.readiness[self.u] == .unresponsive }
+        h.controller.stop()
+        let afterStop = h.stub.calls.count
+        try await Task.sleep(for: .milliseconds(600))
+        XCTAssertEqual(h.stub.calls.count, afterStop, "nothing after a quit")
+    }
+
     /// After Finished the job list is asked again until it answers with
     /// SpringBoard (a spawn can fail while launchd settles).
     func testSpringBoardIsAskedForUntilItAnswers() async throws {
