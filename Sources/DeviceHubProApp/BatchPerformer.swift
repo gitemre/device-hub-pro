@@ -240,7 +240,10 @@ final class BatchPerformer {
             try await apply(.statusBar(model), udid: udid, simctl: simctl)
         case .screenshot:
             let destination = try screenshotDestination(target, context)
-            try await simctl.screenshot(udid: udid, to: destination, timeout: Self.simulatorScreenshotTimeout)
+            try await simctl.screenshot(
+                udid: udid, to: destination, timeout: Self.simulatorScreenshotTimeout,
+                display: simulators.captureDisplay(udid: udid)
+            )
         case .reduceMotion(let on):
             try await apply(.reduceMotion(on), udid: udid, simctl: simctl, usesDevicectl: true)
         case .increaseContrast(let on):

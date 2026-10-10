@@ -376,15 +376,16 @@ final class MirrorController {
         udid: String,
         deviceSet: URL?,
         simctl: SimctlClient,
-        bridge: (any SimulatorBridging)?
+        bridge: (any SimulatorBridging)?,
+        panel: SimulatorSessionPanel = .main
     ) -> any MirrorSessionProtocol {
         if let simulatorSessionFactoryOverride {
             return simulatorSessionFactoryOverride(udid, bridge != nil)
         }
         if let bridge {
-            return SimulatorMirrorSession(udid: udid, deviceSet: deviceSet, bridge: bridge, simctl: simctl)
+            return SimulatorMirrorSession(udid: udid, deviceSet: deviceSet, bridge: bridge, simctl: simctl, panel: panel)
         }
-        return SimulatorScreenshotSession(udid: udid, simctl: simctl)
+        return SimulatorScreenshotSession(udid: udid, simctl: simctl, display: panel.screenID == 0 ? nil : panel.screenID)
     }
 
     /// Stops the session's transport for `tearDownMirror`. Keys still held

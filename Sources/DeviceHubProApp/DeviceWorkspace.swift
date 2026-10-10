@@ -95,6 +95,8 @@ final class DeviceWorkspace {
     let appleControls: AppleControlsController
     /// A simulator's live stage.
     let simulatorCanvas: SimulatorCanvasController
+    /// A foldable simulator's fold strip (iPhone Duo).
+    let simulatorFold: SimulatorFoldController
     /// A selected physical iPhone's view-only screen: the live USB capture,
     /// the screenshot preview or the static panel.
     let physicalLive: PhysicalLiveViewController
@@ -190,6 +192,7 @@ final class DeviceWorkspace {
         self.physicalCrashLogs = physicalCrashLogs
         self.appleControls = appleControls
         self.simulatorCanvas = simulatorCanvas
+        self.simulatorFold = SimulatorFoldController(simulators: services.simulators, canvas: simulatorCanvas)
         self.physicalLive = PhysicalLiveViewController(provider: services.environment.screenCapture)
         // Two-phase init: the coordinator's real hooks close over `self`, so
         // it is built here with an inert placeholder and rebound once every
@@ -197,6 +200,18 @@ final class DeviceWorkspace {
         self.lifecycle = DeviceLifecycleCoordinator(hooks: DeviceWorkspace.placeholderLifecycleHooks)
         wireMirror()
         wireSimulatorCanvasSession()
+        simulatorFold.mirroredDevice = { [weak self] in self?.context.device }
+        // A foldable simulator is held through the fold's orientation picker:
+        // the stage's rotate and Device ▸ Orientation alike.
+        simulatorCanvas.holdFoldable = { [weak simulatorFold] udid, pose in
+            simulatorFold?.setHeldPose(pose, udid: udid) ?? false
+        }
+        appleControls.holdFoldable = { [weak simulatorFold] udid, pose in
+            simulatorFold?.setHeldPose(pose, udid: udid) ?? false
+        }
+        simulatorFold.onPoseChanged = { [weak appleControls] udid, pose in
+            appleControls?.noteHeldPose(pose, udid: udid)
+        }
         wirePhysicalLive()
         wirePhysicalControl()
         wireLifecycle()

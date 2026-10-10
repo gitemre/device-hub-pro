@@ -53,6 +53,9 @@ public final class SimulatorMirrorSession: MirrorSessionProtocol, SimulatorButto
     public let udid: String
     /// The device set holding the simulator, or nil for the default set.
     public let deviceSet: URL?
+    /// The panel mirrored and touched (a foldable's inner panel, else the
+    /// main screen).
+    public let panel: SimulatorSessionPanel
     public let frames = FrameStore()
     public var transport: MirrorTransport { .simulatorSurface }
 
@@ -162,8 +165,17 @@ public final class SimulatorMirrorSession: MirrorSessionProtocol, SimulatorButto
     ///   - simctl: a client for the same device set, used to put text the
     ///     keyboard layout cannot type on the pasteboard. Without it such text
     ///     is dropped with an error.
-    public convenience init(udid: String, deviceSet: URL? = nil, bridge: any SimulatorBridging, simctl: SimctlClient? = nil) {
-        self.init(udid: udid, deviceSet: deviceSet, bridge: bridge, simctl: simctl, minimumPublishInterval: Self.defaultMinimumPublishInterval)
+    public convenience init(
+        udid: String,
+        deviceSet: URL? = nil,
+        bridge: any SimulatorBridging,
+        simctl: SimctlClient? = nil,
+        panel: SimulatorSessionPanel = .main
+    ) {
+        self.init(
+            udid: udid, deviceSet: deviceSet, bridge: bridge, simctl: simctl,
+            minimumPublishInterval: Self.defaultMinimumPublishInterval, panel: panel
+        )
     }
 
     /// Test seam: the publish interval, a fixed keyboard layout, and the
@@ -175,10 +187,12 @@ public final class SimulatorMirrorSession: MirrorSessionProtocol, SimulatorButto
         simctl: SimctlClient? = nil,
         minimumPublishInterval: Duration,
         keyboardLayout: SimulatorKeyboardLayout? = nil,
-        pasteboardWriter: (@Sendable (String) async throws -> Void)? = nil
+        pasteboardWriter: (@Sendable (String) async throws -> Void)? = nil,
+        panel: SimulatorSessionPanel = .main
     ) {
         self.udid = udid
         self.deviceSet = deviceSet
+        self.panel = panel
         self.bridge = bridge
         self.simctl = simctl
         self.address = SimulatorAddress(udid: udid, deviceSetPath: deviceSet?.path)
@@ -290,7 +304,7 @@ public final class SimulatorMirrorSession: MirrorSessionProtocol, SimulatorButto
     private func open(generation: UInt64) {
         do {
             _ = try bridge.load()
-            let screen = try bridge.makeScreen(for: address)
+            let screen = try bridge.makeScreen(for: address, screenID: panel.screenID)
             let initial = screen.initialProperties
             let adopted = state.withLock { state -> Bool in
                 guard state.running, state.generation == generation else { return false }
@@ -761,6 +775,7 @@ public final class SimulatorMirrorSession: MirrorSessionProtocol, SimulatorButto
         // Nothing connects until the first send, so a channel made for a
         // generation that ended meanwhile is simply dropped.
         let made = bridge.makeInput(for: address)
+        made.setDigitizerTarget(panel.digitizerTarget)
         return state.withLock { state in
             guard state.running, state.generation == generation else { return nil }
             if let existing = state.input { return existing }

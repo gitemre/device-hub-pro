@@ -288,7 +288,7 @@ final class AppleControlsController {
             if let reading = try? await backend.read(read) { readings.append(reading) }
         }
         guard generation == attachGeneration else { return generation }
-        for reading in readings { state.apply(reading) }
+        for reading in readings { apply(reading) }
         capabilityRevision += 1
         isLoaded = true
         return generation
@@ -326,7 +326,7 @@ final class AppleControlsController {
         }
         let (readZone, readList, readScenarios) = await (zone, barList, scenarios)
         guard generation == attachGeneration else { return }
-        for reading in readings { state.apply(reading) }
+        for reading in readings { apply(reading) }
         if let readZone { bootTimeZone = .some(readZone) }
         if let readList {
             statusBarActive = !readList.isEmpty
@@ -363,7 +363,7 @@ final class AppleControlsController {
         let answer = try? await active.read(read)
         syncCapabilities()
         guard let reading = answer, generation == writeGeneration, attach == attachGeneration else { return }
-        state.apply(reading)
+        apply(reading)
     }
 
     /// A physical device's backend records a feature a call found
@@ -399,7 +399,7 @@ final class AppleControlsController {
             let answer = try await active.apply(change)
             guard self.udid == udid else { return true }
             if let answer {
-                state.apply(answer)
+                apply(answer)
             } else {
                 applyExpected(change)
             }
@@ -533,7 +533,33 @@ final class AppleControlsController {
 
     // Sensors, Advanced
 
-    func setPose(_ pose: SimulatorDevicePose) async { await perform(.orientation(pose), "change the orientation") }
+    /// Holds a foldable simulator as a pose (`SimulatorFoldController
+    /// .setHeldPose`); false for any other device, which devicectl turns.
+    @ObservationIgnored var holdFoldable: (@MainActor (_ udid: String, _ pose: SimulatorDevicePose) -> Bool)?
+
+    func setPose(_ pose: SimulatorDevicePose) async {
+        if let udid, !isPhysical, holdFoldable?(udid, pose) == true { return }
+        await perform(.orientation(pose), "change the orientation")
+    }
+
+    /// The fold strip or the stage's rotate held the foldable `udid` as
+    /// `pose` (the fold book records it): Device ▸ Orientation checks it.
+    func noteHeldPose(_ pose: SimulatorDevicePose, udid: String) {
+        guard self.udid == udid else { return }
+        state.pose = pose
+    }
+
+    /// A reading, with a held foldable's pose from the fold book over
+    /// devicectl's (which does not follow the orientation picker: iPhone Duo
+    /// held face up read `landscapeRight`, held portrait `landscapeLeft`).
+    /// The book forgets a simulator that shut down: it boots upright, and
+    /// devicectl reads it again.
+    private func apply(_ reading: AppleControlsReading) {
+        state.apply(reading)
+        if let udid, let held = simulators.folds.records[udid]?.pose {
+            state.pose = held
+        }
+    }
     func setBiometricsEnrolled(_ enrolled: Bool) async { await perform(.biometricsEnrolled(enrolled), "change the enrolment") }
 
     /// A match or non-match request kept until the simulator shows its

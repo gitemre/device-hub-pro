@@ -94,6 +94,8 @@ final class SimulatorCanvasController {
     /// stops before the boot ends is the display not being up yet, not a
     /// failure, so it is not replaced by the view-only canvas.
     @ObservationIgnored private var followingBoot: Set<String> = []
+    /// The simulator the last session started for, and the panel it shows.
+    @ObservationIgnored private var startedPanel: (udid: String, panel: SimulatorSessionPanel)?
     /// Whether dtuhidd was already connected in the simulator's boot when
     /// its live session last started, by UDID
     /// (`SimulatorCanvasMemory.dtuhiddWasActive`).
@@ -122,6 +124,9 @@ final class SimulatorCanvasController {
     ) -> Void = { _, _ in }
     /// The mirrored device and its session.
     @ObservationIgnored var activeDevice: @MainActor () -> DeviceRef? = { nil }
+    /// Holds a foldable simulator as a pose (`SimulatorFoldController
+    /// .setHeldPose`); false for any other device.
+    @ObservationIgnored var holdFoldable: (@MainActor (_ udid: String, _ pose: SimulatorDevicePose) -> Bool)?
     @ObservationIgnored var activeSession: @MainActor () -> (any MirrorSessionProtocol)? = { nil }
     /// How long a live session has to publish its first frame.
     @ObservationIgnored var smokeTimeout: Duration = .seconds(3)
@@ -159,6 +164,39 @@ final class SimulatorCanvasController {
         self.mirror = mirror
         self.memory = memory
         self.status = status
+        watchFoldables()
+    }
+
+    /// A device type's panels are read off the main thread, and on a launch
+    /// with the simulator booted its session often draws first: the pose
+    /// then came from the first frame (a closed iPhone Duo's says landscape
+    /// right). When the panels land, a foldable on the stage is held as its
+    /// lit panel rests.
+    private func watchFoldables() {
+        withObservationTracking {
+            _ = simulators.foldables.count
+        } onChange: { [weak self] in
+            Task { @MainActor [weak self] in
+                guard let self else { return }
+                if let device = self.activeDevice(), device.platform == .apple { self.foldablesRead(device.id) }
+                self.watchFoldables()
+            }
+        }
+    }
+
+    /// The panels of the mirrored simulator's device type were read. A
+    /// session that started before shows the main screen, the outer panel:
+    /// when the fold kept from the app's last run lit the inner one (the
+    /// simulator stayed open while the app quit), it restarts there;
+    /// otherwise the device is held as its lit panel rests.
+    private func foldablesRead(_ udid: String) {
+        if let entry = simulators.entry(udid: udid),
+           simulators.litPanel(of: entry) == .inner,
+           let started = startedPanel, started.udid == udid, started.panel == .main {
+            followFold(udid)
+        } else {
+            settleFoldPose(udid)
+        }
     }
 
     // MARK: - Reading
@@ -410,6 +448,15 @@ final class SimulatorCanvasController {
         }.value
     }
 
+    /// A foldable's lit panel changed (`SimulatorInventory.noteFold`): the
+    /// mirrored session restarts on the panel now lit, with its chrome.
+    func followFold(_ udid: String) {
+        guard activeDevice() == .apple(udid), let entry = simulators.entry(udid: udid) else { return }
+        let canvas = canvas(for: entry)
+        guard canvas.isLive else { return }
+        start(entry, canvas: canvas)
+    }
+
     /// Clears the live canvas's failure for `udid` and starts its session
     /// again: the view-only stage's "Try Live View" button.
     func retryLiveCanvas(_ udid: String) {
@@ -429,11 +476,22 @@ final class SimulatorCanvasController {
         smokeTask = nil
         memory.orientations[entry.udid] = nil
         devicePose.reset()
+        // A foldable is held the way its lit panel rests (iPhone Duo open:
+        // landscape; closed: portrait), not as its first frame says: the
+        // session starts before the panel lights, and a closed device's first
+        // frame still carries the open one's landscape interface.
+        if let orientation = foldRestingOrientation(entry) {
+            memory.orientations[entry.udid] = orientation
+            devicePose.snap(toTurns: AppleChromePose.turns(for: orientation))
+        }
+        let panel = simulators.sessionPanel(for: entry)
+        startedPanel = (entry.udid, panel)
         let session = mirror.makeSimulatorSession(
             udid: entry.udid,
             deviceSet: simulators.deviceSet,
             simctl: simctl,
-            bridge: canvas.isLive ? simulators.bridge : nil
+            bridge: canvas.isLive ? simulators.bridge : nil,
+            panel: panel
         )
         // devicectl-backed actions need T2: devicectl answered for a
         // simulator of this set (it never does in a private set).
@@ -502,12 +560,58 @@ final class SimulatorCanvasController {
     /// home screen) is taken for portrait.
     private func adoptFirstFrameOrientation(_ udid: String, session: any MirrorSessionProtocol) {
         guard memory.orientations[udid] == nil,
-              let rotation = (session as? SimulatorMirrorSession)?.publishedRotation,
-              rotation != .upright
+              let orientation = Self.firstFrameOrientation(
+                  published: (session as? SimulatorMirrorSession)?.publishedRotation,
+                  foldResting: simulators.entry(udid: udid).flatMap(foldRestingOrientation)
+              )
         else { return }
-        let orientation = Self.orientation(for: rotation)
         memory.orientations[udid] = orientation
         devicePose.snap(toTurns: AppleChromePose.turns(for: orientation))
+    }
+
+    /// The pose a session's first frame puts the device in, if any: a
+    /// foldable's resting one (its panels were read after the session
+    /// started, as on a launch with the simulator booted: the interface a
+    /// closed iPhone Duo publishes is the open one's landscape right), else
+    /// the interface's turn when it is turned.
+    static func firstFrameOrientation(
+        published: SimulatorFrameRotation?,
+        foldResting: SimulatorOrientation?
+    ) -> SimulatorOrientation? {
+        if let foldResting { return foldResting }
+        guard let published, published != .upright else { return nil }
+        return orientation(for: published)
+    }
+
+    /// How a foldable is posed: the way its lit panel rests, turned as it is
+    /// held (`SimulatorInventory.foldPoseTurns`). Nil for any other device,
+    /// and before the device type's panels are read.
+    private func foldRestingOrientation(_ entry: SimulatorEntry) -> SimulatorOrientation? {
+        simulators.foldPoseTurns(of: entry).map(Self.orientation(forTurns:))
+    }
+
+    /// The device orientation `turns` counter-clockwise quarter turns pose.
+    static func orientation(forTurns turns: Int) -> SimulatorOrientation {
+        switch ((turns % 4) + 4) % 4 {
+        case 1: return .landscapeLeft
+        case 2: return .portraitUpsideDown
+        case 3: return .landscapeRight
+        default: return .portrait
+        }
+    }
+
+    /// The mirrored foldable's pose follows how it is now held (the fold
+    /// strip turned it on its side, or back), when its lit panel did not
+    /// change (`followFold` restarts the session then).
+    func settleFoldPose(_ udid: String) {
+        guard activeDevice() == .apple(udid), let entry = simulators.entry(udid: udid),
+              let orientation = foldRestingOrientation(entry)
+        else { return }
+        memory.orientations[udid] = orientation
+        devicePose.settle(rotation: AppleChromePose.turns(for: orientation))
+        if let session = activeSession() as? any SimulatorSessionControlling {
+            Task { await session.resync() }
+        }
     }
 
     /// The live canvas failed for `udid`: the view-only canvas takes over,
@@ -604,6 +708,13 @@ final class SimulatorCanvasController {
               let entry = simulators.entry(udid: device.id),
               let session = activeSession() as? any SimulatorSessionControlling
         else { return }
+        // A foldable turns through CoreMotion's orientation picker
+        // (`SimulatorFoldController.setHeldPose`): the orientation GSEvent
+        // leaves iPhone Duo's open panel landscape.
+        if session.isLiveCanvas, let holdFoldable {
+            let next = Self.nextOrientation(from: simulators.folds.record(of: entry.udid).orientation, direction: direction)
+            if holdFoldable(entry.udid, SimulatorFold.pose(for: next)) { return }
+        }
         let current = memory.orientations[entry.udid]
             ?? Self.orientation(for: (session as? SimulatorMirrorSession)?.publishedRotation)
         let next = Self.nextOrientation(
@@ -760,7 +871,9 @@ final class SimulatorCanvasController {
             }.value
             if let png { return png }
         }
-        return try await Self.simctlScreenshot(udid: device.id, simctl: simctl, timeout: screenshotTimeout)
+        return try await Self.simctlScreenshot(
+            udid: device.id, simctl: simctl, timeout: screenshotTimeout, display: simulators.captureDisplay(udid: device.id)
+        )
     }
 
     /// Starts `simctl io recordVideo` into `url` when the mirrored simulator
@@ -773,7 +886,7 @@ final class SimulatorCanvasController {
               !session.isLiveCanvas,
               let simctl = simulators.simctl
         else { return nil }
-        return SimulatorVideoRecording(udid: device.id, simctl: simctl, url: url)
+        return SimulatorVideoRecording(udid: device.id, simctl: simctl, url: url, display: simulators.captureDisplay(udid: device.id))
     }
 
     /// `simctl io <UDID> screenshot` into a temporary file, read back and
@@ -784,7 +897,8 @@ final class SimulatorCanvasController {
     nonisolated static func simctlScreenshot(
         udid: String,
         simctl: SimctlClient,
-        timeout: Duration = .seconds(20)
+        timeout: Duration = .seconds(20),
+        display: UInt32? = nil
     ) async throws -> Data {
         let file = FileManager.default.temporaryDirectory
             .appendingPathComponent("DeviceHubPro-capture-\(UUID().uuidString).png")
@@ -793,7 +907,7 @@ final class SimulatorCanvasController {
             try? FileManager.default.removeItem(at: file)
         }
         do {
-            try await simctl.screenshot(udid: udid, to: file, timeout: timeout)
+            try await simctl.screenshot(udid: udid, to: file, timeout: timeout, display: display)
         } catch ProcessRunnerError.timedOut {
             throw CaptureError.screenDidNotAnswer(seconds: seconds(timeout))
         }

@@ -44,7 +44,7 @@ public enum SimulatorColorFilterType: String, Sendable, CaseIterable, Identifiab
 
 /// The six physical poses `devicectl device orientation set` takes; the four
 /// upright ones are also `SimulatorOrientation`s.
-public enum SimulatorDevicePose: String, Sendable, CaseIterable, Identifiable {
+public enum SimulatorDevicePose: String, Sendable, CaseIterable, Identifiable, Codable {
     case portrait
     case portraitUpsideDown
     case landscapeLeft

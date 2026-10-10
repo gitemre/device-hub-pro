@@ -134,9 +134,10 @@ public struct AppleChromeDescriptor: Sendable, Hashable {
     /// `com.apple.dt.devicekit.chrome.phone11`.
     public var identifier: String
     public var slices: Slices
-    /// The preview of the whole frame at one screen size; never drawn (one
-    /// chrome serves several screen sizes, so the frame is built from the
-    /// slices around the screen).
+    /// The preview of the whole frame at one screen size. One chrome serves
+    /// several screen sizes, so the frame is built from the slices around the
+    /// screen; the composite is drawn only when the slices are placeholders
+    /// (`AppleChromeLayout`).
     public var composite: String?
     /// `images.sizing`: from the screen's edge to the slices' outer box.
     public var sizing: Insets

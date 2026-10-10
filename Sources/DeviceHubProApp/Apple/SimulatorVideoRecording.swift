@@ -24,10 +24,10 @@ final class SimulatorVideoRecording {
     private let task: Task<Void, any Error>
 
     /// Starts recording `udid` into `url` (a new file).
-    init(udid: String, simctl: SimctlClient, url: URL) {
+    init(udid: String, simctl: SimctlClient, url: URL, display: UInt32? = nil) {
         self.url = url
         let recording = Task.detached(priority: .userInitiated) {
-            try await simctl.recordVideo(udid: udid, to: url, codec: .h264)
+            try await simctl.recordVideo(udid: udid, to: url, codec: .h264, display: display)
         }
         task = recording
         Task { [weak self] in

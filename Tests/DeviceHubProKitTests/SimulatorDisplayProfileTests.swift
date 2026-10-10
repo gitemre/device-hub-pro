@@ -31,6 +31,7 @@ final class SimulatorDisplayProfileTests: XCTestCase {
                 "hdpi": 460,
                 "height": 2622,
                 "scale": 3,
+                "screenID": 1,
                 "vdpi": 460,
                 "width": 1206,
             ],

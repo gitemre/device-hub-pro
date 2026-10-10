@@ -1148,7 +1148,10 @@ private struct MirrorContainer: View {
         zoomableStage(visible: visible, stage: stage, topInset: topInset)
             // Not 0: a fully transparent view stops drawing, and the Metal layer
             // would then show its stale contents for a frame or two on reveal.
-            .opacity(hidesUntilZoomSettles || isSettlingNewSession ? 0.001 : 1)
+            // The 3D model stays: it draws no video to settle (it would wait
+            // out the fallback), keeps the device in view while the panels
+            // switch, and folds on screen.
+            .opacity((hidesUntilZoomSettles || isSettlingNewSession) && !showsDeviceModel ? 0.001 : 1)
             .onChange(of: liveSessionID, initial: true) { _, _ in revealWhenSettled() }
             .onChange(of: stageSettled) { _, _ in revealWhenSettled() }
             .onChange(of: workspace.mirror.mirrorViewState.videoPointsPerPixel) { _, _ in revealWhenSettled() }
@@ -1187,9 +1190,16 @@ private struct MirrorContainer: View {
         }
     }
 
+    /// A foldable simulator in its 3D model fills the stage whatever the
+    /// zoom: the zoom's scale modes measure the 2D screen's drawn pixels,
+    /// which the model does not draw, and would shrink it to a speck.
+    private var showsDeviceModel: Bool {
+        DeviceModelStageView.isShown(chrome: chrome, workspace: workspace, preferences: model.preferences)
+    }
+
     @ViewBuilder
     private func zoomableStage(visible: CGSize, stage: CGSize, topInset: CGFloat) -> some View {
-        if let zoom = workspace.window.stageZoom {
+        if let zoom = workspace.window.stageZoom, !showsDeviceModel {
             ScrollView([.horizontal, .vertical]) {
                 content(available: CGSize(
                     width: visible.width * zoom,
@@ -1233,7 +1243,7 @@ private struct MirrorContainer: View {
             session: session,
             chrome: chrome,
             available: available,
-            showsFoldControls: workspace.hardware.showsFoldControls,
+            showsFoldControls: workspace.hardware.showsFoldControls || workspace.simulatorFold.showsFoldControls,
             showsNavigationBar: NavigationBarSpec.isShown(
                 preference: model.preferences.showNavigationButtons,
                 device: workspace.context.device,
@@ -1271,6 +1281,24 @@ struct MirrorStageContent: View {
     /// The fold strip, the navigation bar, or both sit under the device.
     private var showsAccessoryStrip: Bool { showsFoldControls || showsNavigationBar }
 
+    /// The clockwise quarter turns that show a frame on a 3D model's panel
+    /// as the panel shows it in its resting pose: the 2D chrome's turn to the
+    /// native panel (`AppleChromeDeviceView.textureTurns`, clockwise as the
+    /// mirror's shader samples it), less the counter-clockwise quarter turns
+    /// the panel rests at (iPhone Duo's open panel is mounted a quarter turn
+    /// round). The device pose's own turn rolls the whole model instead.
+    static func modelPanelTurns(
+        frame: AppleChromeFrame,
+        session: any MirrorSessionProtocol,
+        devicePose: StagePoseAnimator,
+        restingTurns: Int
+    ) -> (Int, Int) -> Int {
+        let native = AppleChromeDeviceView.textureTurns(frame: frame, session: session, devicePose: devicePose)
+        return { width, height in
+            (((native(width, height) - restingTurns) % 4) + 4) % 4
+        }
+    }
+
     var body: some View {
         ZStack {
             if workspace.window.showDeviceFrame {
@@ -1278,7 +1306,39 @@ struct MirrorStageContent: View {
                 case .skin(let skin):
                     framedContent(skin: skin)
                 case .appleChrome(let frame):
-                    AppleChromeDeviceView(session: session, frame: frame, available: available)
+                    if showsFoldControls {
+                        // A foldable simulator (iPhone Duo): the fold strip
+                        // under its chrome, as under a foldable emulator; in
+                        // its 3D model when the window asks for it.
+                        FoldStripStage(available: available, stripHeight: foldStripHeight) { fitted in
+                            if DeviceModelStageView.isShown(chrome: chrome, workspace: workspace, preferences: model.preferences),
+                               let deviceModel = workspace.simulatorFold.deviceModel {
+                                DeviceModelStageView(
+                                    model: deviceModel,
+                                    session: session,
+                                    opening: workspace.simulatorFold.hingeAngle ?? 0,
+                                    litPanel: workspace.simulatorFold.litPanel,
+                                    size: fitted,
+                                    panelTurns: Self.modelPanelTurns(
+                                        frame: frame,
+                                        session: session,
+                                        devicePose: workspace.simulatorCanvas.devicePose,
+                                        restingTurns: workspace.simulatorFold.restingTurns
+                                    ),
+                                    roll: ((workspace.simulatorCanvas.devicePose.targetTurns
+                                        - workspace.simulatorFold.restingTurns) % 4 + 4) % 4,
+                                    spinRequests: workspace.simulatorFold.spinRequests
+                                )
+                                .frame(width: fitted.width, height: fitted.height)
+                            } else {
+                                AppleChromeDeviceView(session: session, frame: frame, available: fitted)
+                            }
+                        } strip: {
+                            StageAccessoryStrip(showsNavigation: false, showsFold: true, offersDeviceModel: true)
+                        }
+                    } else {
+                        AppleChromeDeviceView(session: session, frame: frame, available: available)
+                    }
                 case .vector:
                     if let pixels = Self.vectorPixels(
                         settled: workspace.mirror.mirrorViewState.devicePixelSize,

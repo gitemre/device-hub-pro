@@ -200,6 +200,35 @@ final class SimulatorInventoryTests: XCTestCase {
         XCTAssertEqual(inventory.simulators.count, 2)
     }
 
+    /// A fold outlives the app while the simulator stays booted: the next
+    /// launch's inventory, listing the same boot, shows the panel the last
+    /// run left lit; a listing of the simulator shut down forgets it, here
+    /// and on disk.
+    func testAFoldIsKeptAcrossLaunchesWhileTheSimulatorStaysBooted() async throws {
+        let udid = "95D9676B-3317-4BA5-8CF6-3CDD0488CACA"
+        let folder = try makeTemporaryFolder("answers")
+        let answer = folder.appendingPathComponent("list.json")
+        try FileManager.default.copyItem(at: SimulatorFixtures.url("simctl-list-j-devices.booted.json"), to: answer)
+        let defaults = UserDefaults.scratch()
+        let simctl = try defaultSetSimctl(listFile: answer.path)
+
+        let first = try inventory(simctl: simctl, devicesDirectory: try makeTemporaryFolder("set"), preferences: AppPreferences(defaults: defaults))
+        await first.refresh()
+        XCTAssertTrue(first.noteFold(udid: udid, angle: 180))
+        first.noteFold(udid: udid, pose: .landscapeLeft)
+        first.stop()
+
+        let next = try inventory(simctl: simctl, devicesDirectory: try makeTemporaryFolder("set"), preferences: AppPreferences(defaults: defaults))
+        await next.refresh()
+        XCTAssertEqual(next.folds.record(of: udid), SimulatorFoldRecord(angle: 180, panel: .inner, orientation: .landscapeLeft, pose: .landscapeLeft))
+
+        try FileManager.default.removeItem(at: answer)
+        try FileManager.default.copyItem(at: SimulatorFixtures.url("simctl-list-j-devices.shutdown.json"), to: answer)
+        await next.reloadList()
+        XCTAssertEqual(next.folds.record(of: udid), .closed)
+        XCTAssertTrue(AppPreferences(defaults: defaults).simulatorFolds.records.isEmpty)
+    }
+
     /// The watcher publishes a change on its own: a device folder appearing
     /// in the set wakes it (FSEvents, else the 5 s poll), and its listing
     /// replaces the last one.
@@ -289,6 +318,37 @@ final class SimulatorInventoryTests: XCTestCase {
         XCTAssertFalse(inventory.deviceTypes.isEmpty)
         XCTAssertEqual(simctl.calls.filter { $0 == "list -j runtimes" }.count, 1)
         XCTAssertEqual(simctl.calls.filter { $0 == "list -j devicetypes" }.count, 1)
+    }
+
+    /// A catalog read that fails (CoreSimulator answering too slowly right
+    /// after the Mac started) is retried by itself, without a refresh: the
+    /// device types land a moment later, and with them the chrome and art.
+    func testAFailedCatalogReadIsRetriedWithoutARefresh() async throws {
+        let marker = try makeTemporaryFolder("marker").appendingPathComponent("answered-once").path
+        let simctl = try makeStubTool("simctl", arms: """
+          *"list -j devices")
+            \(SimulatorFixtures.cat("simctl-list-j-devices.empty-set.json")) ;;
+          *"list -j runtimes")
+            \(SimulatorFixtures.cat("simctl-list-j-runtimes.json")) ;;
+          *"list -j devicetypes")
+            if [ -e \(SimulatorFixtures.quoted(marker)) ]; then
+              \(SimulatorFixtures.cat("simctl-list-j-devicetypes.json"))
+            else
+              : > \(SimulatorFixtures.quoted(marker)); exit 1
+            fi ;;
+        """)
+        let inventory = try inventory(simctl: simctl, devicesDirectory: try makeTemporaryFolder("set"))
+        inventory.catalogRetryDelays = [.milliseconds(50), .milliseconds(50)]
+
+        await inventory.refresh()
+        XCTAssertTrue(inventory.deviceTypes.isEmpty, "the first read failed")
+
+        let deadline = ContinuousClock.now + .seconds(10)
+        while inventory.deviceTypes.isEmpty, ContinuousClock.now < deadline {
+            try await Task.sleep(for: .milliseconds(50))
+        }
+        XCTAssertFalse(inventory.deviceTypes.isEmpty, "the retry read the device types")
+        XCTAssertEqual(simctl.calls.filter { $0 == "list -j devicetypes" }.count, 2)
     }
 
     /// Quit stops the provider for good: a refresh that was waiting on the

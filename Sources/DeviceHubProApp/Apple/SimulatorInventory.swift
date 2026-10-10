@@ -61,6 +61,19 @@ final class SimulatorInventory {
     /// disk), read with its display; nil for a device type without one (an
     /// Apple TV), without DeviceKit, or without Apple tooling.
     private(set) var chromeFrames: [String: AppleChromeFrame?] = [:]
+    /// The foldable device types among those read (iPhone Duo), by device
+    /// type identifier: their two panels and the inner panel's own chrome
+    /// and display (the outer panel's are `chromeFrames` and
+    /// `displayShapes`, the device type's main display).
+    private(set) var foldables: [String: SimulatorFoldable] = [:]
+    /// The fold Device Hub Pro last put each booted foldable simulator in,
+    /// by UDID. A simulator boots closed, so one missing here is closed; a
+    /// simulator that shuts down or boots again is forgotten. Kept in the
+    /// preferences: a simulator stays as it was while the app quits and
+    /// opens again.
+    private(set) var folds: SimulatorFoldBook {
+        didSet { if folds != oldValue { preferences.setSimulatorFolds(folds) } }
+    }
 
     /// The toolchain the probe found; nil until it answered or without
     /// Apple tooling.
@@ -70,6 +83,17 @@ final class SimulatorInventory {
     /// The private bridge for the live canvas, made once the probe answered;
     /// nil keeps every simulator view-only.
     @ObservationIgnored private(set) var bridge: (any SimulatorBridging)?
+    /// Sends foldable simulators' hinge angles through `bridge`; made with it.
+    @ObservationIgnored var foldSender: SimulatorFoldSender? {
+        // The one gate for the private path: the fold strip, Laptop and Tent,
+        // and a foldable's rotate all send through this.
+        guard let bridge, !SimulatorFold.isDisabled() else { return nil }
+        if let made = madeFoldSender { return made }
+        let sender = SimulatorFoldSender(bridge: bridge)
+        madeFoldSender = sender
+        return sender
+    }
+    @ObservationIgnored private var madeFoldSender: SimulatorFoldSender?
 
     /// A list change: the listing or the catalogs.
     /// Its owner re-reads `simulators`/`visibleSimulators` from here.
@@ -88,6 +112,15 @@ final class SimulatorInventory {
     /// must not list them again on every refresh). A failed read is tried
     /// again on the next refresh.
     @ObservationIgnored private var catalogLoaded = false
+    /// Retries a failed catalog read on its own: right after a Mac starts,
+    /// CoreSimulator can answer too slowly for the first read, and without
+    /// the device types the stage has no Apple chrome or product art.
+    @ObservationIgnored private var catalogRetry: Task<Void, Never>?
+    /// Device types whose display was "read" before the catalog named their
+    /// bundle; forgotten when it lands, so their chrome is read then.
+    @ObservationIgnored private var shapesReadWithoutCatalog: Set<String> = []
+    /// The waits between catalog retries. Settable for tests.
+    @ObservationIgnored var catalogRetryDelays: [Duration] = [.seconds(2), .seconds(5), .seconds(10), .seconds(20), .seconds(30)]
     /// Set for good by `stop()` (quit): a refresh still waiting on the probe
     /// or on simctl then starts nothing and applies nothing.
     @ObservationIgnored private var isStopped = false
@@ -103,6 +136,7 @@ final class SimulatorInventory {
     init(apple: AppleTooling?, preferences: AppPreferences) {
         self.apple = apple
         self.preferences = preferences
+        folds = preferences.simulatorFolds
         tooling = apple == nil ? .unavailable : .probing
     }
 
@@ -154,6 +188,7 @@ final class SimulatorInventory {
     /// device type declares none.
     func displayShape(for entry: SimulatorEntry) -> DisplayShape? {
         guard let identifier = entry.deviceTypeIdentifier else { return nil }
+        if litPanel(of: entry) == .inner, let inner = foldables[identifier] { return inner.innerShape }
         return displayShapes[identifier] ?? nil
     }
 
@@ -167,7 +202,79 @@ final class SimulatorInventory {
     /// read it; nil before, and when its device type has none.
     func chromeFrame(for entry: SimulatorEntry) -> AppleChromeFrame? {
         guard let identifier = entry.deviceTypeIdentifier else { return nil }
+        if litPanel(of: entry) == .inner, let inner = foldables[identifier] { return inner.innerChrome }
         return chromeFrames[identifier] ?? nil
+    }
+
+    // MARK: - A foldable's panels
+
+    /// `entry`'s two panels when its device type is a foldable whose
+    /// display was read; nil otherwise.
+    func foldPanels(for entry: SimulatorEntry) -> SimulatorFoldPanels? {
+        entry.deviceTypeIdentifier.flatMap { foldables[$0]?.panels }
+    }
+
+    /// The panel a foldable `entry` shows: the inner one only after Device
+    /// Hub Pro opened it past `SimulatorFold.innerPanelAbove`.
+    func litPanel(of entry: SimulatorEntry) -> SimulatorFoldPanel {
+        guard foldPanels(for: entry) != nil else { return .outer }
+        return folds.record(of: entry.udid).panel
+    }
+
+    /// The screen ID simctl's screenshots and recordings of `udid` name
+    /// (`--display`): the lit panel of a foldable; nil for every other
+    /// device, whose main display simctl captures by itself.
+    func captureDisplay(udid: String) -> UInt32? {
+        guard let entry = entry(udid: udid), let panels = foldPanels(for: entry) else { return nil }
+        return panels.profile(of: litPanel(of: entry)).screenID
+    }
+
+    /// The 3D model of `entry`'s device type, when Xcode ships a checked one.
+    func deviceModel(for entry: SimulatorEntry) -> AppleDeviceModel? {
+        entry.deviceTypeIdentifier.flatMap { foldables[$0]?.model }
+    }
+
+    /// `productClass` of a device type's `profile.plist` ("V68").
+    nonisolated static func productClass(ofDeviceType bundle: URL) -> String? {
+        let url = bundle.appendingPathComponent("Contents/Resources/profile.plist")
+        guard let data = try? Data(contentsOf: url),
+              let root = try? PropertyListSerialization.propertyList(from: data, format: nil) as? [String: Any]
+        else { return nil }
+        return root["productClass"] as? String
+    }
+
+    /// The panel `entry`'s live session mirrors and touches.
+    func sessionPanel(for entry: SimulatorEntry) -> SimulatorSessionPanel {
+        guard let panels = foldPanels(for: entry) else { return .main }
+        return .foldable(litPanel(of: entry), of: panels)
+    }
+
+    /// Records the hinge at `angle` for the foldable `udid`; returns whether
+    /// the lit panel changed (the session then has to follow it).
+    @discardableResult
+    func noteFold(udid: String, angle: Double) -> Bool {
+        folds.note(udid: udid, angle: angle, bootedAt: bootTime(of: udid))
+    }
+
+    /// Records the foldable `udid` held at `pose`.
+    func noteFold(udid: String, pose: SimulatorDevicePose) {
+        folds.note(udid: udid, pose: pose, bootedAt: bootTime(of: udid))
+    }
+
+    /// When the listing says `udid` booted (`SimulatorFoldBook`).
+    private func bootTime(of udid: String) -> Date? {
+        listedDevices.first { $0.udid == udid && $0.state == .booted }?.lastUsedAt
+    }
+
+    /// How `entry`'s foldable is posed on the stage, in counter-clockwise
+    /// quarter turns (`AppleChromePose`): the lit panel's resting turn (iPhone
+    /// Duo's open panel rests a quarter round) plus the turn it is held at.
+    /// Nil for any other device, and before its panels are read.
+    func foldPoseTurns(of entry: SimulatorEntry) -> Int? {
+        guard let panels = foldPanels(for: entry) else { return nil }
+        let resting = AppleChromePose.turns(for: SimulatorFold.restingRotation(of: panels.profile(of: litPanel(of: entry))))
+        let held = AppleChromePose.turns(for: folds.record(of: entry.udid).orientation)
+        return (resting + held) % 4
     }
 
     /// Reads `entry`'s device type display, and the Apple chrome it names,
@@ -182,19 +289,35 @@ final class SimulatorInventory {
     private func loadDisplayShape(identifier: String, bundlePath: String?) async {
         guard !displayShapes.keys.contains(identifier) else { return }
         guard let bundlePath else {
+            // No catalog yet: the vector body for now, read again once the
+            // catalog lands (`forgetShapesReadWithoutCatalog`).
             displayShapes[identifier] = .some(nil)
             chromeFrames[identifier] = .some(nil)
+            shapesReadWithoutCatalog.insert(identifier)
             return
         }
         let deviceKit = apple?.deviceKit
-        let (shape, chrome) = await Task.detached(priority: .userInitiated) { () -> (DisplayShape?, AppleChromeFrame?) in
+        let developerDir = toolchain?.developerDirectory
+        let (shape, chrome, foldable) = await Task.detached(priority: .userInitiated) {
+            () -> (DisplayShape?, AppleChromeFrame?, SimulatorFoldable?) in
             let bundle = URL(fileURLWithPath: bundlePath, isDirectory: true)
-            guard let profile = SimulatorDisplayProfile.read(deviceTypeBundle: bundle) else { return (nil, nil) }
-            let chrome = deviceKit.flatMap {
-                AppleChromeFrameProvider(deviceKit: $0).frame(deviceTypeBundle: bundle, display: profile)
+            guard let profile = SimulatorDisplayProfile.read(deviceTypeBundle: bundle) else { return (nil, nil, nil) }
+            func chrome(_ display: SimulatorDisplayProfile) -> AppleChromeFrame? {
+                deviceKit.flatMap { AppleChromeFrameProvider(deviceKit: $0).frame(deviceTypeBundle: bundle, display: display) }
             }
-            return (profile.displayShape(id: "simulator:\(identifier)"), chrome)
+            let foldable = SimulatorFoldPanels(panels: SimulatorDisplayProfile.readPanels(deviceTypeBundle: bundle)).map {
+                SimulatorFoldable(
+                    panels: $0,
+                    innerChrome: chrome($0.inner),
+                    innerShape: $0.inner.displayShape(id: "simulator:\(identifier):inner"),
+                    model: Self.productClass(ofDeviceType: bundle).flatMap { productClass in
+                        developerDir.flatMap { AppleDeviceModel.locate(productClass: productClass, developerDir: $0) }
+                    }
+                )
+            }
+            return (profile.displayShape(id: "simulator:\(identifier)"), chrome(profile), foldable)
         }.value
+        if let foldable { foldables[identifier] = foldable }
         chromeFrames[identifier] = .some(chrome)
         displayShapes[identifier] = .some(shape)
     }
@@ -326,6 +449,8 @@ final class SimulatorInventory {
     /// on the probe or on simctl, or that comes later, starts nothing.
     func stop() {
         isStopped = true
+        catalogRetry?.cancel()
+        catalogRetry = nil
         watching?.cancel()
         watching = nil
         watcher?.stop()
@@ -467,6 +592,56 @@ final class SimulatorInventory {
         }
         if let listedDeviceTypes { deviceTypes = listedDeviceTypes }
         catalogLoaded = listedRuntimes != nil && listedDeviceTypes != nil
+        if listedDeviceTypes != nil { forgetShapesReadWithoutCatalog() }
+        if hasListed {
+            apply(listedDevices)
+        }
+        if !catalogLoaded { scheduleCatalogRetry(simctl) }
+    }
+
+    /// Reads again, now with their bundles, the device types whose display
+    /// was "read" before the catalog named a bundle; the views watching
+    /// `displayShapes` / `chromeFrames` then draw the chrome.
+    private func forgetShapesReadWithoutCatalog() {
+        let pending = shapesReadWithoutCatalog
+        shapesReadWithoutCatalog = []
+        for identifier in pending {
+            displayShapes[identifier] = nil
+            chromeFrames[identifier] = nil
+            guard let type = deviceTypes.first(where: { $0.identifier == identifier }) else { continue }
+            Task { [weak self] in
+                await self?.loadDisplayShape(identifier: identifier, bundlePath: type.bundlePath)
+            }
+        }
+    }
+
+    /// Reads the catalogs again after each of `catalogRetryDelays` until a
+    /// read succeeds; one retry loop at a time.
+    private func scheduleCatalogRetry(_ simctl: SimctlClient) {
+        guard catalogRetry == nil, !isStopped else { return }
+        let delays = catalogRetryDelays
+        catalogRetry = Task { [weak self] in
+            for delay in delays {
+                try? await Task.sleep(for: delay)
+                guard let self, !Task.isCancelled, !self.isStopped, !self.catalogLoaded else { break }
+                await self.loadCatalogOnce(simctl)
+            }
+            self?.catalogRetry = nil
+        }
+    }
+
+    private func loadCatalogOnce(_ simctl: SimctlClient) async {
+        async let runtimeList = simctl.listRuntimes()
+        async let deviceTypeList = simctl.listDeviceTypes()
+        let listedRuntimes = try? await runtimeList
+        let listedDeviceTypes = try? await deviceTypeList
+        if let listedRuntimes {
+            runtimes = listedRuntimes
+            runtimesRead = true
+        }
+        if let listedDeviceTypes { deviceTypes = listedDeviceTypes }
+        catalogLoaded = listedRuntimes != nil && listedDeviceTypes != nil
+        if listedDeviceTypes != nil { forgetShapesReadWithoutCatalog() }
         if hasListed {
             apply(listedDevices)
         }
@@ -480,6 +655,18 @@ final class SimulatorInventory {
         let defaults = readDefaultDeviceUDIDs()
         let entries = devices.map {
             SimulatorEntry(device: $0, runtimes: runtimes, deviceTypes: deviceTypes, defaultDeviceUDIDs: defaults)
+        }
+        // Before the entries: a fold kept from an earlier boot (or an earlier
+        // run of the app) never reaches the stage.
+        let booted = Dictionary(
+            devices.filter { $0.state == .booted }.map { ($0.udid, $0.lastUsedAt) },
+            uniquingKeysWith: { first, _ in first }
+        )
+        let recorded = Set(folds.records.keys)
+        folds.keep(only: booted)
+        // Their input channels too: a reboot starts a new connection.
+        for udid in recorded.subtracting(folds.records.keys) {
+            madeFoldSender?.forget(SimulatorAddress(udid: udid, deviceSetPath: deviceSet?.path))
         }
         if entries != simulators {
             simulators = entries
@@ -501,4 +688,14 @@ final class SimulatorInventory {
         guard let toolchain else { return }
         tooling = AppleToolingStatus(toolchain: toolchain, devicectlProbe: devicectlProbe, canvasReady: canvasReady)
     }
+}
+
+/// A foldable device type's panels, with the inner panel's own chrome and
+/// display (read from the device type like the main ones).
+struct SimulatorFoldable: Equatable {
+    let panels: SimulatorFoldPanels
+    let innerChrome: AppleChromeFrame?
+    let innerShape: DisplayShape?
+    /// Its 3D model in the user's Xcode, when that file is a checked one.
+    let model: AppleDeviceModel?
 }
