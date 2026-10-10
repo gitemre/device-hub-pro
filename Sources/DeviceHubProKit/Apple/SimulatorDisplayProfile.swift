@@ -40,6 +40,12 @@ public struct SimulatorDisplayProfile: Sendable, Hashable {
     /// type's screen carries a Dynamic Island, which the simulator draws
     /// into its framebuffer; a placeholder screen has to draw it itself.
     public var hasDynamicIsland: Bool
+    /// `screenID`: the panel's screen ID, which the bridge resolves a panel
+    /// by and digitizer events target (iPhone Duo: 1 outer, 3 inner).
+    public var screenID: UInt32?
+    /// `nativeRotation`, degrees: how far the panel is turned from the
+    /// device's portrait (iPhone Duo's inner panel: 270, a landscape panel).
+    public var nativeRotation: Int
 
     public init(
         width: Int,
@@ -53,7 +59,9 @@ public struct SimulatorDisplayProfile: Sendable, Hashable {
         verticalDpi: Double? = nil,
         chromeIdentifier: String? = nil,
         framebufferMaskIdentifier: String? = nil,
-        hasDynamicIsland: Bool = false
+        hasDynamicIsland: Bool = false,
+        screenID: UInt32? = nil,
+        nativeRotation: Int = 0
     ) {
         self.width = width
         self.height = height
@@ -67,6 +75,8 @@ public struct SimulatorDisplayProfile: Sendable, Hashable {
         self.chromeIdentifier = chromeIdentifier
         self.framebufferMaskIdentifier = framebufferMaskIdentifier
         self.hasDynamicIsland = hasDynamicIsland
+        self.screenID = screenID
+        self.nativeRotation = nativeRotation
     }
 
     /// Reads the device type bundle's `capabilities.plist`; nil when it is
@@ -92,6 +102,32 @@ public struct SimulatorDisplayProfile: Sendable, Hashable {
     public static func parse(capabilities: [String: Any]) -> SimulatorDisplayProfile? {
         guard let displays = capabilities["displays"] as? [[String: Any]], !displays.isEmpty else { return nil }
         let display = displays.first { ($0["displayType"] as? String) == "integrated" } ?? displays[0]
+        return profile(of: display, capabilities: capabilities)
+    }
+
+    /// Every built-in panel a touch can reach (`integrated` with
+    /// `hasDigitizer`), by screen ID: one on most devices, two on a foldable
+    /// (iPhone Duo's outer panel, screen 1, then its inner one, screen 3).
+    /// Reads a file: call it off the main thread.
+    public static func readPanels(deviceTypeBundle bundle: URL) -> [SimulatorDisplayProfile] {
+        let file = bundle.appendingPathComponent("Contents/Resources/capabilities.plist")
+        guard let data = try? Data(contentsOf: file),
+              let root = try? PropertyListSerialization.propertyList(from: data, format: nil) as? [String: Any],
+              let capabilities = root["capabilities"] as? [String: Any]
+        else { return [] }
+        return panels(capabilities: capabilities)
+    }
+
+    /// The panels of the plist's `capabilities` dictionary (`readPanels`).
+    public static func panels(capabilities: [String: Any]) -> [SimulatorDisplayProfile] {
+        guard let displays = capabilities["displays"] as? [[String: Any]] else { return [] }
+        return displays
+            .filter { ($0["displayType"] as? String) == "integrated" && ($0["hasDigitizer"] as? Bool ?? true) }
+            .compactMap { profile(of: $0, capabilities: capabilities) }
+            .sorted { ($0.screenID ?? .max) < ($1.screenID ?? .max) }
+    }
+
+    private static func profile(of display: [String: Any], capabilities: [String: Any]) -> SimulatorDisplayProfile? {
         guard let width = integer(display["width"]), let height = integer(display["height"]),
               width > 0, height > 0
         else { return nil }
@@ -112,7 +148,9 @@ public struct SimulatorDisplayProfile: Sendable, Hashable {
             verticalDpi: number(display["vdpi"]),
             chromeIdentifier: display["chromeIdentifier"] as? String,
             framebufferMaskIdentifier: display["framebufferMaskIdentifier"] as? String,
-            hasDynamicIsland: capabilities["DeviceSupportsDynamicIsland"] as? Bool ?? false
+            hasDynamicIsland: capabilities["DeviceSupportsDynamicIsland"] as? Bool ?? false,
+            screenID: integer(display["screenID"]).flatMap { $0 >= 0 ? UInt32($0) : nil },
+            nativeRotation: integer(display["nativeRotation"]) ?? 0
         )
     }
 

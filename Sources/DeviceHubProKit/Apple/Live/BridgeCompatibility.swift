@@ -57,7 +57,8 @@ public struct CoreSimulatorVersion: Sendable, Hashable, Comparable, CustomString
 /// CoreSimulator this Mac has. The bridge talks to private, yearly-moving
 /// surfaces, so it runs only on builds it was verified on:
 ///
-/// - **1171.x** (Xcode 27.0) is allowlisted.
+/// - **1171.x** (Xcode 27.0) and **1174.x** (Xcode 27.1: verified on 1174.9.2,
+///   27.1 RC 27A9275, with iPhone Duo on iOS 27.1 24A94232) are allowlisted.
 /// - **Below 1155.4** never: that build removed `-ioSurface` and moved input to
 ///   dtuhidd; older builds would need a second (legacy Indigo) stack.
 /// - **Any other build from 1155.4 on** (a newer Xcode, or an Xcode 27 beta)
@@ -72,7 +73,7 @@ public enum BridgeCompatibility {
     public static let allowUntestedVariable = "DHP_SIMBRIDGE_ALLOW_UNTESTED"
 
     /// Major CoreSimulator versions the bridge was verified on.
-    public static let allowlistedMajors: Set<Int> = [1171]
+    public static let allowlistedMajors: Set<Int> = [1171, 1174]
     /// The oldest CoreSimulator the bridge can ever run on.
     public static let minimumVersion = CoreSimulatorVersion(1155, 4)
 

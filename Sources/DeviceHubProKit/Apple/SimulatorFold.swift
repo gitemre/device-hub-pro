@@ -1,0 +1,561 @@
+import Foundation
+import Synchronization
+
+/// A foldable simulator's two touch panels: iPhone Duo's outer panel (lit
+/// while closed) and its inner one (lit while open).
+public struct SimulatorFoldPanels: Sendable, Hashable {
+    public var outer: SimulatorDisplayProfile
+    public var inner: SimulatorDisplayProfile
+
+    /// A device type's panels (`SimulatorDisplayProfile.panels`) as a
+    /// foldable's: exactly two, each with a screen ID, the lower ID outside.
+    /// Nil for every other device.
+    public init?(panels: [SimulatorDisplayProfile]) {
+        guard panels.count == 2, let first = panels[0].screenID, let second = panels[1].screenID, first != second else {
+            return nil
+        }
+        outer = first < second ? panels[0] : panels[1]
+        inner = first < second ? panels[1] : panels[0]
+    }
+
+    public func profile(of panel: SimulatorFoldPanel) -> SimulatorDisplayProfile {
+        panel == .outer ? outer : inner
+    }
+}
+
+public enum SimulatorFoldPanel: String, Sendable, Hashable, Codable {
+    case outer
+    case inner
+}
+
+/// Folding a simulator, as Apple's Device Hub does with its hinge slider.
+///
+/// The hinge angle reaches the guest as a vendor-defined HID event on
+/// dtuhidd's AVP custom service: usage page 0xFF61, usage 0x5B, version 1,
+/// and IOKit's compact XML (what `IOCFUnserialize` reads; a full plist of
+/// 329 bytes was refused as too large) of `{source: "hinge-slider-control",
+/// type: "range", value: <degrees>}`. CoreMotion's device-state relay in the
+/// guest turns it into hinge events, SpringBoard into a pose and a panel.
+/// Established against Xcode 27.1 RC (27A9275, CoreSimulator 1174.9.2) with
+/// iPhone Duo on iOS 27.1 (24A94232); `DeviceHubProSimBridgeSmoke --avp`
+/// is the canary. `DHP_DISABLE_SIMULATOR_FOLD=1` turns it off.
+public enum SimulatorFold {
+    public static let disableVariable = "DHP_DISABLE_SIMULATOR_FOLD"
+
+    public static func isDisabled(environment: [String: String] = ProcessInfo.processInfo.environment) -> Bool {
+        environment[disableVariable] == "1"
+    }
+
+    /// The AVP custom service's usage page and usage (dtuhidd reported them
+    /// as its `PrimaryUsagePage` 65377 and `PrimaryUsage` 91).
+    public static let usagePage: UInt32 = 0xFF61
+    public static let usage: UInt32 = 0x5B
+    public static let version: UInt32 = 1
+
+    /// Measured on the simulator (2026-10-09): opening from closed lights
+    /// the inner panel past 90° (92° did, 90° did not); closing from open
+    /// lights the outer one again below 20° (18° did, 20° did not). In
+    /// between, the lit panel stays.
+    public static let innerPanelAbove: Double = 90
+    public static let outerPanelBelow: Double = 20
+
+    /// The panel lit after the hinge moves to `angle` from a fold showing
+    /// `current`.
+    public static func panel(afterAngle angle: Double, from current: SimulatorFoldPanel) -> SimulatorFoldPanel {
+        if angle > innerPanelAbove { return .inner }
+        if angle < outerPanelBelow { return .outer }
+        return current
+    }
+
+    /// A preset's hinge angle, as Xcode 27.1's Device Hub sets it: SpringBoard
+    /// read its half open as 127.78°, and it reads a sent angle as 5 + angle
+    /// × 170/180 (100 → 99.44, 128 → 125.89, 130 → 127.78, 150 → 146.67), so
+    /// Device Hub sends 130. Whole degrees only (a `<real>` value was
+    /// ignored); above `innerPanelAbove`, so the inner panel lights.
+    public static func angle(for posture: PostureKind) -> Double {
+        switch posture {
+        case .closed: return 0
+        case .halfOpened: return 130
+        case .opened: return 180
+        }
+    }
+
+    /// How long a preset takes to move the hinge, and the rate of the angles
+    /// on the way: Device Hub sent about 35 hinge events 17–18 ms apart for
+    /// one preset, easing into the angle (SpringBoard read 129, 136, 147.5,
+    /// 157.6, 165, 170.7, 174.7 then 180 on the way to Open), so apps see the
+    /// fold move, not jump.
+    public static let sweepDuration: TimeInterval = 0.6
+    public static let sweepRate: Double = 60
+
+    /// The whole-degree angles a sweep from `start` to `end` sends, easing
+    /// out (cubic): fast first, settling into `end`, which is always last.
+    /// No angle repeats the one before it; none when `start` is `end`.
+    public static func sweepAngles(from start: Double, to end: Double) -> [Int] {
+        let first = Int(sentAngle(start)), last = Int(sentAngle(end))
+        guard first != last else { return [] }
+        let frames = max(Int((sweepDuration * sweepRate).rounded()), 1)
+        var angles: [Int] = []
+        for frame in 1...frames {
+            let progress = Double(frame) / Double(frames)
+            let eased = 1 - pow(1 - progress, 3)
+            let angle = Int(sentAngle(Double(first) + Double(last - first) * eased))
+            if angle != (angles.last ?? first) { angles.append(angle) }
+        }
+        if angles.last != last { angles.append(last) }
+        return angles
+    }
+
+    /// What a preset sends, as Device Hub does: the device held upright
+    /// (Device Hub set portrait before every preset), then the hinge swept
+    /// from where it is.
+    public static func presetSteps(for posture: PostureKind, from angle: Double) -> [SimulatorFoldStep] {
+        [.pose(.portrait), .sweep(from: angle, to: Self.angle(for: posture))]
+    }
+
+    /// The angle a hinge event carries (`hingeEvent`): whole degrees, 0...180.
+    public static func sentAngle(_ degrees: Double) -> Double {
+        min(max(degrees.isFinite ? degrees : 0, 0), 180).rounded()
+    }
+
+    /// Which side of the panel thresholds an angle is on (0 below
+    /// `outerPanelBelow`, 1 between, 2 above `innerPanelAbove`): two angles
+    /// in one zone light the same panel from wherever the hinge was.
+    public static func zone(of degrees: Double) -> Int {
+        let angle = sentAngle(degrees)
+        if angle < outerPanelBelow { return 0 }
+        return angle > innerPanelAbove ? 2 : 1
+    }
+
+    /// The preset an angle reads as: closed below `outerPanelBelow`, open
+    /// at 180° (SpringBoard's "open flat": 179° still read as partially
+    /// open), half in between.
+    public static func posture(forAngle angle: Double) -> PostureKind {
+        if angle < outerPanelBelow { return .closed }
+        if angle.rounded() >= 180 { return .opened }
+        return .halfOpened
+    }
+
+    /// How a panel's picture rests: iPhone Duo's inner panel is turned 270°
+    /// (`nativeRotation`) and reported `uiOrientation` 3 (a quarter
+    /// clockwise) as soon as it lit; 90° and 180° follow by symmetry (no
+    /// device type has them).
+    public static func restingRotation(of panel: SimulatorDisplayProfile) -> SimulatorFrameRotation {
+        switch ((panel.nativeRotation % 360) + 360) % 360 {
+        case 270: return .clockwise
+        case 90: return .counterClockwise
+        case 180: return .upsideDown
+        default: return .upright
+        }
+    }
+
+    /// The event that moves the hinge to `degrees` (0...180, whole degrees).
+    public static func hingeEvent(degrees: Double) -> SimulatorHIDEvent {
+        let value = Int(sentAngle(degrees))
+        let xml = "<dict><key>source</key><string>hinge-slider-control</string>"
+            + "<key>type</key><string>range</string>"
+            + "<key>value</key><integer>\(value)</integer></dict>"
+        return .vendorDefined(usagePage: usagePage, usage: usage, version: version, data: Data(xml.utf8))
+    }
+
+    /// How the device is held, as CoreMotion's device state takes it on the
+    /// same service as the hinge: `{source: "orientation-picker-control",
+    /// type: "enum", value: <name>}`, what Device Hub's Device ▸ Orientation
+    /// sends (locationd logged "Processing AVP event - Source:
+    /// orientation-picker-control" and "Orientation set to: 2 (pud)",
+    /// "5 (faceup)", "6 (facedown)" for its items; `portrait-upside-down`,
+    /// `upside-down` and `face-up` were not taken). The orientation GSEvent
+    /// turns backboardd's device orientation but leaves the open panel's
+    /// interface landscape; this turns it (Settings on the open panel went
+    /// from 2853×2007 to 2007×2853). Same build as the hinge.
+    public static func pickerValue(for pose: SimulatorDevicePose) -> String {
+        switch pose {
+        case .portrait: return "portrait"
+        case .portraitUpsideDown: return "pud"
+        case .landscapeLeft: return "landscape-left"
+        case .landscapeRight: return "landscape-right"
+        case .faceUp: return "faceup"
+        case .faceDown: return "facedown"
+        }
+    }
+
+    /// The event that holds the device as `pose`.
+    public static func poseEvent(_ pose: SimulatorDevicePose) -> SimulatorHIDEvent {
+        let xml = "<dict><key>source</key><string>orientation-picker-control</string>"
+            + "<key>type</key><string>enum</string>"
+            + "<key>value</key><string>\(pickerValue(for: pose))</string></dict>"
+        return .vendorDefined(usagePage: usagePage, usage: usage, version: version, data: Data(xml.utf8))
+    }
+
+    /// The pose that holds the device at an interface orientation.
+    public static func pose(for orientation: SimulatorOrientation) -> SimulatorDevicePose {
+        switch orientation {
+        case .portrait: return .portrait
+        case .portraitUpsideDown: return .portraitUpsideDown
+        case .landscapeLeft: return .landscapeLeft
+        case .landscapeRight: return .landscapeRight
+        }
+    }
+
+    /// The interface orientation a pose holds the device at; nil lying flat
+    /// (face up or down), where the interface keeps the one it had.
+    public static func orientation(for pose: SimulatorDevicePose) -> SimulatorOrientation? {
+        switch pose {
+        case .portrait: return .portrait
+        case .portraitUpsideDown: return .portraitUpsideDown
+        case .landscapeLeft: return .landscapeLeft
+        case .landscapeRight: return .landscapeRight
+        case .faceUp, .faceDown: return nil
+        }
+    }
+}
+
+/// One thing sent to a foldable simulator, in order (`SimulatorFoldSender`).
+public enum SimulatorFoldStep: Sendable, Equatable {
+    /// The hinge to this many degrees, at once (the slider).
+    case hinge(Double)
+    /// The hinge moved to `to` over `SimulatorFold.sweepDuration`
+    /// (`sweepAngles`), from the angle sent last, else from `from`.
+    case sweep(from: Double, to: Double)
+    /// The device held this way (`SimulatorFold.poseEvent`).
+    case pose(SimulatorDevicePose)
+    /// A wait, so the guest settles one step (a panel lighting) before the
+    /// next.
+    case pause(TimeInterval)
+}
+
+/// The fold strip's postures past Apple's presets: the device on its side,
+/// half open. On a laptop the inner panel lies along the hinge, the lower
+/// half flat and the upper one up; a tent stands on both edges, the outer
+/// panel lit outside.
+public enum SimulatorHeldPosture: String, CaseIterable, Identifiable, Sendable {
+    case laptop
+    case tent
+
+    public var id: String { rawValue }
+
+    public var label: String {
+        switch self {
+        case .laptop: return "Laptop"
+        case .tent: return "Tent"
+        }
+    }
+
+    public var systemImage: String {
+        switch self {
+        case .laptop: return "laptopcomputer"
+        case .tent: return "tent"
+        }
+    }
+
+    /// The hinge: a laptop past `SimulatorFold.innerPanelAbove`, a tent
+    /// short of it, so each keeps its panel lit.
+    public var angle: Double {
+        switch self {
+        case .laptop: return 105
+        case .tent: return 70
+        }
+    }
+
+    public var panel: SimulatorFoldPanel {
+        switch self {
+        case .laptop: return .inner
+        case .tent: return .outer
+        }
+    }
+
+    /// Both lie on the device's side.
+    public static let orientation: SimulatorOrientation = .landscapeRight
+
+    /// How long the guest takes to light the other panel, once the hinge
+    /// got there, before the device turns.
+    public static let panelSwitchPause: TimeInterval = 0.4
+
+    /// The steps from a fold at `angle` lighting `current`: when the posture
+    /// needs the other panel, the hinge first sweeps past that panel's
+    /// threshold (flat, or closed) and the guest lights it; then the device
+    /// turns on its side and the hinge sweeps to the posture's angle.
+    public func steps(from current: SimulatorFoldPanel, angle start: Double) -> [SimulatorFoldStep] {
+        var steps: [SimulatorFoldStep] = []
+        var from = start
+        if current != panel {
+            let extreme: Double = panel == .inner ? 180 : 0
+            steps += [.sweep(from: from, to: extreme), .pause(Self.panelSwitchPause)]
+            from = extreme
+        }
+        return steps + [.pose(SimulatorFold.pose(for: Self.orientation)), .sweep(from: from, to: angle)]
+    }
+}
+
+/// The panel a simulator session mirrors and sends touches to.
+public struct SimulatorSessionPanel: Sendable, Hashable {
+    /// The screen the bridge resolves (0: the lowest ID, the main screen).
+    public var screenID: UInt32
+    /// The digitizer events' `target` (0: the main screen).
+    public var digitizerTarget: UInt32
+
+    public init(screenID: UInt32, digitizerTarget: UInt32) {
+        self.screenID = screenID
+        self.digitizerTarget = digitizerTarget
+    }
+
+    /// The main screen: every device's, and a folded iPhone Duo's.
+    public static let main = SimulatorSessionPanel(screenID: 0, digitizerTarget: 0)
+
+    /// A foldable's `panel`: the outer one is the main screen; the inner one
+    /// is resolved and targeted by its screen ID (a tap on iPhone Duo's
+    /// inner panel landed with target 3 and with none of 0, 1 or 2).
+    public static func foldable(_ panel: SimulatorFoldPanel, of panels: SimulatorFoldPanels) -> SimulatorSessionPanel {
+        switch panel {
+        case .outer:
+            return SimulatorSessionPanel(screenID: panels.outer.screenID ?? 0, digitizerTarget: 0)
+        case .inner:
+            let id = panels.inner.screenID ?? 0
+            return SimulatorSessionPanel(screenID: id, digitizerTarget: id)
+        }
+    }
+}
+
+/// Sends hinge angles and held orientations to foldable simulators, in
+/// order. A drag of the fold slider makes angles faster than they need to
+/// reach the guest, so an angle not sent yet is replaced by a newer one that
+/// follows it directly, when both light the same panel (`SimulatorFold.zone`:
+/// an angle that crosses a threshold is always sent, or the guest would keep
+/// the panel the app no longer shows); one input channel per simulator, all
+/// on one serial queue, connected on the first send.
+public final class SimulatorFoldSender: Sendable {
+    private let bridge: any SimulatorBridging
+    private let queue = DispatchQueue(label: "com.devicehubpro.simulator-fold", qos: .userInitiated)
+    private let state = Mutex(State())
+
+    private struct State {
+        var pending: [SimulatorAddress: [SimulatorFoldStep]] = [:]
+        var drainScheduled = false
+        var inputs: [SimulatorAddress: any SimulatorInputBridging] = [:]
+        var lastError: [SimulatorAddress: String] = [:]
+        /// The hinge angle each simulator was sent last: where a sweep starts.
+        var lastAngle: [SimulatorAddress: Int] = [:]
+    }
+
+    public init(bridge: any SimulatorBridging) {
+        self.bridge = bridge
+    }
+
+    /// Queues `degrees` for `address`, replacing an angle that waits last.
+    public func send(degrees: Double, to address: SimulatorAddress) {
+        send([.hinge(degrees)], to: address)
+    }
+
+    /// Queues `steps` for `address` after those waiting; a first hinge step
+    /// replaces a hinge step waiting last in the same zone.
+    public func send(_ steps: [SimulatorFoldStep], to address: SimulatorAddress) {
+        guard !steps.isEmpty else { return }
+        let schedule = state.withLock { state -> Bool in
+            var queued = state.pending[address] ?? []
+            if case .hinge(let new)? = steps.first, case .hinge(let old)? = queued.last,
+               SimulatorFold.zone(of: new) == SimulatorFold.zone(of: old) {
+                queued.removeLast()
+            }
+            state.pending[address] = queued + steps
+            guard !state.drainScheduled else { return false }
+            state.drainScheduled = true
+            return true
+        }
+        if schedule { queue.async { [self] in drain() } }
+    }
+
+    /// The last send's failure for `address`, if it failed.
+    public func lastError(for address: SimulatorAddress) -> String? {
+        state.withLock { $0.lastError[address] }
+    }
+
+    /// Closes `address`'s channel (the simulator shut down).
+    public func forget(_ address: SimulatorAddress) {
+        let input = state.withLock { state -> (any SimulatorInputBridging)? in
+            state.pending[address] = nil
+            state.lastError[address] = nil
+            state.lastAngle[address] = nil
+            return state.inputs.removeValue(forKey: address)
+        }
+        if let input { queue.async { input.disconnect() } }
+    }
+
+    /// The hinge angle `address` was sent last, if any.
+    public func lastAngle(for address: SimulatorAddress) -> Int? {
+        state.withLock { $0.lastAngle[address] }
+    }
+
+    /// Waits, at most `timeout`, until every queued angle was sent (tests).
+    public func waitUntilIdle(timeout: TimeInterval = 2) {
+        let deadline = Date().addingTimeInterval(timeout)
+        while Date() < deadline {
+            let done = queue.sync { state.withLock { $0.pending.isEmpty && !$0.drainScheduled } }
+            if done { return }
+            Thread.sleep(forTimeInterval: 0.005)
+        }
+    }
+
+    /// On the queue: sends each simulator's steps in order until none waits.
+    private func drain() {
+        while true {
+            let next = state.withLock { state -> (SimulatorAddress, SimulatorFoldStep, (any SimulatorInputBridging)?)? in
+                guard let (address, steps) = state.pending.first(where: { !$0.value.isEmpty }) else {
+                    state.pending = [:]
+                    state.drainScheduled = false
+                    return nil
+                }
+                state.pending[address] = Array(steps.dropFirst())
+                return (address, steps[0], state.inputs[address])
+            }
+            guard let (address, step, existing) = next else { return }
+            let input = existing ?? bridge.makeInput(for: address)
+            if existing == nil { state.withLock { $0.inputs[address] = input } }
+            switch step {
+            case .hinge(let degrees):
+                send(SimulatorFold.hingeEvent(degrees: degrees), on: input, to: address, angle: Int(SimulatorFold.sentAngle(degrees)))
+            case .sweep(let from, let to):
+                let start = state.withLock { $0.lastAngle[address] }.map(Double.init) ?? from
+                for angle in SimulatorFold.sweepAngles(from: start, to: to) {
+                    send(SimulatorFold.hingeEvent(degrees: Double(angle)), on: input, to: address, angle: angle)
+                    Thread.sleep(forTimeInterval: 1 / SimulatorFold.sweepRate)
+                }
+            case .pose(let pose):
+                send(SimulatorFold.poseEvent(pose), on: input, to: address, angle: nil)
+            case .pause(let seconds):
+                Thread.sleep(forTimeInterval: seconds)
+            }
+        }
+    }
+
+    /// On the queue: one event; a hinge event's angle becomes the one sent last.
+    private func send(_ event: SimulatorHIDEvent, on input: any SimulatorInputBridging, to address: SimulatorAddress, angle: Int?) {
+        do {
+            try input.send(event)
+            state.withLock { state in
+                state.lastError[address] = nil
+                if let angle { state.lastAngle[address] = angle }
+            }
+        } catch {
+            state.withLock { $0.lastError[address] = "\(error)" }
+        }
+    }
+}
+
+/// Where Device Hub Pro last put a foldable simulator's hinge, and the panel
+/// that lit.
+public struct SimulatorFoldRecord: Sendable, Equatable, Codable {
+    public var angle: Double
+    public var panel: SimulatorFoldPanel
+    /// How the device is held (`SimulatorFold.orientationEvent`).
+    public var orientation: SimulatorOrientation
+    /// The pose the orientation picker last held it at (Device ▸
+    /// Orientation's check, which devicectl does not read back); nil before
+    /// any.
+    public var pose: SimulatorDevicePose?
+
+    public init(
+        angle: Double,
+        panel: SimulatorFoldPanel,
+        orientation: SimulatorOrientation = .portrait,
+        pose: SimulatorDevicePose? = nil
+    ) {
+        self.angle = angle
+        self.panel = panel
+        self.orientation = orientation
+        self.pose = pose
+    }
+
+    /// How a simulator boots: closed, its outer panel lit, upright.
+    public static let closed = SimulatorFoldRecord(angle: 0, panel: .outer)
+}
+
+/// The folds of the booted foldable simulators Device Hub Pro moved, by
+/// UDID. One it never moved is closed, as a simulator boots.
+///
+/// Each fold holds for the boot it was recorded in: the simulator keeps its
+/// hinge while Device Hub Pro quits and opens again, so the book is kept on
+/// disk, and a simulator that shut down or booted again since is forgotten
+/// (`keep(only:)`). A boot is simctl's `lastUsedAt`, which the listing of a
+/// booted simulator sets to the moment it booted (the start of its
+/// `launchd_sim`) and leaves while it runs.
+public struct SimulatorFoldBook: Sendable, Equatable, Codable {
+    public private(set) var records: [String: SimulatorFoldRecord] = [:]
+    /// When each recorded simulator booted, where the listing said.
+    public private(set) var boots: [String: Date] = [:]
+
+    public init() {}
+
+    public func record(of udid: String) -> SimulatorFoldRecord {
+        records[udid] ?? .closed
+    }
+
+    /// Records the hinge at `angle` for `udid` (`SimulatorFold.panel`'s
+    /// hysteresis), in the boot at `bootedAt`; returns whether the lit panel
+    /// changed.
+    @discardableResult
+    public mutating func note(udid: String, angle: Double, bootedAt: Date? = nil) -> Bool {
+        let before = current(udid, bootedAt: bootedAt)
+        var after = before
+        after.angle = angle
+        after.panel = SimulatorFold.panel(afterAngle: angle, from: before.panel)
+        records[udid] = after
+        return after.panel != before.panel
+    }
+
+    /// Records `udid` held at `pose`, in the boot at `bootedAt`: lying flat
+    /// keeps the interface orientation it had.
+    public mutating func note(udid: String, pose: SimulatorDevicePose, bootedAt: Date? = nil) {
+        var record = current(udid, bootedAt: bootedAt)
+        record.pose = pose
+        if let orientation = SimulatorFold.orientation(for: pose) { record.orientation = orientation }
+        records[udid] = record
+    }
+
+    /// Keeps the folds of the simulators booted now, each mapped to when it
+    /// booted (nil where the listing did not say): one that shut down, or
+    /// booted again since its fold was recorded, is forgotten.
+    public mutating func keep(only booted: [String: Date?]) {
+        for udid in Array(records.keys) {
+            guard let boot = booted[udid] else {
+                records[udid] = nil
+                continue
+            }
+            guard let boot else { continue }
+            if let recorded = boots[udid], recorded != boot {
+                records[udid] = nil
+            } else {
+                boots[udid] = boot
+            }
+        }
+        boots = boots.filter { records[$0.key] != nil }
+    }
+
+    /// `udid`'s record for the boot at `bootedAt`: closed when the one kept
+    /// is from an earlier boot.
+    private mutating func current(_ udid: String, bootedAt boot: Date?) -> SimulatorFoldRecord {
+        if let boot {
+            if let recorded = boots[udid], recorded != boot { records[udid] = nil }
+            boots[udid] = boot
+        }
+        return record(of: udid)
+    }
+
+    private enum CodingKeys: String, CodingKey {
+        case records, boots
+    }
+
+    public init(from decoder: any Decoder) throws {
+        let container = try decoder.container(keyedBy: CodingKeys.self)
+        records = try container.decode([String: SimulatorFoldRecord].self, forKey: .records)
+        boots = try container.decode([String: Date].self, forKey: .boots)
+        records = records.filter { boots[$0.key] != nil }
+    }
+
+    /// Only the folds whose boot is known: the next launch's listing checks
+    /// each against the simulator's boot before it is used.
+    public func encode(to encoder: any Encoder) throws {
+        var container = encoder.container(keyedBy: CodingKeys.self)
+        try container.encode(records.filter { boots[$0.key] != nil }, forKey: .records)
+        try container.encode(boots, forKey: .boots)
+    }
+}

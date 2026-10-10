@@ -178,11 +178,15 @@ private struct AppCommands: Commands {
         return NSApp.keyWindow === compact
     }
 
+    /// Off while the stage shows a foldable in 3D: the model has a zoom of
+    /// its own, and the stage zoom's scale modes measure the 2D screen.
     private var zoomAvailable: Bool {
-        stageZoomIsAvailable(
+        guard stageZoomIsAvailable(
             liveSelectionSerial: workspace?.liveSelectionSerial,
             hasSession: workspace?.selectedDeviceHasSession ?? false
-        )
+        ) else { return false }
+        guard let workspace, let model else { return true }
+        return !DeviceModelStageView.isShown(in: workspace, model: model)
     }
 
     var body: some Commands {

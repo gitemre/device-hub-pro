@@ -152,11 +152,21 @@ NS_SWIFT_NAME(SimBridgeScreen)
 
 /// Resolves `udid` in `deviceSetPath` (nil: the default set) through a service
 /// context for `developerDir`, then finds the display whose descriptor state
-/// has display class 0 and that vends the SimScreen callbacks.
+/// has display class 0 and that vends the SimScreen callbacks. A device with
+/// several such panels (iPhone Duo) gives the one whose screen ID is
+/// `screenID`, or with 0 the lowest ID (the device type's first display).
 - (nullable instancetype)initWithUDID:(NSString *)udid
                         deviceSetPath:(nullable NSString *)deviceSetPath
                          developerDir:(NSString *)developerDir
+                             screenID:(uint32_t)screenID
                                 error:(NSError **)error NS_DESIGNATED_INITIALIZER
+    NS_SWIFT_NAME(init(udid:deviceSetPath:developerDir:screenID:));
+
+/// The lowest screen ID's panel.
+- (nullable instancetype)initWithUDID:(NSString *)udid
+                        deviceSetPath:(nullable NSString *)deviceSetPath
+                         developerDir:(NSString *)developerDir
+                                error:(NSError **)error
     NS_SWIFT_NAME(init(udid:deviceSetPath:developerDir:));
 
 /// The properties read when the screen was resolved.
@@ -271,6 +281,11 @@ NS_SWIFT_NAME(SimBridgeHID)
 /// Wait after the barrier answers, for the daemon to open its devices (idb: 0.2 s).
 @property NSTimeInterval replyTail;
 
+/// The digitizer events' `target`: 0, the main screen, for every device but
+/// one with several panels (iPhone Duo's inner panel takes another value).
+/// Atomic; set it before sending to another panel.
+@property (atomic) uint32_t digitizerTarget;
+
 /// Never waits; safe on any queue.
 @property (readonly, getter=isConnected) BOOL connected;
 /// Never waits; safe on any queue.
@@ -309,6 +324,15 @@ NS_SWIFT_NAME(SimBridgeHID)
 /// before the key and up after it.
 - (BOOL)sendKeyWithUsage:(uint32_t)usage down:(BOOL)down error:(NSError **)error
     NS_SWIFT_NAME(sendKey(usage:down:));
+
+/// A vendor-defined HID event (`IndigoVendorDefinedEvent`): dtuhidd posts
+/// `data` on its AVP custom service under `usagePage` and `usage`.
+- (BOOL)sendVendorDefinedWithUsagePage:(uint32_t)usagePage
+                                 usage:(uint32_t)usage
+                               version:(uint32_t)version
+                                  data:(NSData *)data
+                                 error:(NSError **)error
+    NS_SWIFT_NAME(sendVendorDefined(usagePage:usage:version:data:));
 
 /// Waits until everything sent so far has left this process.
 - (BOOL)flushWithTimeout:(NSTimeInterval)timeout error:(NSError **)error NS_SWIFT_NAME(flush(timeout:));

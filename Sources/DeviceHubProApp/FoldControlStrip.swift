@@ -9,6 +9,15 @@ protocol FoldControlDriving: AnyObject {
     var hingeAngle: Double? { get }
     func setPostureAnimated(_ posture: PostureKind)
     func setHingeAngle(_ degrees: Double)
+    /// Postures past Apple's presets the device can be put in (a foldable
+    /// simulator's laptop and tent); none by default.
+    var heldPostures: [SimulatorHeldPosture] { get }
+    func setHeldPosture(_ posture: SimulatorHeldPosture)
+}
+
+extension FoldControlDriving {
+    var heldPostures: [SimulatorHeldPosture] { [] }
+    func setHeldPosture(_ posture: SimulatorHeldPosture) {}
 }
 
 @MainActor
@@ -99,6 +108,20 @@ struct FoldControlStrip: View {
                     }
                 }
                 .help("\(posture.label): hinge \(posture.angleRange)")
+            }
+            ForEach(driver.heldPostures) { posture in
+                Button {
+                    driver.setHeldPosture(posture)
+                } label: {
+                    if compaction.showsLabels {
+                        Image(systemName: posture.systemImage)
+                        Text(posture.label)
+                    } else {
+                        Image(systemName: posture.systemImage)
+                            .accessibilityLabel(posture.label)
+                    }
+                }
+                .help("\(posture.label): on its side, hinge \(Int(posture.angle))°")
             }
             if let sliderWidth = compaction.sliderWidth {
                 if showsSlider {

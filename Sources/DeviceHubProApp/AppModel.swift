@@ -893,7 +893,9 @@ final class AppModel {
                     return content
                 }
             }
-            return await SimulatorLifecycleController.screenshotContent(udid, simctl)
+            return await SimulatorLifecycleController.screenshotContent(
+                udid, simctl, display: self.services.simulators.captureDisplay(udid: udid)
+            )
         }
         // The canvas's session half (its begin and teardown hooks, the
         // stopped session, the display) and the rest of the per-device

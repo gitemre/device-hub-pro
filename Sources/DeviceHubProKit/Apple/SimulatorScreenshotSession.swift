@@ -63,9 +63,13 @@ public final class SimulatorScreenshotSession: MirrorSessionProtocol, @unchecked
     }
 
     /// Polls `udid` through `simctl`, bounded by `captureTimeout`.
-    public convenience init(udid: String, simctl: SimctlClient, interval: Duration = defaultInterval) {
+    /// `display`: the panel to capture (a foldable's lit panel), else the
+    /// main display.
+    public convenience init(udid: String, simctl: SimctlClient, interval: Duration = defaultInterval, display: UInt32? = nil) {
         self.init(udid: udid, interval: interval) { destination in
-            try await simctl.screenshot(udid: udid, to: destination, timeout: SimulatorScreenshotSession.captureTimeout)
+            try await simctl.screenshot(
+                udid: udid, to: destination, timeout: SimulatorScreenshotSession.captureTimeout, display: display
+            )
         }
     }
 

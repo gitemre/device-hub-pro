@@ -216,6 +216,76 @@ final class AppleChromeTests: XCTestCase {
         XCTAssertEqual(rect, CGRect(x: 182.5, y: 799, width: 66, height: 66))
     }
 
+    /// iPhone Duo's outer panel (`phone15`, Xcode 27.1 RC 27A9275, read
+    /// 2026-10-09): `sizing` 26 / 14 / 22 / 14 (left, top, right, bottom),
+    /// `devicePadding` 9 but 0 at the bottom, every slice the same 118 × 64
+    /// pt "unused" page, the composite 514 × 706 pt; the screen is 1398 ×
+    /// 2034 px at 3x.
+    static let duoOuterChrome = AppleChromeDescriptor(
+        identifier: "com.apple.dt.devicekit.chrome.phone15",
+        slices: .init(topLeft: "Phone TL", top: "Phone Top", topRight: "Phone TR", right: "Phone Right",
+                      bottomRight: "Phone BR", bottom: "Phone Base", bottomLeft: "Phone BL", left: "Phone Left"),
+        composite: "PhoneComposite",
+        sizing: .init(top: 14, left: 26, bottom: 14, right: 22),
+        devicePadding: .init(top: 9, left: 9, bottom: 0, right: 9),
+        outerCornerRadius: 80
+    )
+
+    /// The placeholder page every Xcode 27.1 RC Duo slice is, and a composite.
+    static func placeholderSizes(composite: CGSize) -> (String) -> CGSize? {
+        { $0 == "PhoneComposite" ? composite : CGSize(width: 118, height: 64) }
+    }
+
+    /// Slices that are not strips build no frame: the composite is the whole
+    /// body, and on `phone15` its hole inside `sizing` is the screen exactly.
+    func testAChromeOfPlaceholderSlicesIsDrawnFromItsComposite() throws {
+        let layout = try XCTUnwrap(AppleChromeLayout.make(
+            descriptor: Self.duoOuterChrome,
+            screenPoints: CGSize(width: 466, height: 678),
+            imageSize: Self.placeholderSizes(composite: CGSize(width: 514, height: 706))
+        ))
+        XCTAssertEqual(layout.slices.map(\.image), ["PhoneComposite"])
+        XCTAssertEqual(layout.box, CGRect(x: 9, y: 9, width: 514, height: 706))
+        XCTAssertEqual(layout.slices.first?.rect, layout.box)
+        XCTAssertEqual(layout.screen, CGRect(x: 35, y: 23, width: 466, height: 678))
+        XCTAssertEqual(layout.canvasSize, CGSize(width: 532, height: 715))
+        XCTAssertTrue(layout.glass.isEmpty, "the composite draws its own glass")
+    }
+
+    /// The inner panel's `phone14` (sizing 17 a side) was drawn for a 626 ×
+    /// 890 pt screen; Duo's is 669 × 951 pt (2007 × 2853 px at 3x), so the
+    /// composite is scaled until its hole is the screen.
+    func testTheCompositeScalesSoItsHoleIsTheScreen() throws {
+        var inner = Self.duoOuterChrome
+        inner.identifier = "com.apple.dt.devicekit.chrome.phone14"
+        inner.sizing = .init(top: 17, left: 17, bottom: 17, right: 17)
+        inner.devicePadding = .zero
+        let layout = try XCTUnwrap(AppleChromeLayout.make(
+            descriptor: inner,
+            screenPoints: CGSize(width: 669, height: 951),
+            imageSize: Self.placeholderSizes(composite: CGSize(width: 660, height: 924))
+        ))
+        let scaleX = 669.0 / 626.0, scaleY = 951.0 / 890.0
+        XCTAssertEqual(layout.box.width, 660 * scaleX, accuracy: 1e-9)
+        XCTAssertEqual(layout.box.height, 924 * scaleY, accuracy: 1e-9)
+        XCTAssertEqual(layout.screen.minX - layout.box.minX, 17 * scaleX, accuracy: 1e-9)
+        XCTAssertEqual(layout.screen.minY - layout.box.minY, 17 * scaleY, accuracy: 1e-9)
+        XCTAssertEqual(layout.screen.size, CGSize(width: 669, height: 951))
+        XCTAssertEqual(layout.box.maxX - layout.screen.maxX, 17 * scaleX, accuracy: 1e-9)
+    }
+
+    /// Real slices keep building the frame when the chrome names a composite
+    /// too (`phone11` does): only placeholders switch to the composite.
+    func testRealSlicesWinOverAComposite() throws {
+        let layout = try XCTUnwrap(AppleChromeLayout.make(
+            descriptor: try phone11(),
+            screenPoints: CGSize(width: 402, height: 874),
+            imageSize: { $0 == "PhoneComposite" ? CGSize(width: 438, height: 910) : Self.phone11Sizes[$0] }
+        ))
+        XCTAssertEqual(layout.slices.count, 8)
+        XCTAssertFalse(layout.slices.contains { $0.image == "PhoneComposite" })
+    }
+
     func testAScreenOrSliceWithoutASizeIsNoFrame() throws {
         XCTAssertNil(AppleChromeLayout.make(descriptor: try phone11(), screenPoints: .zero) { Self.phone11Sizes[$0] })
         XCTAssertNil(AppleChromeLayout.make(descriptor: try phone11(), screenPoints: CGSize(width: 402, height: 874)) { $0 == "Phone BR" ? nil : Self.phone11Sizes[$0] })

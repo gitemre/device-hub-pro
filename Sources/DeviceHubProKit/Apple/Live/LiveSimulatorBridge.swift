@@ -46,9 +46,9 @@ public struct LiveSimulatorBridge: SimulatorBridging {
         )
     }
 
-    public func makeScreen(for address: SimulatorAddress) throws -> any SimulatorScreenBridging {
+    public func makeScreen(for address: SimulatorAddress, screenID: UInt32) throws -> any SimulatorScreenBridging {
         dispatchPrecondition(condition: .notOnQueue(.main))
-        return try LiveSimulatorScreen(address: address, developerDir: developerDir)
+        return try LiveSimulatorScreen(address: address, developerDir: developerDir, screenID: screenID)
     }
 
     public func makeInput(for address: SimulatorAddress) -> any SimulatorInputBridging {
@@ -104,9 +104,11 @@ final class LiveSimulatorScreen: SimulatorScreenBridging {
     private let callbackQueue = DispatchQueue(label: "com.devicehubpro.simbridge.screen-callbacks", qos: .userInteractive)
     let initialProperties: SimulatorScreenProperties
 
-    init(address: SimulatorAddress, developerDir: String) throws {
+    init(address: SimulatorAddress, developerDir: String, screenID: UInt32 = 0) throws {
         do {
-            screen = try SimBridgeScreen(udid: address.udid, deviceSetPath: address.deviceSetPath, developerDir: developerDir)
+            screen = try SimBridgeScreen(
+                udid: address.udid, deviceSetPath: address.deviceSetPath, developerDir: developerDir, screenID: screenID
+            )
         } catch {
             throw SimulatorBridgeError(bridging: error)
         }
@@ -165,6 +167,9 @@ final class LiveSimulatorInput: SimulatorInputBridging {
     /// Never waits; safe on any queue.
     var isConnected: Bool { hid.isConnected }
 
+    var digitizerTarget: UInt32 { hid.digitizerTarget }
+    func setDigitizerTarget(_ target: UInt32) { hid.digitizerTarget = target }
+
     /// Never waits; safe on any queue.
     var lastConnectReport: SimulatorHIDConnectReport? {
         hid.lastConnectReport.map(SimulatorHIDConnectReport.init)
@@ -200,6 +205,8 @@ final class LiveSimulatorInput: SimulatorInputBridging {
                 try hid.sendButton(usagePage: button.usagePage, usage: button.usage, down: isDown)
             case .key(let usage, let isDown):
                 try hid.sendKey(usage: usage, down: isDown)
+            case .vendorDefined(let usagePage, let usage, let version, let data):
+                try hid.sendVendorDefined(usagePage: usagePage, usage: usage, version: version, data: data)
             }
         } catch {
             throw SimulatorBridgeError(bridging: error)

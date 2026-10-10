@@ -399,13 +399,21 @@ struct ContentView: View {
         }
     }
 
+    /// The stage shows the selected foldable in its 3D model, which has a
+    /// zoom of its own.
+    private var showsDeviceModel: Bool {
+        DeviceModelStageView.isShown(in: workspace, model: model)
+    }
+
     /// TB-03: DH's 151×36 pt zoom capsule (− │ fit 1 +).
     private var zoomCapsule: some View {
-        // A simulator's canvas session is live without a serial.
+        // A simulator's canvas session is live without a serial. The 3D
+        // model has a zoom of its own (pinch, scroll): the stage zoom's scale
+        // modes measure the 2D screen it does not draw.
         let isDisabled = !stageZoomIsAvailable(
             liveSelectionSerial: workspace.liveSelectionSerial,
             hasSession: workspace.selectedDeviceHasSession
-        )
+        ) || showsDeviceModel
         return ToolbarSegmentedCapsule(
             segments: [
                 ToolbarSegment(

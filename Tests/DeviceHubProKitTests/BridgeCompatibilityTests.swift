@@ -9,8 +9,10 @@ import XCTest
 final class BridgeCompatibilityTests: XCTestCase {
     private let none: [String: String] = [:]
 
-    func testTheVerifiedMajorIsAllowlisted() {
-        for version in ["1171.7", "1171", "1171.0", "1171.12.3"] {
+    func testTheVerifiedMajorsAreAllowlisted() {
+        // 1174.9.2 is the one Xcode 27.1 RC (27A9275) installs; the bridge
+        // smoke passed on it against an iPhone Duo (iOS 27.1, 24A94232).
+        for version in ["1171.7", "1171", "1171.0", "1171.12.3", "1174.9.2", "1174"] {
             let verdict = BridgeCompatibility.verdict(coreSimulatorVersion: version, environment: none)
             XCTAssertEqual(verdict, .allowlisted(CoreSimulatorVersion(version)!), version)
             XCTAssertTrue(verdict.allowsBridge, version)

@@ -44,6 +44,23 @@ struct Options {
     var deviceSetPath: String?
     var seconds = 10.0
     var outputDirectory: URL?
+    /// `--avp <JSON object>`: send this dictionary as one vendor-defined
+    /// event instead of running the checks (the fold probe).
+    var avpDictionary: String?
+    var avpFormat = "bplist"
+    var avpUsagePage: UInt32 = 0xFF00
+    var avpUsage: UInt32 = 0
+    var avpVersion: UInt32 = 1
+    /// `--screen-id <n>`: watch this panel (0: the lowest screen ID).
+    var screenID: UInt32 = 0
+    /// `--tap x,y`: tap there (native-portrait ratios) with `--target` and
+    /// report whether the watched panel changed, instead of the checks.
+    var tap: (x: Double, y: Double)?
+    var target: UInt32 = 0
+    /// `--orient <portrait|portraitUpsideDown|landscapeLeft|landscapeRight>`:
+    /// turn the device with the orientation GSEvent and report each panel's
+    /// interface orientation and whether it is lit, instead of the checks.
+    var orientation: SimulatorOrientation?
 }
 
 func parseOptions() -> Options {
@@ -62,6 +79,22 @@ func parseOptions() -> Options {
         case "--set": options.deviceSetPath = value(argument)
         case "--seconds": options.seconds = Double(value(argument)) ?? 10
         case "--out": options.outputDirectory = URL(fileURLWithPath: value(argument), isDirectory: true)
+        case "--avp": options.avpDictionary = value(argument)
+        case "--avp-format": options.avpFormat = value(argument)
+        case "--avp-page": options.avpUsagePage = UInt32(value(argument).replacingOccurrences(of: "0x", with: ""), radix: 16) ?? 0
+        case "--avp-usage": options.avpUsage = UInt32(value(argument).replacingOccurrences(of: "0x", with: ""), radix: 16) ?? 0
+        case "--avp-version": options.avpVersion = UInt32(value(argument)) ?? 1
+        case "--screen-id": options.screenID = UInt32(value(argument)) ?? 0
+        case "--target": options.target = UInt32(value(argument)) ?? 0
+        case "--orient":
+            guard let orientation = SimulatorOrientation(rawValue: value(argument)) else {
+                FileHandle.standardError.write(Data("--orient takes portrait, portraitUpsideDown, landscapeLeft or landscapeRight\n".utf8))
+                exit(2)
+            }
+            options.orientation = orientation
+        case "--tap":
+            let parts = value(argument).split(separator: ",").compactMap { Double($0) }
+            options.tap = parts.count == 2 ? (parts[0], parts[1]) : nil
         default:
             FileHandle.standardError.write(Data("unknown argument \(argument)\nusage: DeviceHubProSimBridgeSmoke --udid <UDID> [--set <path>] [--seconds 10] [--out <dir>]\n".utf8))
             exit(2)
@@ -334,6 +367,22 @@ func smoke(_ options: Options, report: Report) throws {
     func simctlRun(_ rest: [String], timeout: TimeInterval = 60) -> (status: Int32, output: String) {
         run(simctl, simctlArguments(rest), environment: environment, timeout: timeout)
     }
+    /// The device type's product family ("iPhone", "iPad", ...), from
+    /// `simctl list -j devices` and `devicetypes`; nil when either read fails.
+    func productFamily() -> String? {
+        func json(_ rest: [String]) -> [String: Any]? {
+            let result = simctlRun(rest, timeout: 30)
+            guard result.status == 0, let data = result.output.data(using: .utf8) else { return nil }
+            return try? JSONSerialization.jsonObject(with: data) as? [String: Any]
+        }
+        guard let runtimes = json(["list", "-j", "devices"])?["devices"] as? [String: [[String: Any]]],
+              let device = runtimes.values.joined().first(where: { $0["udid"] as? String == options.udid }),
+              let typeIdentifier = device["deviceTypeIdentifier"] as? String,
+              let types = json(["list", "-j", "devicetypes"])?["devicetypes"] as? [[String: Any]],
+              let type = types.first(where: { $0["identifier"] as? String == typeIdentifier })
+        else { return nil }
+        return type["productFamily"] as? String
+    }
     func dtuhiddActive() -> String {
         let result = simctlRun(["spawn", options.udid, "notifyutil", "-g", "com.apple.coredevice.dtuhidd.active"], timeout: 30)
         let value = result.output.split(whereSeparator: \.isWhitespace).last.map(String.init) ?? "?"
@@ -361,7 +410,7 @@ func smoke(_ options: Options, report: Report) throws {
 
     // 3. The screen.
     start = nowNanoseconds()
-    let screen = try bridge.makeScreen(for: address)
+    let screen = try bridge.makeScreen(for: address, screenID: options.screenID)
     report.numbers["screenResolveMs"] = milliseconds(since: start)
     let properties = screen.initialProperties
     report.facts["screenProperties"] = "type=\(properties.screenType) id=\(properties.screenID) uiOrientation=\(properties.uiOrientation) pixels=\(properties.pixelWidth)x\(properties.pixelHeight)"
@@ -370,6 +419,28 @@ func smoke(_ options: Options, report: Report) throws {
 
     let input = bridge.makeInput(for: address)
     report.check("inputLazy", !input.isConnected, "input created, connected=\(input.isConnected)")
+
+    if let avp = options.avpDictionary {
+        // With --screen-id the panel is watched (its callbacks registered)
+        // while the hinge moves, as the app's session watches the panel it
+        // shows.
+        if options.screenID != 0 { try screen.start { _ in } }
+        defer { if options.screenID != 0 { screen.stop() } }
+        try avpProbe(avp, input: input, simctlRun: simctlRun)
+        return
+    }
+    if let tap = options.tap {
+        try tapProbe(tap, screen: screen, input: input)
+        return
+    }
+    if let orientation = options.orientation {
+        try bridge.makeGSEvents(for: address).sendOrientation(orientation.gsEventValue)
+        log("sent orientation \(orientation.rawValue) (GSEvent \(orientation.gsEventValue))")
+        Thread.sleep(forTimeInterval: 2.5)
+        panelReport(bridge: bridge, address: address, simctlRun: simctlRun, prefix: "orient")
+        report.check("orientationSent", true, "sent; see the panel facts")
+        return
+    }
 
     let recorder = ScreenRecorder()
     start = nowNanoseconds()
@@ -509,7 +580,11 @@ func smoke(_ options: Options, report: Report) throws {
     let beforeTap = snapshot(surface)
     let seedBefore = surface.seed
     let tapFrames = recorder.frameCount
-    let isTablet = surface.height > 0 && Double(surface.width) / Double(surface.height) > 0.6
+    // The product family, not the screen's shape: a foldable's outer display
+    // (iPhone Duo, 1398x2034) is as wide as an iPad's but lays Settings out
+    // as a phone does.
+    let isTablet = productFamily().map { $0 == "iPad" }
+        ?? (surface.height > 0 && Double(surface.width) / Double(surface.height) > 0.6)
     let tapPoint = isTablet ? (x: 0.15, y: 0.31) : (x: 0.5, y: 0.62)
     report.facts["tapPoint"] = String(format: "%.2f,%.2f (%@)", tapPoint.x, tapPoint.y, isTablet ? "tablet" : "phone")
     start = nowNanoseconds()
@@ -583,6 +658,133 @@ func smoke(_ options: Options, report: Report) throws {
     let simulatorKit = diagnostics.simulatorKitLoaded
     report.facts["simulatorKitLoaded"] = simulatorKit ? "yes" : "no"
     report.check("simulatorKitNotNeeded", !simulatorKit, "SimulatorKit mapped into the process: \(simulatorKit ? "yes" : "no")")
+}
+
+// MARK: - Fold probe
+
+/// Sends `json` (a JSON object) as one vendor-defined event, encoded as
+/// `options.avpFormat` (`json`, `bplist`, `xml`), then reports what the
+/// guest logged about it and how bright each panel is (iPhone Duo's inner
+/// panel lights only when unfolded).
+func avpProbe(
+    _ json: String,
+    input: any SimulatorInputBridging,
+    simctlRun: ([String], TimeInterval) -> (status: Int32, output: String)
+) throws {
+    guard let object = try JSONSerialization.jsonObject(with: Data(json.utf8)) as? [String: Any] else {
+        report.check("avpDictionary", false, "--avp is not a JSON object")
+        return
+    }
+    let data: Data
+    switch options.avpFormat {
+    case "json": data = Data(json.utf8)
+    case "xml": data = try PropertyListSerialization.data(fromPropertyList: object, format: .xml, options: 0)
+    case "iokit": data = Data(ioKitXML(object).utf8)
+    default: data = try PropertyListSerialization.data(fromPropertyList: object, format: .binary, options: 0)
+    }
+    try input.connect()
+    try input.send(.vendorDefined(usagePage: options.avpUsagePage, usage: options.avpUsage, version: options.avpVersion, data: data))
+    try input.flush(timeout: .seconds(2))
+    log(String(format: "sent %@ as %@ (%ld bytes) on page 0x%X usage 0x%X version %u",
+               json, options.avpFormat, data.count, options.avpUsagePage, options.avpUsage, options.avpVersion))
+    Thread.sleep(forTimeInterval: 3)
+    let logs = simctlRun(["spawn", options.udid, "log", "show", "--last", "8s", "--style", "compact", "--predicate",
+                          "eventMessage CONTAINS[c] \"AVP\" OR eventMessage CONTAINS[c] \"vendor defined\" OR eventMessage CONTAINS[c] \"hinge\" OR eventMessage CONTAINS[c] \"relay\""], 60)
+    for line in logs.output.split(separator: "\n").suffix(30) { log("guest: \(line)") }
+    for display in ["primary", "primary-1"] {
+        let path = (options.outputDirectory ?? URL(fileURLWithPath: NSTemporaryDirectory()))
+            .appendingPathComponent("avp-\(display).png").path
+        let shot = simctlRun(["io", options.udid, "screenshot", "--display=\(display)", path], 60)
+        let share = shot.status == 0 ? nonBlackShare(atPath: path) : -1
+        report.facts["lit-\(display)"] = String(format: "%.2f", share)
+        log(String(format: "%@: %.0f%% of sampled pixels are not black", display, share * 100))
+    }
+    report.check("avpSent", true, "sent; see the guest lines and lit-* facts")
+}
+
+/// Each panel's interface orientation (as the bridge resolves the screen)
+/// and lit share (from a simctl screenshot of its display), written to
+/// `--out` as `<prefix>-<display>.png`.
+func panelReport(
+    bridge: any SimulatorBridging,
+    address: SimulatorAddress,
+    simctlRun: ([String], TimeInterval) -> (status: Int32, output: String),
+    prefix: String
+) {
+    for (screenID, display) in [(UInt32(1), "primary"), (UInt32(3), "primary-1")] {
+        let properties = (try? bridge.makeScreen(for: address, screenID: screenID))?.initialProperties
+        let path = (options.outputDirectory ?? URL(fileURLWithPath: NSTemporaryDirectory()))
+            .appendingPathComponent("\(prefix)-\(display).png").path
+        let shot = simctlRun(["io", options.udid, "screenshot", "--display=\(display)", path], 60)
+        let share = shot.status == 0 ? nonBlackShare(atPath: path) : -1
+        let orientation = properties.map { "\($0.uiOrientation)" } ?? "?"
+        let pixels = properties.map { "\($0.pixelWidth)x\($0.pixelHeight)" } ?? "?"
+        report.facts["\(prefix)-\(display)"] = "uiOrientation=\(orientation) pixels=\(pixels) lit=\(String(format: "%.2f", share))"
+        log("\(display) (screen \(screenID)): \(report.facts["\(prefix)-\(display)"]!)")
+    }
+}
+
+/// Taps `point` on digitizer target `options.target` and reports whether the
+/// watched panel changed; writes the panel before and after (raw, native
+/// portrait) to `--out`.
+func tapProbe(_ point: (x: Double, y: Double), screen: any SimulatorScreenBridging, input: any SimulatorInputBridging) throws {
+    let recorder = ScreenRecorder()
+    try screen.start { event in recorder.handle(event) }
+    defer { screen.stop() }
+    let deadline = Date().addingTimeInterval(3)
+    while recorder.surface == nil && Date() < deadline { Thread.sleep(forTimeInterval: 0.005) }
+    guard let surface = recorder.surface ?? (try? screen.currentSurface()), let before = snapshot(surface) else {
+        report.check("tapSurface", false, "no surface for screen \(options.screenID)")
+        return
+    }
+    input.setDigitizerTarget(options.target)
+    try input.send(.touch(x: point.x, y: point.y, phase: .began))
+    try input.send(.touch(x: point.x, y: point.y, phase: .ended))
+    try input.flush(timeout: .seconds(2))
+    Thread.sleep(forTimeInterval: 2)
+    guard let after = snapshot(surface) else { return }
+    let changed = differingShare(sampledPixels(before), sampledPixels(after))
+    if let directory = options.outputDirectory {
+        writePNG(before, to: directory.appendingPathComponent("tap-before.png"))
+        writePNG(after, to: directory.appendingPathComponent("tap-after.png"))
+    }
+    report.facts["tapChanged"] = String(format: "%.3f", changed)
+    report.check("tapChangesPanel", changed > 0.02, String(format: "tap (%.3f, %.3f) target %u on screen %u: %.1f%% of sampled pixels changed (%dx%d)",
+                                                         point.x, point.y, options.target, options.screenID, changed * 100, before.width, before.height))
+}
+
+/// `object` in IOKit's compact XML (what `IOCFUnserialize` reads): no
+/// header, no whitespace; numbers with a fraction become `<real>`.
+func ioKitXML(_ object: Any) -> String {
+    switch object {
+    case let dictionary as [String: Any]:
+        return "<dict>" + dictionary.keys.sorted().map { "<key>\($0)</key>" + ioKitXML(dictionary[$0]!) }.joined() + "</dict>"
+    case let array as [Any]:
+        return "<array>" + array.map(ioKitXML).joined() + "</array>"
+    case let number as NSNumber where CFGetTypeID(number) == CFBooleanGetTypeID():
+        return number.boolValue ? "<true/>" : "<false/>"
+    case let number as NSNumber:
+        return number.doubleValue.rounded() == number.doubleValue
+            ? "<integer>\(number.int64Value)</integer>" : "<real>\(number.doubleValue)</real>"
+    default:
+        return "<string>\(object)</string>"
+    }
+}
+
+/// The share of sampled pixels that are not black in the PNG at `path`.
+func nonBlackShare(atPath path: String) -> Double {
+    guard let source = CGImageSourceCreateWithURL(URL(fileURLWithPath: path) as CFURL, nil),
+          let image = CGImageSourceCreateImageAtIndex(source, 0, nil),
+          let context = CGContext(data: nil, width: 64, height: 64, bitsPerComponent: 8, bytesPerRow: 256,
+                                  space: CGColorSpaceCreateDeviceRGB(), bitmapInfo: CGImageAlphaInfo.premultipliedLast.rawValue)
+    else { return -1 }
+    context.draw(image, in: CGRect(x: 0, y: 0, width: 64, height: 64))
+    guard let pixels = context.data?.assumingMemoryBound(to: UInt8.self) else { return -1 }
+    var lit = 0
+    for index in 0..<(64 * 64) where Int(pixels[index * 4]) + Int(pixels[index * 4 + 1]) + Int(pixels[index * 4 + 2]) > 30 {
+        lit += 1
+    }
+    return Double(lit) / Double(64 * 64)
 }
 
 // MARK: - main

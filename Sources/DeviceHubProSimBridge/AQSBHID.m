@@ -47,14 +47,21 @@ static BOOL AQSBLookUpXPCSimSymbols(AQSBXPCSimSymbols *symbols) {
     return found.endpointFromPort != NULL && found.enableSim2Host != NULL;
 }
 
+/// dtuhidd's vendor-defined service, which posts on its AVP custom service.
+static const char *const kVendorDefinedService = "com.apple.coredevice.feature.remote.hid.vendordefined";
+
 /// The plain-XPC envelope dtuhidd decodes: {messageType, isBarrier, featureIdentifier, payload}.
-static xpc_object_t AQSBEnvelope(const char *messageType, bool isBarrier, xpc_object_t payload) {
+static xpc_object_t AQSBFeatureEnvelope(const char *messageType, bool isBarrier, const char *feature, xpc_object_t payload) {
     xpc_object_t message = xpc_dictionary_create(NULL, NULL, 0);
     xpc_dictionary_set_string(message, "messageType", messageType);
     xpc_dictionary_set_bool(message, "isBarrier", isBarrier);
-    xpc_dictionary_set_string(message, "featureIdentifier", kDigitizerService);
+    xpc_dictionary_set_string(message, "featureIdentifier", feature);
     xpc_dictionary_set_value(message, "payload", payload);
     return message;
+}
+
+static xpc_object_t AQSBEnvelope(const char *messageType, bool isBarrier, xpc_object_t payload) {
+    return AQSBFeatureEnvelope(messageType, isBarrier, kDigitizerService, payload);
 }
 
 /// A barrier carrying keyboard usage 0 ("no event"), so dtuhidd answers
@@ -431,7 +438,7 @@ static xpc_object_t AQSBDigitizerPoint(double x, double y) {
     xpc_dictionary_set_value(payload, "pointOne", AQSBDigitizerPoint(x, y));
     xpc_dictionary_set_uint64(payload, "eventType", phase);
     xpc_dictionary_set_uint64(payload, "edge", edge);
-    xpc_dictionary_set_uint64(payload, "target", 0);
+    xpc_dictionary_set_uint64(payload, "target", self.digitizerTarget);
     return [self sendMessageType:"IndigoDigitizerEvent" payload:payload error:error];
 }
 
@@ -456,7 +463,7 @@ static xpc_object_t AQSBDigitizerPoint(double x, double y) {
     xpc_dictionary_set_value(payload, "pointTwo", AQSBDigitizerPoint(secondX, secondY));
     xpc_dictionary_set_uint64(payload, "eventType", phase);
     xpc_dictionary_set_uint64(payload, "edge", AQSBTouchEdgeNone);
-    xpc_dictionary_set_uint64(payload, "target", 0);
+    xpc_dictionary_set_uint64(payload, "target", self.digitizerTarget);
     return [self sendMessageType:"IndigoDigitizerEvent" payload:payload error:error];
 }
 
@@ -476,6 +483,25 @@ static xpc_object_t AQSBDigitizerPoint(double x, double y) {
     xpc_dictionary_set_uint64(payload, "usageCode", usage);
     xpc_dictionary_set_uint64(payload, "state", down ? 1 : 2);
     return [self sendMessageType:"IndigoKeyboardButtonEvent" payload:payload error:error];
+}
+
+- (BOOL)sendVendorDefinedWithUsagePage:(uint32_t)usagePage
+                                 usage:(uint32_t)usage
+                               version:(uint32_t)version
+                                  data:(NSData *)data
+                                 error:(NSError **)error {
+    AQSBEnterBridge();
+    xpc_connection_t connection = [self connectionConnectingIfNeeded:error];
+    if (!connection) {
+        return NO;
+    }
+    xpc_object_t payload = xpc_dictionary_create(NULL, NULL, 0);
+    xpc_dictionary_set_uint64(payload, "usagePage", usagePage);
+    xpc_dictionary_set_uint64(payload, "usage", usage);
+    xpc_dictionary_set_uint64(payload, "version", version);
+    xpc_dictionary_set_data(payload, "data", data.bytes, data.length);
+    xpc_connection_send_message(connection, AQSBFeatureEnvelope("IndigoVendorDefinedEvent", false, kVendorDefinedService, payload));
+    return YES;
 }
 
 - (BOOL)flushWithTimeout:(NSTimeInterval)timeout error:(NSError **)error {

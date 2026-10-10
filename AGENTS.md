@@ -236,6 +236,24 @@ alternative stays the fallback.
   `Sources/DeviceHubProKit/Apple/FastInput/` (`FastInputSourceGuardTests`).
 - **Simulator bridge** (`DHP_DISABLE_SIMBRIDGE`, `DHP_SIMBRIDGE_ALLOW_UNTESTED`):
   `Sources/DeviceHubProSimBridge`, provenance in its `PROVENANCE.md`.
+- **Simulator fold** (`DHP_DISABLE_SIMULATOR_FOLD`): a foldable simulator's hinge (iPhone Duo)
+  goes over the bridge's input connection as a vendor-defined dtuhidd event (`SimulatorFold`,
+  `SimulatorFoldSender`; entries in the bridge's `PROVENANCE.md`). Its canary is
+  `DeviceHubProSimBridgeSmoke --udid <UDID> --avp '{"source":"hinge-slider-control","type":"range","value":180}'
+  --avp-format iokit --avp-page FF61 --avp-usage 5B`, which reports how lit each panel is. The device
+  is held (Laptop, Tent, the stage's rotate, Device ▸ Orientation) through the same service's
+  orientation picker (`SimulatorFold.poseEvent`), whose canary is the same command with
+  `--avp '{"source":"orientation-picker-control","type":"enum","value":"landscape-left"}'`, and
+  `--orient` reports each panel's interface. Off, or without the live canvas, the fold strip is not
+  offered.
+- **Device model** (`DHP_DISABLE_DEVICE_MODEL`): a foldable simulator's 3D view reads Apple's model
+  of the device (iPhone Duo's `V68.usdz`) from the user's Xcode at runtime (`AppleDeviceModel`):
+  never copied into the repository, the app or a fixture, and used only when its SHA-256 is one of
+  `AppleDeviceModel.known`. Its parts are found by shape (`AppleDeviceModel.panels`), not by their
+  scrambled names. Its canary is `AppleDeviceModelLiveTests` (`DHP_DEVICE_MODEL_LIVE=1`, on a Mac
+  whose selected Xcode ships a known model, or with `DHP_DEVICE_MODEL_DEVELOPER_DIR` naming such an
+  Xcode's `Contents/Developer`). Off, or without a known model, the stage keeps the 2D
+  chrome.
 
 ## Test switches
 

@@ -439,6 +439,22 @@ final class SimctlClientTests: XCTestCase {
         XCTAssertEqual(fake.invocations, [["io", Self.udid, "screenshot", "--type=png", "/tmp/x.png"]])
     }
 
+    /// A foldable's panel by screen ID: HELP-DERIVED Xcode 27.1 RC (27A9275)
+    /// `simctl io help` ("--display  Specifies which display to record.
+    /// Accepts: Screen ID (eg: \"1\") ..."), the same text as Xcode 27.0's.
+    /// On iPhone Duo without it simctl captured the inner panel, black while
+    /// the device is closed. With no display the argv is unchanged.
+    func testAScreenshotAndARecordingNameTheirPanel() async throws {
+        let fake = try FakeTool(name: "simctl", rules: [.init("screenshot", stdoutFile: nil, stderrFile: nil, exitCode: 0)])
+        let client = SimctlClient(simctlURL: fake.executableURL)
+        try await client.screenshot(udid: Self.udid, to: URL(fileURLWithPath: "/tmp/x.png"), display: 3)
+        try await client.screenshot(udid: Self.udid, to: URL(fileURLWithPath: "/tmp/y.png"))
+        XCTAssertEqual(fake.invocations, [
+            ["io", Self.udid, "screenshot", "--type=png", "--display=3", "/tmp/x.png"],
+            ["io", Self.udid, "screenshot", "--type=png", "/tmp/y.png"],
+        ])
+    }
+
     // MARK: Pasteboard
 
     /// The captures behind the pasteboard tests, from my own default-set

@@ -454,6 +454,31 @@ final class SimulatorMirrorSessionTests: XCTestCase {
         }
     }
 
+    /// A foldable's inner panel: the session resolves screen 3 and its
+    /// touches carry target 3; the default session asks for the lowest
+    /// screen and target 0.
+    func testASessionMirrorsAndTouchesItsPanel() throws {
+        let panels = try XCTUnwrap(SimulatorFoldPanels(panels: SimulatorDisplayProfile.panels(capabilities: SimulatorFoldTests.iPhoneDuo)))
+        for (panel, expectedScreen, expectedTarget) in [
+            (SimulatorSessionPanel.main, UInt32(0), UInt32(0)),
+            (.foldable(.outer, of: panels), 1, 0),
+            (.foldable(.inner, of: panels), 3, 3),
+        ] {
+            let bridge = makeBridge(surface: try makeSurface())
+            let session = SimulatorMirrorSession(
+                udid: udid, deviceSet: nil, bridge: bridge, minimumPublishInterval: .milliseconds(1),
+                keyboardLayout: .usQWERTY, panel: panel
+            )
+            addTeardownBlock { session.stopAndWait() }
+            session.start()
+            XCTAssertEqual(try screen(bridge).requestedScreenID, expectedScreen)
+            XCTAssertTrue(eventually { session.frames.current != nil })
+            session.send(TouchCommand(phase: .down, x: 1, y: 1))
+            XCTAssertTrue(eventually { bridge.inputs.first?.sent.isEmpty == false })
+            XCTAssertEqual(bridge.inputs.first?.digitizerTarget, expectedTarget)
+        }
+    }
+
     /// Before the first frame there is nothing to position a touch against.
     func testTouchesBeforeTheFirstFrameAreDropped() {
         let session = makeSession(makeBridge(surface: nil))

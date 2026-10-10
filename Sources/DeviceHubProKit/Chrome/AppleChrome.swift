@@ -122,6 +122,8 @@ public final class AppleChromeArt: @unchecked Sendable, Hashable, CustomStringCo
         for name in descriptor.slices.all {
             guard load(name) != nil else { return nil }
         }
+        // Drawn only when the slices are placeholders (`AppleChromeLayout`).
+        if let composite = descriptor.composite { _ = load(composite) }
         descriptor.inputs = descriptor.inputs.filter { input in
             load(input.image) != nil && (input.imageDown.map { load($0) != nil } ?? true)
         }
@@ -208,7 +210,13 @@ public final class AppleChromeArt: @unchecked Sendable, Hashable, CustomStringCo
 
 /// A chrome built around one screen: the frame is made from the slices at
 /// the screen's point size (one chrome serves several screens, so its
-/// composite preview is never drawn), in the device's native portrait.
+/// composite preview is not drawn while the slices can build the frame), in
+/// the device's native portrait.
+///
+/// A chrome whose edge slices are not strips (Xcode 27.1's `phone14` and
+/// `phone15`, iPhone Duo's two panels, ship one 118 × 64 pt page reading
+/// "unused" for all eight) is drawn from its composite instead: one piece,
+/// scaled so the hole it leaves inside `sizing` is the screen.
 /// Chrome points, top-left based, in the canvas: the slices' box plus the
 /// room the buttons need.
 ///
@@ -234,6 +242,10 @@ public struct AppleChromeLayout: Sendable, Hashable {
     /// How far past the box's edge the reference line of a side button's
     /// offset lies, chrome points (see the rules above).
     public static let buttonReach: CGFloat = 11
+    /// The longest an edge slice may run along its edge and still be a strip
+    /// the frame stretches: 1 or 2 pt in every chrome Xcode 27.0 and 27.1
+    /// install, 118 pt in the placeholders.
+    static let maxEdgeSliceLength: CGFloat = 2
 
     public struct Piece: Sendable, Hashable {
         public var image: String
@@ -272,8 +284,10 @@ public struct AppleChromeLayout: Sendable, Hashable {
     ) -> AppleChromeLayout? {
         guard screenPoints.width > 0, screenPoints.height > 0 else { return nil }
         let sizing = descriptor.sizing
-        let width = screenPoints.width + CGFloat(sizing.left + sizing.right)
-        let height = screenPoints.height + CGFloat(sizing.top + sizing.bottom)
+        let bezelWidth = CGFloat(sizing.left + sizing.right)
+        let bezelHeight = CGFloat(sizing.top + sizing.bottom)
+        var width = screenPoints.width + bezelWidth
+        var height = screenPoints.height + bezelHeight
         let slices = descriptor.slices
         guard let tl = imageSize(slices.topLeft), let tr = imageSize(slices.topRight),
               let bl = imageSize(slices.bottomLeft), let br = imageSize(slices.bottomRight),
@@ -282,16 +296,38 @@ public struct AppleChromeLayout: Sendable, Hashable {
         else { return nil }
 
         // Box space: the box at the origin.
-        var pieces = [
-            Piece(image: slices.topLeft, rect: CGRect(origin: .zero, size: tl)),
-            Piece(image: slices.topRight, rect: CGRect(x: width - tr.width, y: 0, width: tr.width, height: tr.height)),
-            Piece(image: slices.bottomRight, rect: CGRect(x: width - br.width, y: height - br.height, width: br.width, height: br.height)),
-            Piece(image: slices.bottomLeft, rect: CGRect(x: 0, y: height - bl.height, width: bl.width, height: bl.height)),
-            Piece(image: slices.top, rect: CGRect(x: tl.width, y: 0, width: max(width - tl.width - tr.width, 0), height: top.height)),
-            Piece(image: slices.right, rect: CGRect(x: width - right.width, y: tr.height, width: right.width, height: max(height - tr.height - br.height, 0))),
-            Piece(image: slices.bottom, rect: CGRect(x: bl.width, y: height - bottom.height, width: max(width - bl.width - br.width, 0), height: bottom.height)),
-            Piece(image: slices.left, rect: CGRect(x: 0, y: tl.height, width: left.width, height: max(height - tl.height - bl.height, 0))),
-        ]
+        var pieces: [Piece]
+        var screenOrigin = CGPoint(x: CGFloat(sizing.left), y: CGFloat(sizing.top))
+        var glass: CGRect
+        let edgesStretch = [top.width, bottom.width, left.height, right.height].allSatisfy { $0 <= maxEdgeSliceLength }
+        if !edgesStretch, let name = descriptor.composite, let composite = imageSize(name),
+           composite.width > bezelWidth, composite.height > bezelHeight {
+            let scaleX = screenPoints.width / (composite.width - bezelWidth)
+            let scaleY = screenPoints.height / (composite.height - bezelHeight)
+            width = composite.width * scaleX
+            height = composite.height * scaleY
+            screenOrigin = CGPoint(x: CGFloat(sizing.left) * scaleX, y: CGFloat(sizing.top) * scaleY)
+            pieces = [Piece(image: name, rect: CGRect(x: 0, y: 0, width: width, height: height))]
+            // The composite draws its own glass.
+            glass = .zero
+        } else {
+            pieces = [
+                Piece(image: slices.topLeft, rect: CGRect(origin: .zero, size: tl)),
+                Piece(image: slices.topRight, rect: CGRect(x: width - tr.width, y: 0, width: tr.width, height: tr.height)),
+                Piece(image: slices.bottomRight, rect: CGRect(x: width - br.width, y: height - br.height, width: br.width, height: br.height)),
+                Piece(image: slices.bottomLeft, rect: CGRect(x: 0, y: height - bl.height, width: bl.width, height: bl.height)),
+                Piece(image: slices.top, rect: CGRect(x: tl.width, y: 0, width: max(width - tl.width - tr.width, 0), height: top.height)),
+                Piece(image: slices.right, rect: CGRect(x: width - right.width, y: tr.height, width: right.width, height: max(height - tr.height - br.height, 0))),
+                Piece(image: slices.bottom, rect: CGRect(x: bl.width, y: height - bottom.height, width: max(width - bl.width - br.width, 0), height: bottom.height)),
+                Piece(image: slices.left, rect: CGRect(x: 0, y: tl.height, width: left.width, height: max(height - tl.height - bl.height, 0))),
+            ]
+            glass = CGRect(
+                x: left.width,
+                y: top.height,
+                width: max(width - left.width - right.width, 0),
+                height: max(height - top.height - bottom.height, 0)
+            )
+        }
         let box = CGRect(x: 0, y: 0, width: width, height: height)
         var buttons: [Button] = []
         for (index, input) in descriptor.inputs.enumerated() {
@@ -324,22 +360,16 @@ public struct AppleChromeLayout: Sendable, Hashable {
             buttons[index].rollover = buttons[index].rollover.applying(shift)
         }
         let placedBox = box.applying(shift)
-        let glass = CGRect(
-            x: placedBox.minX + left.width,
-            y: placedBox.minY + top.height,
-            width: max(width - left.width - right.width, 0),
-            height: max(height - top.height - bottom.height, 0)
-        )
         return AppleChromeLayout(
             canvasSize: canvas.size,
             box: placedBox,
             screen: CGRect(
-                x: placedBox.minX + CGFloat(sizing.left),
-                y: placedBox.minY + CGFloat(sizing.top),
+                x: placedBox.minX + screenOrigin.x,
+                y: placedBox.minY + screenOrigin.y,
                 width: screenPoints.width,
                 height: screenPoints.height
             ),
-            glass: glass,
+            glass: glass.applying(shift),
             slices: pieces,
             buttons: buttons,
             outerCornerRadius: CGFloat(descriptor.outerCornerRadius ?? 0)

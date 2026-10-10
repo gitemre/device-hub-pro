@@ -160,7 +160,9 @@ final class SimulatorLifecycleController {
     @ObservationIgnored var screenContent: @MainActor (
         _ udid: String,
         _ simctl: SimctlClient
-    ) async -> SimulatorReadiness.ScreenContent? = SimulatorLifecycleController.screenshotContent
+    ) async -> SimulatorReadiness.ScreenContent? = { udid, simctl in
+        await SimulatorLifecycleController.screenshotContent(udid, simctl)
+    }
     /// How often the home screen process and the screen are looked at once
     /// the boot status is Finished.
     @ObservationIgnored var homeScreenPollInterval: Duration = .milliseconds(500)
@@ -719,7 +721,8 @@ final class SimulatorLifecycleController {
     /// Runs off the main actor: the PNG is 1206×2622 (3840×2160 on tvOS).
     nonisolated static func screenshotContent(
         _ udid: String,
-        _ simctl: SimctlClient
+        _ simctl: SimctlClient,
+        display: UInt32? = nil
     ) async -> SimulatorReadiness.ScreenContent? {
         let file = FileManager.default.temporaryDirectory
             .appendingPathComponent("DeviceHubPro-ready-\(UUID().uuidString).png")
@@ -728,7 +731,7 @@ final class SimulatorLifecycleController {
             try? FileManager.default.removeItem(at: file)
         }
         do {
-            try await simctl.screenshot(udid: udid, to: file, timeout: .seconds(20))
+            try await simctl.screenshot(udid: udid, to: file, timeout: .seconds(20), display: display)
         } catch {
             return nil
         }

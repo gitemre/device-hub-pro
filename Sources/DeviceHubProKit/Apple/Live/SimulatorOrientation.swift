@@ -7,7 +7,7 @@ import Foundation
 ///
 /// An iPhone with Face ID never shows its interface upside down: asked for
 /// `portraitUpsideDown`, it keeps the interface where it was.
-public enum SimulatorOrientation: String, Sendable, CaseIterable {
+public enum SimulatorOrientation: String, Sendable, CaseIterable, Codable {
     case portrait
     case portraitUpsideDown
     case landscapeLeft

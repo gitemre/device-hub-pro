@@ -284,7 +284,8 @@ struct DeviceMenuItems: View {
         let androidBlock = layout.showsAndroidExtras && workspace?.menuTargetSerial != nil
         let profile = layout.kind == .android || layout.kind == .simulator
         let sendFiles = layout.isRunning && (layout.kind == .simulator || layout.kind == .android) && workspace != nil
-        let showsFold = workspace?.hardware.showsFoldControls == true && workspace?.menuTargetSerial != nil
+        let showsFold = (workspace?.hardware.showsFoldControls == true && workspace?.menuTargetSerial != nil)
+            || (workspace?.simulatorFold.showsFoldControls == true && workspace?.contextIsSelection == true)
         let stage = showsFold || workspace?.offersResizeMode == true
         if lifecycle { lifecycleItems(layout) }
         if appleBlock, let udid = selectedSimulator?.udid, let workspace {
@@ -428,6 +429,10 @@ struct DeviceMenuItems: View {
         if workspace?.hardware.showsFoldControls == true, workspace?.menuTargetSerial != nil {
             Button("Fold / Unfold") {
                 Task { @MainActor in workspace?.hardware.toggleFold() }
+            }
+        } else if workspace?.simulatorFold.showsFoldControls == true, workspace?.contextIsSelection == true {
+            Button("Fold / Unfold") {
+                workspace?.simulatorFold.toggleFold()
             }
         }
         // Device Hub's Device > Enter Resize Mode (no shortcut there either):

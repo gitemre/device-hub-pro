@@ -30,6 +30,7 @@ final class AppPreferences {
         static let locationDefaultsVersion = "locationDefaultsVersion"
         static let shutDownStartedSimulatorsOnQuit = "shutDownStartedSimulatorsOnQuit"
         static let simulatorDevicectlProbe = "simulatorDevicectlProbe"
+        static let simulatorFolds = "simulatorFolds"
         static let simulatorTimeZones = "simulatorTimeZones"
         static let showPhysicalAppleDevices = "showPhysicalAppleDevices"
         static let enabledPhysicalAppleDevices = "enabledPhysicalAppleDevices"
@@ -42,6 +43,7 @@ final class AppPreferences {
         static let physicalInfoVisible = "physicalInfoVisible"
         static let zoomHintDismissed = "zoomHintDismissed"
         static let showNavigationButtons = "showNavigationButtons"
+        static let showDeviceModel = "showDeviceModel"
         static let stayOnTopMain = "stayOnTopMain"
         static let stayOnTopCompact = "stayOnTopCompact"
         static let settingsProfiles = "settingsProfiles"
@@ -70,6 +72,7 @@ final class AppPreferences {
             locationDefaultsVersion,
             shutDownStartedSimulatorsOnQuit,
             simulatorDevicectlProbe,
+            simulatorFolds,
             simulatorTimeZones,
             showPhysicalAppleDevices,
             enabledPhysicalAppleDevices,
@@ -82,6 +85,7 @@ final class AppPreferences {
             physicalInfoVisible,
             zoomHintDismissed,
             showNavigationButtons,
+            showDeviceModel,
             stayOnTopMain,
             stayOnTopCompact,
             settingsProfiles,
@@ -131,6 +135,9 @@ final class AppPreferences {
     /// without asking again until CoreDevice changes. Nil
     /// until a probe answered.
     private(set) var simulatorDevicectlProbe: CachedDevicectlProbe?
+    /// Where Device Hub Pro left each booted foldable simulator's fold
+    /// (`SimulatorInventory.folds`), for the next launch.
+    private(set) var simulatorFolds: SimulatorFoldBook
     /// The time zone the Controls chose per simulator (UDID → zone
     /// identifier): simctl has no time-zone command, so Device Hub Pro hands it to
     /// the boots it starts (`SIMCTL_CHILD_TZ`). A simulator without an entry
@@ -186,6 +193,8 @@ final class AppPreferences {
     /// View ▸ Show Navigation Buttons: the Back, Home and Recents bar under
     /// an Android handheld on the stage. On unless the user turned it off.
     private(set) var showNavigationButtons: Bool
+    /// A foldable simulator opens in its 3D model (`DeviceModelStageView`).
+    private(set) var showDeviceModel: Bool
     /// Window ▸ Stay on Top, as the user last set it for a main window and
     /// for the compact mirror: new windows start with it (each window then
     /// toggles on its own). Persisted; off on a fresh install.
@@ -257,6 +266,8 @@ final class AppPreferences {
             defaults.object(forKey: Keys.shutDownStartedSimulatorsOnQuit) as? Bool ?? true
         simulatorDevicectlProbe = defaults.data(forKey: Keys.simulatorDevicectlProbe)
             .flatMap { try? JSONDecoder().decode(CachedDevicectlProbe.self, from: $0) }
+        simulatorFolds = defaults.data(forKey: Keys.simulatorFolds)
+            .flatMap { try? JSONDecoder().decode(SimulatorFoldBook.self, from: $0) } ?? SimulatorFoldBook()
         simulatorTimeZones = (defaults.dictionary(forKey: Keys.simulatorTimeZones) as? [String: String]) ?? [:]
         showPhysicalAppleDevices = defaults.bool(forKey: Keys.showPhysicalAppleDevices)
         enabledPhysicalAppleDevices = Self.normalizedUDIDs(
@@ -274,6 +285,7 @@ final class AppPreferences {
         physicalInfoVisible = PhysicalInfoProperty.decode(defaults.array(forKey: Keys.physicalInfoVisible) as? [String])
         zoomHintDismissed = defaults.bool(forKey: Keys.zoomHintDismissed)
         showNavigationButtons = defaults.object(forKey: Keys.showNavigationButtons) as? Bool ?? true
+        showDeviceModel = defaults.object(forKey: Keys.showDeviceModel) as? Bool ?? false
         stayOnTopMain = defaults.bool(forKey: Keys.stayOnTopMain)
         stayOnTopCompact = defaults.bool(forKey: Keys.stayOnTopCompact)
         androidSDKPath = defaults.string(forKey: Keys.androidSDKPath) ?? ""
@@ -351,6 +363,11 @@ final class AppPreferences {
     func setAndroidReadyCardDismissed(_ dismissed: Bool) {
         androidReadyCardDismissed = dismissed
         defaults.set(dismissed, forKey: Keys.androidReadyCardDismissed)
+    }
+
+    func setShowDeviceModel(_ shown: Bool) {
+        showDeviceModel = shown
+        defaults.set(shown, forKey: Keys.showDeviceModel)
     }
 
     func setShowNavigationButtons(_ shown: Bool) {
@@ -508,6 +525,15 @@ final class AppPreferences {
 
     private static func normalizedUDIDs(_ udids: [String]) -> [String] {
         Set(udids.map(PhysicalDeviceOptIn.normalize).filter { !$0.isEmpty }).sorted()
+    }
+
+    func setSimulatorFolds(_ folds: SimulatorFoldBook) {
+        simulatorFolds = folds
+        if !folds.records.isEmpty, let data = try? JSONEncoder().encode(folds) {
+            defaults.set(data, forKey: Keys.simulatorFolds)
+        } else {
+            defaults.removeObject(forKey: Keys.simulatorFolds)
+        }
     }
 
     func setSimulatorDevicectlProbe(_ probe: CachedDevicectlProbe?) {

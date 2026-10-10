@@ -728,6 +728,19 @@ final class SimulatorCanvasTests: XCTestCase {
         XCTAssertEqual(Canvas.orientation(for: nil), .portrait)
     }
 
+    /// A first frame turns the device to its interface's pose, unless the
+    /// device is a foldable: that one rests as its lit panel does, whatever
+    /// the interface says (a closed iPhone Duo publishes the open one's
+    /// landscape right).
+    func testAFoldableIgnoresItsFirstFramesTurn() {
+        typealias Canvas = SimulatorCanvasController
+        XCTAssertEqual(Canvas.firstFrameOrientation(published: .clockwise, foldResting: nil), .landscapeRight)
+        XCTAssertNil(Canvas.firstFrameOrientation(published: .upright, foldResting: nil))
+        XCTAssertNil(Canvas.firstFrameOrientation(published: nil, foldResting: nil))
+        XCTAssertEqual(Canvas.firstFrameOrientation(published: .clockwise, foldResting: .portrait), .portrait)
+        XCTAssertEqual(Canvas.firstFrameOrientation(published: nil, foldResting: .landscapeRight), .landscapeRight)
+    }
+
     // MARK: - Menus and handoff
 
     /// The Device menu's simulator items: shown only for an Apple device,

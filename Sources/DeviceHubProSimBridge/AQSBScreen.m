@@ -89,9 +89,25 @@ static IOSurface *AQSBAsSurface(id object) {
 
 // MARK: - Screen
 
+/// The screen ID a descriptor reports, or UINT32_MAX when it cannot say.
+static uint32_t AQSBScreenIDOf(id descriptor) {
+    __block id proxy = nil;
+    NSError *readError = nil;
+    if (!AQSBGuarded(@"-[SimScreen screenProperties]", &readError, ^{
+            proxy = [(id<AQSBSimScreen>)descriptor screenProperties];
+        })) {
+        return UINT32_MAX;
+    }
+    AQSBScreenProperties *properties = [AQSBScreenProperties propertiesFromProxy:proxy error:&readError];
+    return properties ? properties.screenID : UINT32_MAX;
+}
+
 /// device.io → ioPorts → the descriptor whose state has display class 0 and
-/// that vends the SimScreen callbacks.
-static id AQSBFindMainScreen(id<AQSBSimDevice> device, NSError **error) {
+/// that vends the SimScreen callbacks. A foldable has two such panels (iPhone
+/// Duo: the outer display is screen 1, the inner one screen 3) and the ports
+/// come in no fixed order, so the lowest screen ID wins (the device type's
+/// first display, the one a folded device shows) unless `screenID` names one.
+static id AQSBFindMainScreen(id<AQSBSimDevice> device, uint32_t screenID, NSError **error) {
     __block NSArray *ports = nil;
     if (!AQSBGuarded(@"-[SimDevice io] / -ioPorts", error, ^{
             id<AQSBSimDeviceIO> io = [device io];
@@ -105,6 +121,7 @@ static id AQSBFindMainScreen(id<AQSBSimDevice> device, NSError **error) {
         }
         return nil;
     }
+    NSMutableArray *candidates = [NSMutableArray array];
     for (id<AQSBSimDeviceIOPort> port in ports) {
         __block id descriptor = nil;
         __block uint16_t displayClass = UINT16_MAX;
@@ -127,8 +144,34 @@ static id AQSBFindMainScreen(id<AQSBSimDevice> device, NSError **error) {
         });
         // One port that raises does not hide the others.
         if (ok && descriptor && displayClass == kMainDisplayClass) {
-            return descriptor;
+            [candidates addObject:descriptor];
         }
+    }
+    if (candidates.count == 1 && screenID == 0) {
+        return candidates.firstObject;
+    }
+    if (candidates.count > 0) {
+        id lowest = candidates.firstObject;
+        uint32_t lowestID = UINT32_MAX;
+        for (id candidate in candidates) {
+            uint32_t candidateID = AQSBScreenIDOf(candidate);
+            if (screenID != 0 && candidateID == screenID) {
+                return candidate;
+            }
+            if (candidateID < lowestID) {
+                lowestID = candidateID;
+                lowest = candidate;
+            }
+        }
+        if (screenID == 0) {
+            return lowest;
+        }
+        if (error) {
+            *error = AQSBMakeError(AQSBErrorScreenNotFound,
+                                   [NSString stringWithFormat:@"no display of class 0 has screen ID %u", screenID],
+                                   nil);
+        }
+        return nil;
     }
     if (error) {
         *error = AQSBMakeError(AQSBErrorScreenNotFound,
@@ -161,13 +204,21 @@ static id AQSBFindMainScreen(id<AQSBSimDevice> device, NSError **error) {
                deviceSetPath:(NSString *)deviceSetPath
                 developerDir:(NSString *)developerDir
                        error:(NSError **)error {
+    return [self initWithUDID:udid deviceSetPath:deviceSetPath developerDir:developerDir screenID:0 error:error];
+}
+
+- (instancetype)initWithUDID:(NSString *)udid
+               deviceSetPath:(NSString *)deviceSetPath
+                developerDir:(NSString *)developerDir
+                    screenID:(uint32_t)screenID
+                       error:(NSError **)error {
     AQSBEnterBridge();
     if ((self = [super init])) {
         _device = AQSBResolveDevice(udid, deviceSetPath, developerDir, YES, error);
         if (!_device) {
             return nil;
         }
-        _screen = AQSBFindMainScreen(_device, error);
+        _screen = AQSBFindMainScreen(_device, screenID, error);
         if (!_screen) {
             return nil;
         }

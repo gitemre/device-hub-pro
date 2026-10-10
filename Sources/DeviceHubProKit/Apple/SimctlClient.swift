@@ -680,11 +680,15 @@ public final class SimctlClient: Sendable {
     // MARK: io
 
     /// Writes a PNG screenshot of the main display to `destination`
-    /// (`io <udid> screenshot`). A powered-off screen blocks simctl for 61 s,
-    /// so pass a `timeout` below that when the screen may be off.
-    public func screenshot(udid: String, to destination: URL, timeout: Duration? = nil) async throws {
+    /// (`io <udid> screenshot`), or of the panel whose screen ID is `display`
+    /// (`--display=<id>`). A foldable needs it: with no `--display`, simctl
+    /// 27.1 captured iPhone Duo's inner panel, black while the device is
+    /// closed. A powered-off screen blocks simctl for 61 s, so pass a
+    /// `timeout` below that when the screen may be off.
+    public func screenshot(udid: String, to destination: URL, timeout: Duration? = nil, display: UInt32? = nil) async throws {
         try Self.validateUDID(udid)
-        try await checked(["io", udid, "screenshot", "--type=png", destination.path], timeout: timeout)
+        let panel = display.map { ["--display=\($0)"] } ?? []
+        try await checked(["io", udid, "screenshot", "--type=png"] + panel + [destination.path], timeout: timeout)
     }
 
     public enum VideoCodec: String, Sendable {
@@ -715,10 +719,12 @@ public final class SimctlClient: Sendable {
         udid: String,
         to destination: URL,
         codec: VideoCodec = .hevc,
+        display: UInt32? = nil,
         onStarted: @escaping @Sendable () -> Void = {}
     ) async throws {
         try Self.validateUDID(udid)
-        let arguments = ["io", udid, "recordVideo", "--codec=\(codec.rawValue)", destination.path]
+        let panel = display.map { ["--display=\($0)"] } ?? []
+        let arguments = ["io", udid, "recordVideo", "--codec=\(codec.rawValue)"] + panel + [destination.path]
         let argv = try commandLine(arguments)
         let transcript = RecordingTranscript()
         let exitCode: Int32
