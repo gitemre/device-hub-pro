@@ -132,6 +132,8 @@ public final class SimulatorMirrorSession: MirrorSessionProtocol, SimulatorButto
     private enum InputEvent {
         case contacts([SimulatorContact])
         case keyboard(KeyboardCommand)
+        /// One key press with its modifiers (a ⌘ shortcut).
+        case stroke(SimulatorKeyStroke)
         /// One edge of a hardware button (the frame's side buttons).
         case button(SimulatorHardwareButton, isDown: Bool)
         /// A button pressed and released after `hold` (Home, Lock).
@@ -601,6 +603,15 @@ public final class SimulatorMirrorSession: MirrorSessionProtocol, SimulatorButto
         enqueue { _ in .keyboard(command) }
     }
 
+    /// A ⌘ shortcut reaches the simulator as the same key pressed with its
+    /// modifiers on the HID keyboard, in order with the keys already queued.
+    public var acceptsShortcuts: Bool { true }
+
+    public func send(shortcut: KeyShortcut) {
+        guard let stroke = shortcut.simulatorStroke else { return }
+        enqueue { _ in .stroke(stroke) }
+    }
+
     // MARK: - Hardware buttons
 
     /// The frame's side buttons reach the simulator as dtuhidd buttons, on
@@ -711,6 +722,10 @@ public final class SimulatorMirrorSession: MirrorSessionProtocol, SimulatorButto
                     }
                 case .keyboard(let command):
                     try type(command, input: input, generation: generation)
+                case .stroke(let stroke):
+                    for event in stroke.events {
+                        try input.send(event)
+                    }
                 case .button(let button, isDown: true):
                     try input.send(.button(button, isDown: true))
                     if !noteHeld(button, generation: generation) {

@@ -43,6 +43,8 @@ final class AppPreferences {
         static let physicalInfoVisible = "physicalInfoVisible"
         static let zoomHintDismissed = "zoomHintDismissed"
         static let showNavigationButtons = "showNavigationButtons"
+        static let captureKeyboardShortcuts = "captureKeyboardShortcuts"
+        static let secureKeyboardEntry = "secureKeyboardEntry"
         static let showDeviceModel = "showDeviceModel"
         static let stayOnTopMain = "stayOnTopMain"
         static let stayOnTopCompact = "stayOnTopCompact"
@@ -85,6 +87,8 @@ final class AppPreferences {
             physicalInfoVisible,
             zoomHintDismissed,
             showNavigationButtons,
+            captureKeyboardShortcuts,
+            secureKeyboardEntry,
             showDeviceModel,
             stayOnTopMain,
             stayOnTopCompact,
@@ -193,6 +197,12 @@ final class AppPreferences {
     /// View ▸ Show Navigation Buttons: the Back, Home and Recents bar under
     /// an Android handheld on the stage. On unless the user turned it off.
     private(set) var showNavigationButtons: Bool
+    /// Settings ▸ Capture keyboard shortcuts: with Keyboard Capture on, ⌘
+    /// shortcuts go to the device too (`KeyShortcut`). Off on a fresh install.
+    private(set) var captureKeyboardShortcuts: Bool
+    /// Settings ▸ Secure keyboard entry (`SecureKeyboardEntry`). Off on a
+    /// fresh install.
+    private(set) var secureKeyboardEntry: Bool
     /// A foldable simulator opens in its 3D model (`DeviceModelStageView`).
     private(set) var showDeviceModel: Bool
     /// Window ▸ Stay on Top, as the user last set it for a main window and
@@ -286,6 +296,8 @@ final class AppPreferences {
         zoomHintDismissed = defaults.bool(forKey: Keys.zoomHintDismissed)
         showNavigationButtons = defaults.object(forKey: Keys.showNavigationButtons) as? Bool ?? true
         showDeviceModel = defaults.object(forKey: Keys.showDeviceModel) as? Bool ?? false
+        captureKeyboardShortcuts = defaults.bool(forKey: Keys.captureKeyboardShortcuts)
+        secureKeyboardEntry = defaults.bool(forKey: Keys.secureKeyboardEntry)
         stayOnTopMain = defaults.bool(forKey: Keys.stayOnTopMain)
         stayOnTopCompact = defaults.bool(forKey: Keys.stayOnTopCompact)
         androidSDKPath = defaults.string(forKey: Keys.androidSDKPath) ?? ""
@@ -363,6 +375,16 @@ final class AppPreferences {
     func setAndroidReadyCardDismissed(_ dismissed: Bool) {
         androidReadyCardDismissed = dismissed
         defaults.set(dismissed, forKey: Keys.androidReadyCardDismissed)
+    }
+
+    func setCaptureKeyboardShortcuts(_ on: Bool) {
+        captureKeyboardShortcuts = on
+        defaults.set(on, forKey: Keys.captureKeyboardShortcuts)
+    }
+
+    func setSecureKeyboardEntry(_ on: Bool) {
+        secureKeyboardEntry = on
+        defaults.set(on, forKey: Keys.secureKeyboardEntry)
     }
 
     func setShowDeviceModel(_ shown: Bool) {

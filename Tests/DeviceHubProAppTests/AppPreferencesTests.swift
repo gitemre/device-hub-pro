@@ -39,6 +39,8 @@ final class AppPreferencesTests: XCTestCase {
             "physicalInfoVisible",
             "zoomHintDismissed",
             "showNavigationButtons",
+            "captureKeyboardShortcuts",
+            "secureKeyboardEntry",
             "showDeviceModel",
             "stayOnTopMain",
             "stayOnTopCompact",

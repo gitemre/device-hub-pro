@@ -1510,6 +1510,8 @@ struct MirrorStageContent: View {
             margin: 1.0,
             allowsUpscaling: true,
             forwardsKeyboard: model.preferences.keyboardForwardingEnabled,
+            capturesShortcuts: model.preferences.captureKeyboardShortcuts,
+            securesKeyboard: model.preferences.secureKeyboardEntry,
             cornerRadius: corners.screen,
             uprightsTexture: true
         )
@@ -1532,6 +1534,8 @@ struct MirrorStageContent: View {
             state: workspace.mirror.mirrorViewState,
             margin: margin,
             forwardsKeyboard: model.preferences.keyboardForwardingEnabled,
+            capturesShortcuts: model.preferences.captureKeyboardShortcuts,
+            securesKeyboard: model.preferences.secureKeyboardEntry,
             // A physical iPhone's chrome that is not read yet, with no
             // picture remembered: the stage's own background shows until
             // the first frame sizes the device, not a stage-sized gray box

@@ -58,7 +58,9 @@ struct FramedMirrorView: View {
                     session: session,
                     state: workspace.mirror.mirrorViewState,
                     margin: 0.96,
-                    forwardsKeyboard: model.preferences.keyboardForwardingEnabled
+                    forwardsKeyboard: model.preferences.keyboardForwardingEnabled,
+                    capturesShortcuts: model.preferences.captureKeyboardShortcuts,
+                    securesKeyboard: model.preferences.secureKeyboardEntry
                 )
             }
         }
@@ -360,6 +362,8 @@ struct FramedMirrorView: View {
             margin: 1.0,
             allowsUpscaling: true,
             forwardsKeyboard: model.preferences.keyboardForwardingEnabled,
+            capturesShortcuts: model.preferences.captureKeyboardShortcuts,
+            securesKeyboard: model.preferences.secureKeyboardEntry,
             cornerRadius: cornerRadius,
             backgroundIsTransparent: true,
             uprightsTexture: true

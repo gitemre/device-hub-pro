@@ -16,6 +16,12 @@ struct MirrorView: View {
     /// Whether Mac key events are forwarded to the device (Device Hub's
     /// hardware-keyboard simulation mode).
     var forwardsKeyboard: Bool = true
+    /// Settings ▸ Capture keyboard shortcuts: while the keyboard is
+    /// forwarded, ⌘ shortcuts go to the device too (`KeyShortcut`).
+    var capturesShortcuts: Bool = false
+    /// Settings ▸ Secure keyboard entry: while the keyboard is forwarded to
+    /// a focused device, other apps cannot read the keys (`SecureKeyboardEntry`).
+    var securesKeyboard: Bool = false
     /// Clips the video to a rounded rect (points): the screen corner
     /// `ScreenCornerPolicy` decides (the device's own, capped at the skin's
     /// opening). Applied on the view's layer because SwiftUI clip modifiers
@@ -166,7 +172,10 @@ private struct MirrorSurface: NSViewRepresentable {
         nsView.onEscapeWithoutCapture = nil
         nsView.onPhysicalKey = nil
         nsView.sendsPhysicalKeys = nil
+        nsView.onShortcut = nil
+        nsView.sendsShortcuts = nil
         nsView.pointerInput = nil
+        nsView.releaseSecureInput()
     }
 
     private func configure(_ view: MirrorMetalView) {
@@ -177,6 +186,10 @@ private struct MirrorSurface: NSViewRepresentable {
         view.presentationMargin = mirror.margin
         view.allowsUpscaling = mirror.allowsUpscaling
         view.keyboardForwardingEnabled = mirror.forwardsKeyboard
+        view.capturesShortcuts = mirror.capturesShortcuts
+        view.securesKeyboard = mirror.securesKeyboard
+        view.onShortcut = { shortcut in session.send(shortcut: shortcut) }
+        view.sendsShortcuts = { session.acceptsShortcuts }
         view.uprightsTexture = mirror.uprightsTexture
         view.textureTurns = mirror.textureTurns
         view.onContacts = { contacts in session.send(contacts: contacts) }
@@ -297,7 +310,17 @@ final class MirrorMetalView: MTKView {
     /// Mac keys go here as the same physical key instead of `onKey`'s text.
     var onPhysicalKey: ((PhysicalKeyEvent) -> Void)?
     var sendsPhysicalKeys: (() -> Bool)?
+    /// ⌘ shortcuts (`capturesShortcuts`): sent here when `sendsShortcuts`
+    /// says the session takes them; a physical iPhone with fast input gets
+    /// them as physical keys instead.
+    var onShortcut: ((KeyShortcut) -> Void)?
+    var sendsShortcuts: (() -> Bool)?
+    var capturesShortcuts = false
+    var securesKeyboard = false {
+        didSet { if securesKeyboard != oldValue { updateSecureInput() } }
+    }
     private var resignObserver: NSObjectProtocol?
+    private var becomeKeyObserver: NSObjectProtocol?
     /// Wheel and Back input for sessions that take real mouse events.
     var pointerInput: (any MirrorPointerInput)?
     var state = MirrorViewState()
@@ -332,7 +355,9 @@ final class MirrorMetalView: MTKView {
     /// which draw anyway.
     var textureTurns: ((Int, Int) -> Int)?
     /// Gates keyboard forwarding; toggled by the toolbar's keyboard button.
-    var keyboardForwardingEnabled = true
+    var keyboardForwardingEnabled = true {
+        didSet { if keyboardForwardingEnabled != oldValue { updateSecureInput() } }
+    }
     static let escapeKeyCode: UInt16 = 53
     /// Called for a bare Esc while the keyboard is not forwarded; true when it
     /// was used (leaving Log Focus).
@@ -539,9 +564,19 @@ final class MirrorMetalView: MTKView {
         if let resignObserver { NotificationCenter.default.removeObserver(resignObserver) }
         resignObserver = window.map {
             NotificationCenter.default.addObserver(forName: NSWindow.didResignKeyNotification, object: $0, queue: .main) { [weak self] _ in
-                MainActor.assumeIsolated { self?.onPhysicalKey?(.releaseAll) }
+                MainActor.assumeIsolated {
+                    self?.onPhysicalKey?(.releaseAll)
+                    self?.updateSecureInput()
+                }
             }
         }
+        if let becomeKeyObserver { NotificationCenter.default.removeObserver(becomeKeyObserver) }
+        becomeKeyObserver = window.map {
+            NotificationCenter.default.addObserver(forName: NSWindow.didBecomeKeyNotification, object: $0, queue: .main) { [weak self] _ in
+                MainActor.assumeIsolated { self?.updateSecureInput() }
+            }
+        }
+        updateSecureInput()
         syncDrawableSize()
         needsDisplay = true
     }
@@ -781,7 +816,48 @@ final class MirrorMetalView: MTKView {
 
     override func resignFirstResponder() -> Bool {
         if physicalKeys { onPhysicalKey?(.releaseAll) }
-        return super.resignFirstResponder()
+        let resigned = super.resignFirstResponder()
+        if resigned { SecureKeyboardEntry.shared.set(false, for: self) }
+        return resigned
+    }
+
+    override func becomeFirstResponder() -> Bool {
+        let became = super.becomeFirstResponder()
+        if became { DispatchQueue.main.async { [weak self] in self?.updateSecureInput() } }
+        return became
+    }
+
+    /// Capture Keyboard Shortcuts: a ⌘ shortcut goes to the device instead
+    /// of the menus while the keyboard is forwarded to this view, except the
+    /// few the Mac keeps (`KeyShortcut.staysOnTheMac`). Key equivalents reach
+    /// the key window's views before the main menu.
+    override func performKeyEquivalent(with event: NSEvent) -> Bool {
+        guard event.type == .keyDown, capturesShortcuts, keyboardForwardingEnabled,
+              window?.firstResponder === self,
+              let shortcut = MirrorKeyRouting.shortcut(keyCode: event.keyCode, modifiers: event.modifierFlags),
+              !shortcut.staysOnTheMac
+        else { return super.performKeyEquivalent(with: event) }
+        if physicalKeys {
+            let modifiers = PhysicalKeyModifiers.mask(rawFlags: event.modifierFlags.rawValue)
+            onPhysicalKey?(.key(code: event.keyCode, isDown: true, modifiers: modifiers))
+            onPhysicalKey?(.key(code: event.keyCode, isDown: false, modifiers: modifiers))
+            return true
+        }
+        guard sendsShortcuts?() == true, let onShortcut else { return super.performKeyEquivalent(with: event) }
+        onShortcut(shortcut)
+        return true
+    }
+
+    /// Secure keyboard entry is on while the keyboard is forwarded to this
+    /// view as the key window's first responder, and the setting asks for it.
+    func updateSecureInput() {
+        let wanted = securesKeyboard && keyboardForwardingEnabled
+            && window?.isKeyWindow == true && window?.firstResponder === self
+        SecureKeyboardEntry.shared.set(wanted, for: self)
+    }
+
+    func releaseSecureInput() {
+        SecureKeyboardEntry.shared.set(false, for: self)
     }
 
     /// Maps a point in view coordinates to posed frame coordinates through
@@ -813,6 +889,18 @@ enum MirrorKeyRouting {
         115, 119,           // home / end
         116, 121,           // page up / page down
     ]
+
+    /// The shortcut a key pressed with Command makes (Capture Keyboard
+    /// Shortcuts), with the other modifiers held; nil without Command.
+    static func shortcut(keyCode: UInt16, modifiers: NSEvent.ModifierFlags) -> KeyShortcut? {
+        guard modifiers.contains(.command) else { return nil }
+        return KeyShortcut(
+            keyCode: keyCode,
+            shift: modifiers.contains(.shift),
+            option: modifiers.contains(.option),
+            control: modifiers.contains(.control)
+        )
+    }
 
     /// The command a key press forwards, or nil to leave it to the Mac:
     /// ⌘ shortcuts stay menu shortcuts, and Control combinations are not
