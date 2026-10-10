@@ -563,8 +563,8 @@ enum ParityMetrics {
     static let statusBannerVerticalPadding: CGFloat = 8
 
     // VID — recording indicator. Device Hub's record button flips to a stop
-    // glyph but shows no elapsed readout, so these are our own values (spec
-    // §8.3) — a red dot + REC + elapsed time in a glass capsule on the stage.
+    // glyph but shows no elapsed readout, so these are our own values
+    // — a red dot + REC + elapsed time in a glass capsule on the stage.
     static let recordingIndicatorTopInset: CGFloat = 14
     static let recordingIndicatorDotDiameter: CGFloat = 8
     static let recordingIndicatorSpacing: CGFloat = 6
@@ -573,7 +573,7 @@ enum ParityMetrics {
     static let recordingIndicatorFontSize: CGFloat = 11
 
     // ANN — annotation editor. Device Hub has no annotation surface, so these
-    // are our own design values (spec §8.1), kept here rather than hardcoded in
+    // are our own design values, kept here rather than hardcoded in
     // the view. The sheet is fixed-size: the fit scale stays stable while
     // annotations are placed, so display points always map back to the same
     // image pixels when `AnnotationRenderer` composites.
@@ -586,7 +586,7 @@ enum ParityMetrics {
     static let annotationSwatchSize: CGFloat = 16
     static let annotationWidthSliderWidth: CGFloat = 100
 
-    // LOG — logcat placeholder states (spec §9.3c). Our own values in the
+    // LOG — logcat placeholder states. Our own values in the
     // inspector's language: secondary text plus a small SF symbol for the
     // no-device / no-output / disconnected states, and a thin paused banner
     // above the list while a stream is paused.
@@ -647,7 +647,7 @@ enum ParityMetrics {
     static let stoppedNameFontSize: CGFloat = 17
     static let stoppedNameFontWeight: Font.Weight = .medium
 
-    // PAIR — wireless pairing sheet (spec §11.3). Device Hub has no wireless
+    // PAIR — wireless pairing sheet. Device Hub has no wireless
     // adb pairing surface (its iOS devices pair over its own transport), so
     // these are our own values in the sheets' language: a fixed-width grouped
     // form, a hint line, and the inline error/busy status above the buttons.

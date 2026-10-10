@@ -71,7 +71,7 @@ enum SelectionRouting {
         switch selection {
         case .avd(let name):
             // An in-app start keeps its booting panel until the boot is
-            // complete and its own session starts (spec §6.4), even though
+            // complete and its own session starts, even though
             // the hot-plug pass may know the new serial earlier.
             guard !snapshot.startingAvdNames.contains(name),
                   let serial = snapshot.avdCards.first(where: { $0.name == name })?.serial

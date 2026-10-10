@@ -1,6 +1,6 @@
 import Foundation
 
-/// Wireless debugging pairing (spec §11.3). The phone's "Pair device with
+/// Wireless debugging pairing. The phone's "Pair device with
 /// pairing code" dialog shows an `IP:port` and a 6-digit code; `adb pair` runs
 /// against that address. The device is then reachable on the *connect* port
 /// its Wireless debugging screen shows — a random port on Android 11+, not

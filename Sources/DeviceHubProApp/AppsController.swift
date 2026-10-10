@@ -15,7 +15,7 @@ import DeviceHubProKit
 @MainActor
 @Observable
 final class AppsController {
-    /// Apps-tab scope filter, Device Hub's scope popup (§7.4). Default
+    /// Apps-tab scope filter, Device Hub's scope popup. Default
     /// `all`, as Device Hub's: a fresh emulator has no user apps, and a tab
     /// that opens on "No Apps" reads as broken.
     enum AppsScope: Hashable {
@@ -46,7 +46,7 @@ final class AppsController {
     /// field are applied client-side in `filteredApps`.
     var installedAppList: [AdbClient.InstalledPackage] = []
     var appsFilter = ""
-    /// The Apps tab's scope popup (§7.4); All Apps by default.
+    /// The Apps tab's scope popup; All Apps by default.
     var appsScope: AppsScope = .all
     /// IDs the `-3` (third-party) list reported for `installedAppList`'s
     /// serial. `pm`'s `-3` and `-s` filters partition its unflagged output,
@@ -72,7 +72,7 @@ final class AppsController {
     /// "Installing…" state and the install popover disables its actions.
     private(set) var isInstallingAPK = false
 
-    /// The install popover's recents (spec §7.2). Owned here so an install
+    /// The install popover's recents. Owned here so an install
     /// triggered anywhere — the picker, the popover or a drop onto the mirror
     /// — lands in the same list; recording happens only after `adb install`
     /// reports success.
@@ -180,7 +180,7 @@ final class AppsController {
         }
     }
 
-    /// Recents update only on success (spec §7.2). The badging read is best
+    /// Recents update only on success. The badging read is best
     /// effort: without a usable aapt2 the entry still records its path and the
     /// popover falls back to the filename.
     private func recordRecentInstall(at url: URL) async {
@@ -195,7 +195,7 @@ final class AppsController {
 
     /// Packages on `serial` for the inspector Apps tab.
     ///
-    /// One adb pair per load (§7.4): the unflagged list drives every scope,
+    /// One adb pair per load: the unflagged list drives every scope,
     /// the `-3` list marks which of its packages are user apps. A scope
     /// switch then never refetches and the Filter field composes with the
     /// scope over the same loaded list.

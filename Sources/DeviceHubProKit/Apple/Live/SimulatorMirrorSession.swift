@@ -33,7 +33,7 @@ import Synchronization
 /// (`SimulatorKeyboard`); a character the layout has no key for is put on the
 /// simulator pasteboard with `simctl pbcopy` and followed by ⌘V. That path is
 /// experimental: on iOS 27.0 the ⌘V did not insert the `pbcopy` text in any
-/// field tried (see the spec, §3.4). Hardware buttons (the frame's side
+/// field tried (see the spec). Hardware buttons (the frame's side
 /// buttons, Home and Lock) go through the same channel, in order with the
 /// touches and keys; a button still down when the session stops goes up
 /// before its channel closes. The dtuhidd connection opens lazily, on the

@@ -31,7 +31,7 @@ struct AppleTooling: Sendable {
     /// `DHP_DIAGNOSTIC_REPORTS_DIR` switch points `live()` elsewhere).
     /// Only read, never changed; nil lists no crash reports, as tests do.
     var diagnosticReportsDirectory: URL? = nil
-    /// The private simulator bridge for the live canvas (§7),
+    /// The private simulator bridge for the live canvas,
     /// made for the Xcode the probe found; nil keeps every simulator on the
     /// view-only canvas. `live()` makes `LiveSimulatorBridge`, which loads
     /// nothing until a session starts; tests pass a `FakeSimulatorBridge` or

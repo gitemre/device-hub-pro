@@ -69,7 +69,7 @@ final class AvdCatalogController {
 
     // MARK: - Gallery
 
-    /// Light hot-plug pass (spec §6.4): only the `ps`-based running-emulator
+    /// Light hot-plug pass: only the `ps`-based running-emulator
     /// half of `refreshGallery()` — no skin catalog scan — so externally
     /// killed or started VMs stop sticking `avdIsBooting` on a stale card.
     /// Serials are reconciled too: a stopped VM's serial is dropped (the next

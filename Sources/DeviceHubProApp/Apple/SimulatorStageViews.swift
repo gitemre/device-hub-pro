@@ -92,7 +92,7 @@ enum SimulatorStagePhase: Equatable {
     }
 }
 
-/// The center stage for a simulator (§3.4): the stopped page
+/// The center stage for a simulator: the stopped page
 /// with its hero and Start, the boot progress with the phase `bootstatus`
 /// reports, and once the simulator is ready the live stage, whose canvas
 /// the simulator canvas picks (`SimulatorCanvasController`).

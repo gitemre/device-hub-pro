@@ -7,7 +7,7 @@ import Foundation
 /// The file is Apple's and stays on the user's Mac: it is read at runtime
 /// from `/Library/Developer/DeviceKit/Chrome/<name>.devicechrome/Contents/
 /// Resources/chrome.json` (`AppleDeviceKit`), never copied into the
-/// repository or the app (§3.5). Only the keys below are read;
+/// repository or the app. Only the keys below are read;
 /// the rest (`resizeRects`, the window `padding`, a TV's `stand`) are not
 /// used.
 public struct AppleChromeDescriptor: Sendable, Hashable {

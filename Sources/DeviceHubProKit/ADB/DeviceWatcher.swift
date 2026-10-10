@@ -304,7 +304,7 @@ public final class DeviceWatcher: @unchecked Sendable {
     /// quiet period starts the debounce timer, later frames only replace the
     /// pending content ("the last frame wins") and never push the timer back,
     /// so a continuous frame stream still emits once per window instead of
-    /// starving the timer (spec §5.1: a fresh snapshot on every restart).
+    /// starving the timer (a fresh snapshot on every restart).
     private func scheduleEmit(of devices: [AndroidDevice]) {
         lock.lock()
         defer { lock.unlock() }

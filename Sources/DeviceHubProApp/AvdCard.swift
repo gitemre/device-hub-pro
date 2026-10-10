@@ -99,7 +99,7 @@ struct AvdCard: Hashable, Identifiable, Sendable {
         skin?.isFoldable ?? false
     }
 
-    /// The `ps`-based running pass of the gallery refresh (spec §6.4): flips
+    /// The `ps`-based running pass of the gallery refresh: flips
     /// only `isRunning` from the parsed emulator names, nothing else.
     func withRunningState(runningAVDNames: Set<String>) -> AvdCard {
         AvdCard(

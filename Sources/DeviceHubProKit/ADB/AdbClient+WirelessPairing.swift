@@ -1,6 +1,6 @@
 import Foundation
 
-/// The pairing-code flow on top of `pair`/`connect` (spec §11.3), with the
+/// The pairing-code flow on top of `pair`/`connect`, with the
 /// connect endpoint discovered through adb's mDNS browser when the user did
 /// not enter one.
 extension AdbClient {

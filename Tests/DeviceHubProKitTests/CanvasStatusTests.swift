@@ -1,7 +1,7 @@
 import XCTest
 @testable import DeviceHubProKit
 
-/// The pure state→panel mapping for the canvas (spec §6.4). Device Hub had
+/// The pure state→panel mapping for the canvas. Device Hub had
 /// no unhealthy device to reference, so these panels are Android-designed.
 final class CanvasStatusTests: XCTestCase {
     private func physical(_ state: String) -> AndroidDevice {

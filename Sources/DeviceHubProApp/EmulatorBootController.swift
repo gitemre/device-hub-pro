@@ -24,7 +24,7 @@ final class EmulatorBootController {
     @ObservationIgnored private var registry = AvdStartRegistry()
 
     /// The AVDs an in-app start or restart is booting. The canvas shows
-    /// their booting panel until the boot completes (spec §6.4). A set: two
+    /// their booting panel until the boot completes. A set: two
     /// AVDs can boot at once, and one finishing must not end the other's.
     var startingAvdNames: Set<String> {
         access(keyPath: \.startingAvdNames)

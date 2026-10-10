@@ -15,8 +15,8 @@ struct AvdStartRegistry: Equatable, Sendable {
     /// booting panel, which `starting` drives.
     private(set) var inFlight: Set<String> = []
     /// The AVDs an in-app start or restart is booting (`startingAvdNames`).
-    /// The canvas shows their booting panel until the boot completes (spec
-    /// §6.4). A set: two AVDs can boot at once, and one finishing must not
+    /// The canvas shows their booting panel until the boot completes.
+    /// A set: two AVDs can boot at once, and one finishing must not
     /// end the other's.
     private(set) var starting: Set<String> = []
     /// Starts the user stopped while they were in flight: they end silently

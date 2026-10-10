@@ -676,7 +676,7 @@ final class AppModel {
         workspace.lifecycleIfRunning?.noteReconnectRequested(serial: serial)
     }
 
-    /// The auto-resume hook (spec §5.2; `DeviceWorkspace.lifecycleResume`).
+    /// The auto-resume hook (`DeviceWorkspace.lifecycleResume`).
     func lifecycleResume(serial: String) async {
         await workspace.lifecycleResume(serial: serial)
     }

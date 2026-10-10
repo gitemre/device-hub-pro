@@ -1,7 +1,7 @@
 import XCTest
 @testable import DeviceHubProApp
 
-/// The Logcat view's placeholder mapping (spec §9.3c), including the
+/// The Logcat view's placeholder mapping, including the
 /// deliberate-stop state that used to fall through to "No device" because
 /// `stopLogcat` clears the serial.
 final class LogcatStateTests: XCTestCase {

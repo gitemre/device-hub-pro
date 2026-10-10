@@ -1,7 +1,7 @@
 import XCTest
 @testable import DeviceHubProKit
 
-/// Wireless pairing (spec §11.3): the pure request parsing/validation, and the
+/// Wireless pairing: the pure request parsing/validation, and the
 /// `AdbClient` pair/connect helpers exercised against a fake `adb` executable
 /// that logs its argv and replays scripted output.
 final class WirelessPairingTests: XCTestCase {

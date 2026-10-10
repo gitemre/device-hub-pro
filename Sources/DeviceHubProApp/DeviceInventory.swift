@@ -57,7 +57,7 @@ final class DeviceInventory {
     /// workspaces can each ghost their own serial without touching the
     /// other's).
     private var ghosts: [WorkspaceID: WorkspaceGhost] = [:]
-    /// The snapshot's real rows behind `devices`' merged view (spec §5.2
+    /// The snapshot's real rows behind `devices`' merged view
     /// amendment: a synthetic ghost never replaces a real row).
     private(set) var realDevices: [AndroidDevice] = []
     /// The watcher fell back to polling `adb devices` (its `track-devices`
@@ -133,7 +133,7 @@ final class DeviceInventory {
     // MARK: - Watcher and snapshots
 
     /// Idempotent watcher startup: one `DeviceWatcher` per app run. Hot-plug
-    /// truth flows through here (spec §5.4) to every registered workspace's
+    /// truth flows through here to every registered workspace's
     /// coordinator, in registration order; `refresh()` keeps its manual role.
     /// Every already-registered coordinator is reset first, so this run
     /// begins exactly as the old app-global coordinator always did — a
@@ -218,8 +218,8 @@ final class DeviceInventory {
 
     /// The watcher's snapshot replaces `devices`; every workspace's ghost of
     /// a disconnected-but-selected device is merged in so the sidebar row,
-    /// the selection and the status panel all come from existing code (spec
-    /// §5.4). The pump (`pump(_:)`) calls this once per snapshot event,
+    /// the selection and the status panel all come from existing code.
+    /// The pump (`pump(_:)`) calls this once per snapshot event,
     /// after every registered coordinator has decided its own episode, so
     /// every ghost this reads is already settled; a direct caller (a
     /// coordinator's own `handle(_:)`, or a test) may still call it any
@@ -245,8 +245,8 @@ final class DeviceInventory {
         ensureDeviceSelection()
         Task {
             // The AVD cards' running state is `ps` truth, not adb truth: a VM
-            // killed outside the app must flip it with this snapshot (spec
-            // §6.4). A hot-plugged device gets its Info without a Refresh.
+            // killed outside the app must flip it with this snapshot.
+            // A hot-plugged device gets its Info without a Refresh.
             await refreshAvdRunningState()
             await loadInfos(for: remote)
         }
@@ -305,7 +305,7 @@ final class DeviceInventory {
         }
     }
 
-    /// The only writer of `devices`' real rows (spec §5.2 amendment): every
+    /// The only writer of `devices`' real rows: every
     /// ghost is appended only while its serial is absent, so a present real
     /// row always survives untouched.
     func setRealDevices(_ remote: [AndroidDevice]) {
@@ -372,7 +372,7 @@ final class DeviceInventory {
     // MARK: - Ghost
 
     /// Every ghost serial across every workspace — exposed so the sidebar's
-    /// "Hide Stopped" exemption (spec §4.5) can keep any ghost row visible,
+    /// "Hide Stopped" exemption can keep any ghost row visible,
     /// whichever workspace's episode is waiting on it.
     var ghostSerials: Set<String> { Set(ghosts.values.map(\.serial)) }
 

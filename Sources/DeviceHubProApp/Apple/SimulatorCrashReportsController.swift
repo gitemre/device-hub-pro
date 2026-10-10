@@ -3,8 +3,8 @@ import Foundation
 import Observation
 import DeviceHubProKit
 
-/// The crash reports of the simulator the Diagnostics tab shows (design
-/// §3.9's "crash reports per UDID"). Device Hub says crash reports
+/// The crash reports of the simulator the Diagnostics tab shows
+/// ("crash reports per UDID"). Device Hub says crash reports
 /// are unavailable for simulators; the crash reporter writes them all the
 /// same, with the Mac's own, and each one names its simulator
 /// (`SimulatorCrashReportParsing`).

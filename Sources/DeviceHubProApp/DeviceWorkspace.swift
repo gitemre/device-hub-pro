@@ -817,8 +817,8 @@ final class DeviceWorkspace {
     // MARK: - Attach
 
     /// Attaches the right mirror transport for `device`: the emulator gRPC
-    /// path for emulators, the scrcpy/H.264 physical path otherwise (spec
-    /// §11.1). `DHP_FORCE_PHYSICAL=<serial>` (or `=1`) routes an emulator
+    /// path for emulators, the scrcpy/H.264 physical path otherwise.
+    /// `DHP_FORCE_PHYSICAL=<serial>` (or `=1`) routes an emulator
     /// through the physical transport for live verification.
     ///
     /// The emulator path awaits the port resolution (adb console reads, `ps`,
@@ -902,7 +902,7 @@ final class DeviceWorkspace {
         )
     }
 
-    /// The auto-resume hook (spec §5.2): re-validates the resume intent
+    /// The auto-resume hook: re-validates the resume intent
     /// before `mirror`, then reports a failed attempt back to the lifecycle.
     func lifecycleResume(serial: String) async {
         let generation = context.sessionGeneration
@@ -912,7 +912,7 @@ final class DeviceWorkspace {
         let isArmed = lifecycleIfRunning?.isAutoReconnectArmed(serial: serial) ?? false
         let errorBeforeResume = status.errorMessage
         let selection: String? = if case .device(let selected) = deviceSelection { selected } else { nil }
-        // Pre-mirror re-check (spec §5.2, "intent invalid … → no action"):
+        // Pre-mirror re-check ("intent invalid … → no action"):
         // the resume task can run after the user moved on or a newer session
         // landed, and `mirror` would `select` + `beginMirrorSession` over the
         // user's fresh session — bail before it does.
@@ -1163,7 +1163,7 @@ final class DeviceWorkspace {
     /// the mirror, and hands a running recording to the save panel. The
     /// app's own teardowns (the lifecycle's, a fatal stream, a device switch,
     /// quit) use `tearDownMirror(cause:)`.
-    /// The waiting panel's "Reconnect" (spec §5.2): this workspace's own
+    /// The waiting panel's "Reconnect": this workspace's own
     /// coordinator resumes at once. Being user initiated it clears the auto
     /// marker, so a failure during this attempt still reaches the alert
     /// surface. Nil unless the watcher is running, like every other

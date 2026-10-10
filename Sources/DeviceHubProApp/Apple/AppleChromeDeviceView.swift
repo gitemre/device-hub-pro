@@ -2,8 +2,8 @@ import AppKit
 import SwiftUI
 import DeviceHubProKit
 
-/// A simulator on the live stage in its Apple chrome (device frame, design
-/// §3.5): the device type's own DeviceKit chrome, read at runtime from the
+/// A simulator on the live stage in its Apple chrome (device frame,
+/// the device type's own DeviceKit chrome, read at runtime from the
 /// user's Xcode (`AppleChromeFrameProvider`), built from its slices around
 /// the screen, with the live canvas clipped to the screen's exact outline
 /// and the chrome's buttons pressable.

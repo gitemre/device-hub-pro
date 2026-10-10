@@ -162,7 +162,7 @@ final class LogcatController {
         }
     }
 
-    /// The stream process's stop reason, when it has exited (spec §9.3c:
+    /// The stream process's stop reason, when it has exited (
     /// the Logcat view's disconnected placeholder). `nil` while idle or
     /// running.
     var logcatStopReason: String? {

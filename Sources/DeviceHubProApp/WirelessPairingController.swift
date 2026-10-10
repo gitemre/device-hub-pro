@@ -2,7 +2,7 @@ import Foundation
 import Observation
 import DeviceHubProKit
 
-/// The Pair Device sheet's wireless pairing (spec §11.3): the attempt in
+/// The Pair Device sheet's wireless pairing: the attempt in
 /// flight and the `adb pair`/`adb connect` flow behind it.
 ///
 /// `AppModel` owns one as `pairing`; the Pair Device sheet and the tests call
@@ -40,7 +40,7 @@ final class WirelessPairingController {
 
     // MARK: - Wireless pairing
 
-    /// Pairs and connects a device in wireless-debugging mode (spec §11.3)
+    /// Pairs and connects a device in wireless-debugging mode
     /// through `AdbClient.pairAndConnect`: `adb pair <pairing address>
     /// <code>`, then `adb connect` on the connect port the user gave (the
     /// Wireless debugging screen's IP address & Port — random on Android

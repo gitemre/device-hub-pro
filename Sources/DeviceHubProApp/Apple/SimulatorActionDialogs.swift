@@ -6,8 +6,8 @@ import DeviceHubProKit
 /// content, so the sidebar and the stage drive the same dialogs; the
 /// operations are the lifecycle controller's.
 ///
-/// Device Hub Pro never erases or deletes a simulator without asking (design
-/// §3.8). The wording follows Device Hub's (its reset and remove
+/// Device Hub Pro never erases or deletes a simulator without asking.
+/// The wording follows Device Hub's (its reset and remove
 /// confirmations), in the app's own words. Uninstalling an app and trusting
 /// a drop's root certificates are asked here too (the Apps inspector and the
 /// stage's drop). A drop's certificates are asked about together, and a

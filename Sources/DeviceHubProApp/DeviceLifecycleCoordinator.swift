@@ -68,7 +68,7 @@ final class DeviceLifecycleCoordinator {
     private var streamTask: Task<Void, Never>?
     private var resumeTask: Task<Void, Never>?
     private var livenessTask: Task<Void, Never>?
-    /// One `flashStatus` per health incident (spec §5.2): the first
+    /// One `flashStatus` per health incident: the first
     /// `.restarting` of an incident flashes, an incident ends on a snapshot.
     private var healthFlashShown = false
     /// Last handoff to `hooks.lifecycleState`: the decider's state *and* the

@@ -353,7 +353,7 @@ public struct SessionLifecycle: Sendable, Equatable {
         switch state {
         case .mirroring(let serial) where serial.hasPrefix("emulator-"):
             // The emulator mirror runs over gRPC; adb absence alone proves
-            // nothing (spec §5.2 amendment, 2026-09-24). Arm one liveness
+            // nothing. Arm one liveness
             // check per absence; adb listing it online again disarms it.
             if devices.contains(where: { $0.serial == serial && $0.isOnline }) {
                 emulatorAway = nil
@@ -416,7 +416,7 @@ public struct SessionLifecycle: Sendable, Equatable {
         // The armed marker only covers the attempt the machine itself started;
         // this teardown ends that attempt either way.
         autoResume = nil
-        // Spec §5.2 amendment: a `transportFatal` teardown arms its attempt
+        // a `transportFatal` teardown arms its attempt
         // immediately — adb still lists the device, so no watcher edge will
         // ever re-trigger the schedule — and the listed device counts as
         // back (if it truly vanished, the next snapshot disarms via the

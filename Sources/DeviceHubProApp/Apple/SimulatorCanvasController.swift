@@ -20,7 +20,7 @@ extension SimulatorScreenshotSession: SimulatorSessionControlling {
     var isLiveCanvas: Bool { false }
 }
 
-/// The live stage of a simulator (§3.7): which canvas it gets,
+/// The live stage of a simulator: which canvas it gets,
 /// starting its session through the model's begin hub, the fallback to the
 /// view-only canvas, and the simulator's hardware from the Device menu and
 /// the pill (Home, Lock, rotation, shake).
@@ -29,22 +29,22 @@ extension SimulatorScreenshotSession: SimulatorSessionControlling {
 /// bridge) is used when the bridge exists (Xcode found), `BridgeCompatibility`
 /// allows this Mac's CoreSimulator, the CoreSimulator the process loaded is
 /// still the installed one (an Xcode update while the app runs makes the
-/// bridge stale until a relaunch, §3.7), the runtime is an allowlisted one
+/// bridge stale until a relaunch), the runtime is an allowlisted one
 /// (`liveCanvasRuntimes`: iOS 26 and 27, the runtimes it was verified on), and
 /// it has not failed for this simulator since it booted. Otherwise the stage
 /// gets the view-only canvas (`SimulatorScreenshotSession`: `simctl io
 /// screenshot` at most once a second while shown) and says why.
 ///
 /// **Smoke check.** A live session must publish its first frame within
-/// `smokeTimeout` (3 s, T3 in §3.7); then the tier reads T3
+/// `smokeTimeout` (3 s); then the tier reads T3
 /// (`SimulatorInventory.setCanvasReady`). A session that does not, or that
 /// stops later for any reason but the simulator shutting down, is replaced
 /// by the view-only canvas and the bridge stays off for that simulator
-/// until it shuts down (or the user asks to try again). The input barrier of
-/// §3.7 is not part of the check: dtuhidd is connected lazily, on the first
-/// input (§3.8).
+/// until it shuts down (or the user asks to try again). The input barrier
+/// is not part of the check: dtuhidd is connected lazily, on the first
+/// input.
 ///
-/// **Input takeover (§3.8).** Connecting dtuhidd sets
+/// **Input takeover.** Connecting dtuhidd sets
 /// `com.apple.coredevice.dtuhidd.active` for the rest of the simulator's
 /// boot, and legacy-Indigo clients (older idb, some agent tools) lose input
 /// on it from then on. So when a live session starts, before any input, the
@@ -435,7 +435,7 @@ final class SimulatorCanvasController {
             simctl: simctl,
             bridge: canvas.isLive ? simulators.bridge : nil
         )
-        // devicectl-backed actions need T2 (§3.7): devicectl answered for a
+        // devicectl-backed actions need T2: devicectl answered for a
         // simulator of this set (it never does in a private set).
         let capabilities = Self.capabilities(liveCanvas: canvas.isLive, devicectlReady: simulators.devicectlReady)
         beginSession(session, .apple(entry.udid), capabilities)

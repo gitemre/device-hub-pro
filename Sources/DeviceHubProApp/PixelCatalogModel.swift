@@ -4,7 +4,7 @@ import DeviceHubProKit
 
 /// The Pixel device list and its provisioning flow. Owns the catalog, the
 /// min-API table and one SDK download at a time; AppModel holds no Pixel
-/// state (spec §3 boundary rule).
+/// state.
 @MainActor
 @Observable
 final class PixelCatalogModel {
