@@ -248,11 +248,13 @@ alternative stays the fallback.
   offered.
 - **Device model** (`DHP_DISABLE_DEVICE_MODEL`): a foldable simulator's 3D view reads Apple's model
   of the device (iPhone Duo's `V68.usdz`) from the user's Xcode at runtime (`AppleDeviceModel`):
-  never copied into the repository, the app or a fixture, and used only when its SHA-256 is one of
-  `AppleDeviceModel.known`. Its parts are found by shape (`AppleDeviceModel.panels`), not by their
+  never copied into the repository, the app or a fixture. A file whose SHA-256 is one of
+  `AppleDeviceModel.known` is used on its measured numbers; another build's file only when it loads
+  with the same shape (same product class and animation length, `AppleDeviceModel.fits`, and both
+  panels found), else the stage keeps the 2D chrome. Its parts are found by shape (`AppleDeviceModel.panels`), not by their
   scrambled names. Its canary is `AppleDeviceModelLiveTests` (`DHP_DEVICE_MODEL_LIVE=1`, on a Mac
   whose selected Xcode ships a known model, or with `DHP_DEVICE_MODEL_DEVELOPER_DIR` naming such an
-  Xcode's `Contents/Developer`). Off, or without a known model, the stage keeps the 2D
+  Xcode's `Contents/Developer`). Off, or without a usable model, the stage keeps the 2D
   chrome.
 
 ## Test switches

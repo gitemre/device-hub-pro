@@ -25,10 +25,11 @@ final class AppleDeviceModelTests: XCTestCase {
         return developer
     }
 
-    private static func spec(for data: Data) -> AppleDeviceModel.Spec {
+    private static func spec(for data: Data, productClass: String = "V68") -> AppleDeviceModel.Spec {
         AppleDeviceModel.Spec(
+            productClass: productClass,
             sha256: SHA256.hash(data: data).map { String(format: "%02x", $0) }.joined(),
-            openTime: 10, closedTime: 15
+            duration: 20, openTime: 10, closedTime: 15
         )
     }
 
@@ -40,14 +41,31 @@ final class AppleDeviceModelTests: XCTestCase {
         ))
         XCTAssertEqual(model.url.lastPathComponent, "V68.usdz")
         XCTAssertEqual(model.spec.openTime, 10)
+        XCTAssertTrue(model.isChecked)
+        XCTAssertTrue(model.fits(animationDuration: 30), "a checked file is shown whatever its length")
     }
 
-    func testAnUnknownFileAMissingFileOrTheKillSwitchIsNoModel() throws {
+    /// Another build's file (a later Xcode) is found unchecked, on the
+    /// numbers of the known file of its product class, and is shown only if
+    /// its animation runs as long as that file's.
+    func testAnotherBuildsFileIsFoundUncheckedAndMustRunAsLong() throws {
         let data = Data("stand-in model".utf8)
         let other = Data("another build's model".utf8)
-        XCTAssertNil(AppleDeviceModel.locate(
+        let model = try XCTUnwrap(AppleDeviceModel.locate(
             productClass: "V68", developerDir: try makeXcode(model: other), environment: [:], known: [Self.spec(for: data)]
-        ), "a file nobody checked")
+        ))
+        XCTAssertFalse(model.isChecked)
+        XCTAssertEqual(model.spec, Self.spec(for: data))
+        XCTAssertTrue(model.fits(animationDuration: 20))
+        XCTAssertFalse(model.fits(animationDuration: 20.5), "an animation of another length may fold elsewhere")
+        XCTAssertNil(AppleDeviceModel.locate(
+            productClass: "V68", developerDir: try makeXcode(model: other), environment: [:],
+            known: [Self.spec(for: data, productClass: "V70")]
+        ), "no known file of its product class")
+    }
+
+    func testAMissingFileAnotherProductClassOrTheKillSwitchIsNoModel() throws {
+        let data = Data("stand-in model".utf8)
         XCTAssertNil(AppleDeviceModel.locate(
             productClass: "V68", developerDir: try makeXcode(model: nil), environment: [:], known: [Self.spec(for: data)]
         ))
@@ -65,7 +83,7 @@ final class AppleDeviceModelTests: XCTestCase {
 
     /// Flat at the stretch's start, closed at its end, linear between, clamped.
     func testTheFoldMapsLinearlyOntoItsStretch() {
-        let spec = AppleDeviceModel.Spec(sha256: "", openTime: 10, closedTime: 15)
+        let spec = AppleDeviceModel.Spec(productClass: "V68", sha256: "", duration: 20, openTime: 10, closedTime: 15)
         XCTAssertEqual(spec.animationTime(forOpening: 180), 10)
         XCTAssertEqual(spec.animationTime(forOpening: 0), 15)
         XCTAssertEqual(spec.animationTime(forOpening: 90), 12.5)

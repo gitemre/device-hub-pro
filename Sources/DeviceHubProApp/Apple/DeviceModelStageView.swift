@@ -42,7 +42,7 @@ struct DeviceModelStageView: View {
     private var scene: DeviceModelScene { holder.scene }
 
     /// Whether the stage shows the mirrored foldable in its 3D model: asked
-    /// for, a checked model in the user's Xcode, and the device drawn in its
+    /// for, a usable model in the user's Xcode, and the device drawn in its
     /// Apple chrome (Show Device Frame on). The stage, its zoom and the fold
     /// strip's 3D controls all go by this.
     static func isShown(chrome: DeviceChrome, workspace: DeviceWorkspace, preferences: AppPreferences) -> Bool {
@@ -76,7 +76,12 @@ struct DeviceModelStageView: View {
         // turns the device, and a double click faces it to the camera again
         // (the canvas takes the mouse itself: SwiftUI's gestures never reach
         // a layer-hosting view).
-        DeviceModelCanvas(scene: scene, model: model, forwardsKeyboard: appModel.preferences.keyboardForwardingEnabled)
+        DeviceModelCanvas(
+            scene: scene,
+            model: model,
+            forwardsKeyboard: appModel.preferences.keyboardForwardingEnabled,
+            unusable: { [simulators = appModel.simulators, model] in simulators.setDeviceModelUnusable(model) }
+        )
         .overlay(alignment: .leading) {
             if let readout = scene.readout {
                 Text(verbatim: "\(readout)°")
@@ -122,10 +127,13 @@ struct DeviceModelCanvas: NSViewRepresentable {
     /// The Mac keyboard reaches the simulator (Keyboard Capture), as on the
     /// 2D stage.
     let forwardsKeyboard: Bool
+    /// The model did not load as one the scene can show (another build's
+    /// file of another shape, say): the stage goes back to the 2D chrome.
+    let unusable: @MainActor () -> Void
 
     func makeNSView(context: Context) -> DeviceModelCanvasView {
         let view = DeviceModelCanvasView()
-        view.attach(scene: scene, model: model)
+        view.attach(scene: scene, model: model, unusable: unusable)
         view.forwardsKeyboard = forwardsKeyboard
         return view
     }
@@ -220,13 +228,16 @@ final class DeviceModelCanvasView: NSView {
         scene?.pointerEnded(at: point, translation: CGSize(width: point.x - start.x, height: point.y - start.y))
     }
 
-    func attach(scene: DeviceModelScene, model: AppleDeviceModel) {
+    func attach(scene: DeviceModelScene, model: AppleDeviceModel, unusable: @escaping @MainActor () -> Void) {
         self.scene = scene
         scene.onNeedsRender = { [weak self] in self?.needsRender = true }
         loadTask = Task { [weak self] in
-            guard let root = await scene.load(model), let self, !Task.isCancelled,
-                  let renderer = try? RealityRenderer()
-            else { return }
+            let root = await scene.load(model)
+            guard !Task.isCancelled else { return }
+            guard let root, let self, let renderer = try? RealityRenderer() else {
+                unusable()
+                return
+            }
             renderer.entities.append(root)
             renderer.activeCamera = scene.camera
             renderer.cameraSettings.colorBackground = .color(CGColor(gray: 0, alpha: 0))
@@ -441,6 +452,7 @@ final class DeviceModelScene {
         }
         find(entity)
         guard let found, let animation = entity.availableAnimations.first,
+              model.fits(animationDuration: animation.definition.duration),
               var component = found.components[ModelComponent.self]
         else { return nil }
         var parts: [AppleDeviceModel.Part] = []
