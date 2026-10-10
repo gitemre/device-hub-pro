@@ -136,7 +136,8 @@ When the tools are installed, the app offers to create your first emulator.
   simulator's Settings panel is Device Hub's three cards followed by collapsed groups); appearance, text size, reduce
   motion, TalkBack, colour filters, contrast and developer toggles. The device settings are in the Device menu as
   well, on every platform: Accessibility, Appearance, Location, Sound, Language (with 24-hour time), Time Zone and
-  Clean Status Bar (a simulator adds Face ID, push, permissions and Open URL), so each has a menu path and a key where
+  Clean Status Bar (a simulator adds Face ID, push, permissions, Open URL and, as in Device Hub, Battery: the status
+  bar's battery at 100, 75, 50 or 25 %), so each has a menu path and a key where
   one exists. An item the device has no hardware for is left out, read from the device itself (`pm list features`): no
   fingerprint touch on a Wear OS watch, no telephony, Shake or Split Screen on a TV. Rows show what the device
   actually does: Force RTL applies at once on Android 8+ (the language list is pushed

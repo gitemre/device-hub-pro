@@ -90,6 +90,14 @@ extension SimctlClient {
         try await checked(arguments, freeText: operatorIndex.map { [$0] } ?? [])
     }
 
+    /// Overrides only the status bar's battery (Device ▸ Battery, as Device
+    /// Hub sets it): the other overridden fields stay as they are.
+    public func overrideStatusBarBattery(udid: String, level: Int, state: SimulatorBatteryState) async throws {
+        try Self.validateUDID(udid)
+        guard (0...100).contains(level) else { throw SimulatorStatusBarState.Problem.batteryLevel(level) }
+        try await checked(["status_bar", udid, "override", "--batteryState", state.rawValue, "--batteryLevel", "\(level)"])
+    }
+
     // MARK: location
 
     /// Runs one of `location list`'s scenarios ("City Run", "Freeway Drive"…).
