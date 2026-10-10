@@ -92,7 +92,7 @@ struct DeviceStageView: View {
         }
     }
 
-    /// The AVD panels (spec §6.4): stopped keeps the skin hero + Start,
+    /// The AVD panels: stopped keeps the skin hero + Start,
     /// booting gets the same hero plus progress and the "Starting…" label.
     @ViewBuilder
     private func avdStage(card: AvdCard) -> some View {
@@ -152,7 +152,7 @@ enum DeviceStagePanelText {
 }
 
 /// Android-designed panels for physical devices adb cannot use. Device Hub
-/// had no unhealthy device to reference (spec §6.4), so there is no visual
+/// had no unhealthy device to reference, so there is no visual
 /// reference to copy.
 private struct DeviceStatusPanel: View {
     @Environment(AppModel.self) private var model
@@ -946,7 +946,7 @@ private struct MirrorStatsHUD: View {
 // MARK: - Recording indicator
 
 /// Red dot + REC + elapsed time in a glass capsule over the mirror, shown
-/// only while the host recorder runs (spec §8.3) — it ends the moment the
+/// only while the host recorder runs — it ends the moment the
 /// recorder does. Device Hub's record button has no elapsed readout, so this
 /// is our own design.
 private struct RecordingIndicator: View {
@@ -1259,7 +1259,7 @@ struct MirrorStageContent: View {
     let chrome: DeviceChrome
     let available: CGSize
     /// Main stage only: `CompactMirrorView` keeps the default `false` and
-    /// stays flat (spec §13).
+    /// stays flat.
     var showsFoldControls = false
     /// Main stage only: the Back / Home / Recents bar under an Android
     /// handheld (`NavigationBarSpec.isShown`).
@@ -1318,7 +1318,7 @@ struct MirrorStageContent: View {
         .modifier(ViewOnlyCanvasVisibility(session: session))
     }
 
-    /// The framed branch (spec §9): the flat framed mirror, with the fold
+    /// The framed branch: the flat framed mirror, with the fold
     /// control strip anchored at the bottom while the stage shows a foldable
     /// emulator (spec acceptance #3), and the device fitted above it.
     private func framedContent(skin: ResolvedSkin) -> some View {

@@ -6,7 +6,7 @@ import Foundation
 /// Xcode's DeviceKit folder, read at runtime: the device chromes
 /// (`Chrome/<name>.devicechrome`) and the screens' exact outlines
 /// (`FramebufferMasks/<id>.pdf`). Nothing in it is copied into the
-/// repository or the app (§3.5); without it the simulator's
+/// repository or the app; without it the simulator's
 /// stage keeps the vector body.
 public struct AppleDeviceKit: Sendable, Hashable {
     public static let defaultRoot = URL(fileURLWithPath: "/Library/Developer/DeviceKit", isDirectory: true)
@@ -452,8 +452,8 @@ public struct AppleChromeFrame: Sendable, Hashable {
     }
 }
 
-/// Finds and loads the Apple chrome of a simulator device type (design
-/// §3.5, device-frame Tier 2): the device type's display names its chrome
+/// Finds and loads the Apple chrome of a simulator device type
+/// (device-frame Tier 2): the device type's display names its chrome
 /// (`chromeIdentifier`) and its screen outline (`framebufferMaskIdentifier`),
 /// with the device type's `profile.plist` (`chromeIdentifier`,
 /// `framebufferMask`) as the fallback; the chrome is read from DeviceKit,

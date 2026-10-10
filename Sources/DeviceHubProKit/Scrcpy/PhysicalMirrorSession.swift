@@ -4,7 +4,7 @@ import Darwin
 import Foundation
 
 /// A live mirror session against an adb device that is not an emulator,
-/// speaking scrcpy's server protocol (spec §11.1–11.2).
+/// speaking scrcpy's server protocol.
 ///
 /// `ScrcpyServerLauncher` pushes/launches the vendored server and hands over
 /// the tunneled video socket (dummy byte already consumed) and, when the

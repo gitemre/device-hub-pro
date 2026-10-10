@@ -43,7 +43,7 @@ import XCTest
 /// With `DHP_IOS_CAPTURE_DIR` set, the orientation rows are also written
 /// there as `orientation-uiOrientation.txt`, the fixture's source.
 final class SimulatorMirrorSessionLiveTests: XCTestCase {
-    /// Per channel, 0–255. See the spec (§3.4) for the values measured: the
+    /// Per channel, 0–255. See the spec for the values measured: the
     /// matching picture and, as a control, the same frame compared half
     /// turned (printed with each row).
     static let maximumDifference = 3.0
@@ -83,7 +83,7 @@ final class SimulatorMirrorSessionLiveTests: XCTestCase {
     }
 
     /// The canary's own rules, without a simulator: each probe is typed
-    /// with keys only (a paste would not arrive, see the spec, §3.4).
+    /// with keys only (a paste would not arrive, see the spec).
     func testTheKeyboardCanaryTypesEveryProbeWithKeys() {
         XCTAssertEqual(Self.layout(forLocale: "tr_TR"), .turkishQ)
         XCTAssertEqual(Self.layout(forLocale: "en_US"), .usQWERTY)

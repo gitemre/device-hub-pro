@@ -24,7 +24,7 @@ import SwiftUI
 ///   (`adb-core/shell-dumpsys-display.txt`): the inner panel 2076x2152 lit,
 ///   radius 85, its hole at (1987.5, 80); the cover 1080x2424 off, radius
 ///   115. They stand in for a phone model's stored shapes; no real phone's
-///   capture exists (plan §8 question 3). The numbers are
+///   capture exists. The numbers are
 ///   `ChromeGeometryTests`': the inner body 2208.047 x 2284.047 with outer
 ///   radius 151.024, the cover's 1181.339 x 2525.339 with 165.669.
 ///

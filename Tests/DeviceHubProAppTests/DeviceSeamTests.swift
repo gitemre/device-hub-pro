@@ -4,7 +4,7 @@ import XCTest
 
 /// The platform-neutral device seam (iOS): what the session hub
 /// records about the mirrored device, and the hazards an Apple device met
-/// before it (§4 R1–R2): the adb pollers firing with its UDID, and the
+/// before it: the adb pollers firing with its UDID, and the
 /// Android lifecycle reading it missing from adb as a disconnect.
 ///
 /// No transport and no device: the sessions are fakes the model's session

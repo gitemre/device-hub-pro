@@ -41,7 +41,7 @@ enum MotionMetrics {
 
     // MARK: - Fold stage (HIG-designed, reference video)
 
-    /// Fold/unfold ramp: the reference simulator folds in ~0.5 s (spec §3).
+    /// Fold/unfold ramp: the reference simulator folds in ~0.5 s.
     /// Parity row: MOTION-07.
     static let foldDuration: TimeInterval = 0.5
     /// Hinge command cadence of `runPostureAnimation` — I/O pacing, not motion.

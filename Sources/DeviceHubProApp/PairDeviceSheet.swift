@@ -1,7 +1,7 @@
 import SwiftUI
 import DeviceHubProKit
 
-/// Wireless ADB pairing (spec §11.3). The phone's "Pair device with pairing
+/// Wireless ADB pairing. The phone's "Pair device with pairing
 /// code" dialog provides an IP:port plus a 6-digit code; after `adb pair`
 /// succeeds the device is connected on the Wireless debugging screen's
 /// IP address & Port — a random port on Android 11+, never the pairing port

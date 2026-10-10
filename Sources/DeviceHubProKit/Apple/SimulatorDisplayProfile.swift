@@ -7,7 +7,7 @@ import Foundation
 /// The file is Apple's and stays on the user's Mac: it is read at runtime
 /// from the device type bundle `simctl list devicetypes` names
 /// (`<bundle>/Contents/Resources/capabilities.plist`), never copied into the
-/// repository or the app (§3.1). The display is the plist's
+/// repository or the app. The display is the plist's
 /// `displays` entry of type `integrated` (the device's own panel; the others
 /// are external outputs), else the first one.
 ///

@@ -837,7 +837,7 @@ private struct DiagnosticsInspectorView: View {
         }
     }
 
-    /// An Android device's diagnostics bundle (spec §6.6): the zip of its logcat
+    /// An Android device's diagnostics bundle: the zip of its logcat
     /// (last 5 minutes), battery and memory dumps, system properties and
     /// device info, and the log window. The button is disabled while a
     /// collection runs.
@@ -1173,7 +1173,7 @@ private struct AppsInspectorView: View {
         proxy.scrollTo(next)
     }
 
-    /// The row's Device Hub-style action menu (spec §7.3): Launch; the copy
+    /// The row's Device Hub-style action menu: Launch; the copy
     /// pair; App Info / Copy Data Path in DH's "App Container" slot; then the
     /// tester extras. Clear Data and Uninstall confirm first;
     /// Force Stop is deliberately unconfirmed.

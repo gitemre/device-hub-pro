@@ -244,8 +244,8 @@ final class VectorStageTests: XCTestCase {
 
     /// A skinless foldable on the main stage is fitted above the fold
     /// control strip, as a skinned one is: the body's centre is the centre
-    /// of the stage less the strip. The compact window's stage has no strip
-    /// (spec §13): the body is centred in the whole stage.
+    /// of the stage less the strip. The compact window's stage has no strip:
+    /// the body is centred in the whole stage.
     func testASkinlessFoldableShowsTheStripAndTheCompactWindowDoesNot() async throws {
         for scale in Self.scales {
             let pixel = 1 / scale

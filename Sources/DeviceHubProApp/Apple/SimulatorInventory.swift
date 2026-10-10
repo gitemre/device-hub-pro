@@ -4,7 +4,7 @@ import DeviceHubProKit
 
 /// The simulators of one device set — the user's default set in the app,
 /// the one Xcode and Device Hub list — and what this Mac's Xcode offers for
-/// them (§3.7).
+/// them.
 ///
 /// It runs `SimulatorWatcher` on the set (FSEvents on the set folder, a
 /// debounced `simctl list -j devices`, a 5 s safety poll) and publishes

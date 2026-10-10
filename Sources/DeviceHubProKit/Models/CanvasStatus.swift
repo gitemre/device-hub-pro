@@ -2,7 +2,7 @@ import Foundation
 
 /// Which stage panel a device selection shows before the live mirror is
 /// available. Device Hub had no unhealthy device to reference, so these
-/// states are Android-designed (spec §6.4).
+/// states are Android-designed.
 public enum CanvasStatusKind: Equatable, Sendable {
     /// No status panel: live mirror, stopped-AVD hero, physical detail or
     /// the empty view.
@@ -18,7 +18,7 @@ public enum CanvasStatusKind: Equatable, Sendable {
 
 /// The pure state→panel mapping behind the canvas status states.
 public enum CanvasStatus {
-    /// The spec's booting label (§6.4).
+    /// The spec's booting label.
     public static let defaultBootingLabel = "Starting…"
 
     /// Maps a stage selection to its panel. `booting` is the emulator's

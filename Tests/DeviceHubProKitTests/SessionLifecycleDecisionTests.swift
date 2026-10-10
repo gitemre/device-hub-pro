@@ -339,7 +339,7 @@ final class SessionLifecycleDecisionTests: XCTestCase {
             .teardown(.transportFatal),
             .setGhost("HT4CWJT01234"),
             .showStatus(.unreachable),
-            // Spec §5.2 amendment: armed immediately — adb still lists the
+            // armed immediately — adb still lists the
             // device, so no watcher edge would ever re-arm the schedule.
             .scheduleResume(serial: "HT4CWJT01234", after: .milliseconds(500), attempt: 1)
         ])

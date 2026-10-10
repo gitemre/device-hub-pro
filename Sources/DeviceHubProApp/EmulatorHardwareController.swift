@@ -59,7 +59,7 @@ final class EmulatorHardwareController {
         controls.isFoldable || activeHingeCount > 0
     }
 
-    /// The fold control strip only for foldable emulators (spec §9).
+    /// The fold control strip only for foldable emulators.
     var showsFoldControls: Bool {
         activeSerial != nil && isFoldable
     }
@@ -120,7 +120,7 @@ final class EmulatorHardwareController {
         guard !Task.isCancelled else { return }
         // Fallback without gRPC: use the emulator console command. This is
         // what keeps the fold strip's preset buttons enabled console-only
-        // (spec §10: presets snap after settle; only the slider is disabled
+        // (presets snap after settle; only the slider is disabled
         // without a gRPC port — `FoldControlStrip` relies on this branch).
         guard let port else {
             guard let adbClient, let serial else { return }

@@ -31,7 +31,7 @@ public enum MirrorTransport: String, Sendable {
     /// never tears; the fallback for older emulators and any MMAP failure.
     case raw
     /// H.264 from the scrcpy server, decoded with VideoToolbox. The physical
-    /// device transport (spec §11.1).
+    /// device transport.
     case h264
     /// An iOS simulator's screen IOSurface, copied through the private
     /// simulator bridge (`SimulatorMirrorSession`).

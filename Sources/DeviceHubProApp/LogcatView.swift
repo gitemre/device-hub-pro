@@ -142,7 +142,7 @@ struct LogcatView: View {
         .padding(10)
     }
 
-    /// Presentation-only states (spec §9.3c): no device / deliberately stopped
+    /// Presentation-only states: no device / deliberately stopped
     /// / disconnected / paused / filter-empty / no output each get an
     /// inspector-style placeholder; a disconnected or paused non-empty list
     /// gets a banner. Streaming and filtering are untouched.
@@ -389,7 +389,7 @@ final class LogcatFeed {
     }
 }
 
-/// The Logcat area's placeholder decision (spec §9.3c), split out so the
+/// The Logcat area's placeholder decision, split out so the
 /// state mapping is testable without a live stream. `nil` means the entry
 /// list is shown.
 enum LogcatPlaceholder: Equatable {

@@ -1136,7 +1136,7 @@ public final class AdbClient: Sendable {
     public static let pairingTimeout: Duration = .seconds(15)
 
     /// Pairs with a device in wireless-debugging pairing mode (`adb pair
-    /// <ip:port> <code>`, spec §11.3). `address` is the pairing dialog's
+    /// <ip:port> <code>`). `address` is the pairing dialog's
     /// `IP:port`, not the connect port. `timeout` terminates the adb process
     /// and throws `ProcessRunnerError.timedOut` when it elapses.
     @discardableResult

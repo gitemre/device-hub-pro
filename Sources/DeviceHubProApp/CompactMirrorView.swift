@@ -273,7 +273,7 @@ struct CompactMirrorView: View {
 
     /// The compact window's stage: the main stage's content in the same
     /// chrome (`DeviceChromeResolver`), without the fold control strip — the
-    /// compact window stays flat (spec §13), a foldable included.
+    /// compact window stays flat, a foldable included.
     static func stageContent(
         session: any MirrorSessionProtocol,
         chrome: DeviceChrome,

@@ -5,8 +5,8 @@ import XCTest
 /// `capabilities.plist`, and the `DisplayShape` the vector body is planned
 /// from.
 ///
-/// The plist is Apple's and is never copied into the repository (design
-/// §3.1), so no fixture holds it. The dictionaries below carry only the keys
+/// The plist is Apple's and is never copied into the repository,
+/// so no fixture holds it. The dictionaries below carry only the keys
 /// the parser reads, with the values of the installed device types they are
 /// named after, read on 2026-09-26 with `plutil -p` from
 /// `/Library/Developer/CoreSimulator/Profiles/DeviceTypes/iPhone 17

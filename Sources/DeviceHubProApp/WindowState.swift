@@ -178,7 +178,7 @@ final class WindowState {
     var teamPickerRequest: TeamPickerRequest?
 
     /// The Pair Nearby Device sheet (iPhone and Android Phone; it holds the
-    /// pairing-code form of spec §11.3), presented from the File menu and
+    /// pairing-code form), presented from the File menu and
     /// the + menu.
     var isPairSheetPresented = false
 

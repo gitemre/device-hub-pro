@@ -26,7 +26,7 @@ struct RecentAPKEntry: Codable, Equatable, Identifiable {
     }
 }
 
-/// The install popover's recents (spec §7.2): the last few successfully
+/// The install popover's recents: the last few successfully
 /// installed APKs, newest first, persisted in `UserDefaults`.
 ///
 /// Entries are absolute paths plus the badging identity the install parsed, so

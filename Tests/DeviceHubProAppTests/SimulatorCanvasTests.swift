@@ -217,7 +217,7 @@ final class SimulatorCanvasTests: XCTestCase {
     }
 
     /// A live session reads `dtuhidd.active` as it starts, before any
-    /// input (§3.8): read 0, the canvas carries the first-input tooltip; read
+    /// input: read 0, the canvas carries the first-input tooltip; read
     /// 1 (Device Hub or another client connected in this boot), none. The
     /// view-only canvas takes no input and reads nothing. A shutdown forgets
     /// the reading (a boot starts at 0).
@@ -529,7 +529,7 @@ final class SimulatorCanvasTests: XCTestCase {
         XCTAssertEqual(pose.presentedAngle, 0)
     }
 
-    /// devicectl-backed rotation is T2 (§3.7): in the default set the
+    /// devicectl-backed rotation is T2: in the default set the
     /// view-only canvas does not offer Rotate, and runs no devicectl, until
     /// The attach asks devicectl about the simulator the user booted and
     /// selected (`device info details`, T2); when it answers, the

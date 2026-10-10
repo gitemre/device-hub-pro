@@ -287,7 +287,7 @@ final class DeviceLifecycleCoordinatorTests: XCTestCase {
         coordinator.handle(.health(.restarting(attempt: 1)))
         coordinator.handle(.health(.restarting(attempt: 2)))
         XCTAssertEqual(recorder.restarts, 2, "one call per restart signal; cache invalidation is idempotent")
-        XCTAssertEqual(recorder.flashes.count, 1, "one flashStatus per incident (spec §5.2), not per signal")
+        XCTAssertEqual(recorder.flashes.count, 1, "one flashStatus per incident, not per signal")
     }
 
     func testHealthFlashReturnsAfterASnapshotEndsTheIncident() {
@@ -332,7 +332,7 @@ final class DeviceLifecycleCoordinatorTests: XCTestCase {
         XCTAssertEqual(GhostEntry.merge(snapshot: [real], ghost: ghost), [real])
     }
 
-    // MARK: Ghost rows (model — spec §5.2 amendment)
+    // MARK: Ghost rows (model)
 
     func testGhostNeverReplacesAPresentRealRow() {
         let model = AppModel.testing()
