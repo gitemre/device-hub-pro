@@ -48,6 +48,7 @@ public enum SimulatorKeyboardLayout: String, Sendable, CaseIterable {
 /// The keyboard half of `SimulatorMirrorSession`: special keys, the layout
 /// tables, and how text becomes key presses.
 public enum SimulatorKeyboard {
+    public static let leftControl: UInt32 = 0xE0
     public static let leftShift: UInt32 = 0xE1
     public static let leftOption: UInt32 = 0xE2
     public static let leftCommand: UInt32 = 0xE3

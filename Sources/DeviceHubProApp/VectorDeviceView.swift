@@ -159,6 +159,8 @@ struct VectorDeviceView: View {
                     margin: 1.0,
                     allowsUpscaling: true,
                     forwardsKeyboard: model.preferences.keyboardForwardingEnabled,
+                    capturesShortcuts: model.preferences.captureKeyboardShortcuts,
+                    securesKeyboard: model.preferences.secureKeyboardEntry,
                     cornerRadius: cornerRadius,
                     cutout: cutout,
                     uprightsTexture: true

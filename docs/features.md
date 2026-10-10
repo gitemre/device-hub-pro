@@ -320,7 +320,12 @@ When the tools are installed, the app offers to create your first emulator.
   the toolbar's keyboard button) sends your Mac keyboard to the device. With capture off, an
   emulator shows its own full on-screen keyboard, so you can see fields hidden under it; turning
   capture on, selecting another device and quitting put the emulator's setting back (phones are
-  not touched; see [docs/soft-keyboard.md](soft-keyboard.md)).
+  not touched; see [docs/soft-keyboard.md](soft-keyboard.md)). Settings ▸ Keyboard adds two
+  switches, as in Xcode's Device Hub: **Capture keyboard shortcuts** sends ⌘ shortcuts to a
+  simulator (or an iPhone with fast input) while capture is on — ⌘H goes home, an app's own
+  shortcuts reach it — keeping ⌘Q, ⌘W, ⌘M, ⌘, and ⌘` for the Mac and ⌘K to turn capture off;
+  **Secure keyboard entry** keeps other apps on the Mac from reading the keys while they go to
+  a device.
 - **Stuck emulator screen.** When an emulator is running but never sends a frame, the stage says
   "The emulator isn't sending its screen" with Restart Emulator and Retry buttons.
 - **Biometrics.** A simulator's Face ID / Touch ID match or non-match (⌥⇧⌘M / ⌥⇧⌘N) waits for

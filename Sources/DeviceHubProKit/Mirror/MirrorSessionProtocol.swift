@@ -52,6 +52,12 @@ public protocol MirrorSessionProtocol: AnyObject, Sendable {
     var acceptsPhysicalKeys: Bool { get }
     /// Forwards one Mac key event as the same physical key.
     func send(physical event: PhysicalKeyEvent)
+
+    /// Whether `send(shortcut:)` reaches the device: Capture Keyboard
+    /// Shortcuts sends the Mac's ⌘ shortcuts there only then.
+    var acceptsShortcuts: Bool { get }
+    /// Forwards a key pressed with Command as the same key and modifiers.
+    func send(shortcut: KeyShortcut)
 }
 
 extension MirrorSessionProtocol {
@@ -66,4 +72,10 @@ extension MirrorSessionProtocol {
     public var acceptsPhysicalKeys: Bool { false }
 
     public func send(physical event: PhysicalKeyEvent) {}
+
+    /// Only a simulator's live canvas takes shortcuts this way (a physical
+    /// iPhone with fast input gets them as physical keys).
+    public var acceptsShortcuts: Bool { false }
+
+    public func send(shortcut: KeyShortcut) {}
 }

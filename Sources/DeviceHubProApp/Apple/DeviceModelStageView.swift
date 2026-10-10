@@ -80,6 +80,8 @@ struct DeviceModelStageView: View {
             scene: scene,
             model: model,
             forwardsKeyboard: appModel.preferences.keyboardForwardingEnabled,
+            capturesShortcuts: appModel.preferences.captureKeyboardShortcuts,
+            securesKeyboard: appModel.preferences.secureKeyboardEntry,
             unusable: { [simulators = appModel.simulators, model] in simulators.setDeviceModelUnusable(model) }
         )
         .overlay(alignment: .leading) {
@@ -127,6 +129,10 @@ struct DeviceModelCanvas: NSViewRepresentable {
     /// The Mac keyboard reaches the simulator (Keyboard Capture), as on the
     /// 2D stage.
     let forwardsKeyboard: Bool
+    /// ⌘ shortcuts go to the simulator too, and other apps cannot read the
+    /// keys (Settings ▸ Keyboard), as on the 2D stage.
+    let capturesShortcuts: Bool
+    let securesKeyboard: Bool
     /// The model did not load as one the scene can show (another build's
     /// file of another shape, say): the stage goes back to the 2D chrome.
     let unusable: @MainActor () -> Void
@@ -134,15 +140,18 @@ struct DeviceModelCanvas: NSViewRepresentable {
     func makeNSView(context: Context) -> DeviceModelCanvasView {
         let view = DeviceModelCanvasView()
         view.attach(scene: scene, model: model, unusable: unusable)
-        view.forwardsKeyboard = forwardsKeyboard
+        updateNSView(view, context: context)
         return view
     }
 
     func updateNSView(_ view: DeviceModelCanvasView, context: Context) {
         view.forwardsKeyboard = forwardsKeyboard
+        view.capturesShortcuts = capturesShortcuts
+        view.securesKeyboard = securesKeyboard
     }
 
     static func dismantleNSView(_ view: DeviceModelCanvasView, coordinator: ()) {
+        SecureKeyboardEntry.shared.set(false, for: view)
         view.detach()
     }
 }
@@ -174,7 +183,14 @@ final class DeviceModelCanvasView: NSView {
 
     override func makeBackingLayer() -> CALayer { metalLayer }
 
-    var forwardsKeyboard = true
+    var forwardsKeyboard = true {
+        didSet { if forwardsKeyboard != oldValue { updateSecureInput() } }
+    }
+    var capturesShortcuts = false
+    var securesKeyboard = false {
+        didSet { if securesKeyboard != oldValue { updateSecureInput() } }
+    }
+    private var keyObservers: [NSObjectProtocol] = []
 
     override var isFlipped: Bool { true }
 
@@ -192,6 +208,35 @@ final class DeviceModelCanvasView: NSView {
             super.keyDown(with: event)
             return
         }
+    }
+
+    /// ⌘ shortcuts go to the lit panel's session as on the 2D stage
+    /// (`MirrorMetalView.performKeyEquivalent`).
+    override func performKeyEquivalent(with event: NSEvent) -> Bool {
+        guard event.type == .keyDown, capturesShortcuts, forwardsKeyboard, window?.firstResponder === self,
+              let shortcut = MirrorKeyRouting.shortcut(keyCode: event.keyCode, modifiers: event.modifierFlags),
+              !shortcut.staysOnTheMac, scene?.sendShortcut(shortcut) == true
+        else { return super.performKeyEquivalent(with: event) }
+        return true
+    }
+
+    override func becomeFirstResponder() -> Bool {
+        let became = super.becomeFirstResponder()
+        if became { DispatchQueue.main.async { [weak self] in self?.updateSecureInput() } }
+        return became
+    }
+
+    override func resignFirstResponder() -> Bool {
+        let resigned = super.resignFirstResponder()
+        if resigned { SecureKeyboardEntry.shared.set(false, for: self) }
+        return resigned
+    }
+
+    /// Secure keyboard entry while the keyboard goes to the simulator from
+    /// this view, the key window's first responder (`SecureKeyboardEntry`).
+    func updateSecureInput() {
+        let wanted = securesKeyboard && forwardsKeyboard && window?.isKeyWindow == true && window?.firstResponder === self
+        SecureKeyboardEntry.shared.set(wanted, for: self)
     }
 
     override func magnify(with event: NSEvent) {
@@ -257,7 +302,15 @@ final class DeviceModelCanvasView: NSView {
         super.viewDidMoveToWindow()
         link?.invalidate()
         link = nil
-        guard window != nil else { return }
+        keyObservers.forEach(NotificationCenter.default.removeObserver)
+        keyObservers = []
+        updateSecureInput()
+        guard let window else { return }
+        for name in [NSWindow.didBecomeKeyNotification, NSWindow.didResignKeyNotification] {
+            keyObservers.append(NotificationCenter.default.addObserver(forName: name, object: window, queue: .main) { [weak self] _ in
+                MainActor.assumeIsolated { self?.updateSecureInput() }
+            })
+        }
         let link = displayLink(target: self, selector: #selector(tick))
         link.add(to: .main, forMode: .common)
         self.link = link
@@ -776,6 +829,13 @@ final class DeviceModelScene {
     func sendKey(_ command: KeyboardCommand) -> Bool {
         guard let feedingSession else { return false }
         feedingSession.send(command)
+        return true
+    }
+
+    /// A ⌘ shortcut for the lit panel's session; false when it takes none.
+    func sendShortcut(_ shortcut: KeyShortcut) -> Bool {
+        guard let feedingSession, feedingSession.acceptsShortcuts else { return false }
+        feedingSession.send(shortcut: shortcut)
         return true
     }
 
