@@ -67,6 +67,24 @@ public enum SimulatorFold {
         return current
     }
 
+    /// The panel a booted foldable's two screenshots say is lit, when they
+    /// agree: the unlit panel is dark (iPhone Duo open on iOS 27.1: the outer
+    /// panel's screenshot is black, the inner one shows the home screen).
+    /// Nil when both are dark (a boot), both show something, or a screenshot
+    /// is missing. Reads a fold something other than Device Hub Pro made.
+    public static func litPanel(
+        outer: SimulatorReadiness.ScreenContent?,
+        inner: SimulatorReadiness.ScreenContent?
+    ) -> SimulatorFoldPanel? {
+        guard let outer, let inner else { return nil }
+        switch (outer, inner) {
+        case (.dark, .dark): return nil
+        case (.dark, _): return .inner
+        case (_, .dark): return .outer
+        default: return nil
+        }
+    }
+
     /// A preset's hinge angle, as Xcode 27.1's Device Hub sets it: SpringBoard
     /// read its half open as 127.78°, and it reads a sent angle as 5 + angle
     /// × 170/180 (100 → 99.44, 128 → 125.89, 130 → 127.78, 150 → 146.67), so
@@ -470,7 +488,8 @@ public struct SimulatorFoldRecord: Sendable, Equatable, Codable {
 }
 
 /// The folds of the booted foldable simulators Device Hub Pro moved, by
-/// UDID. One it never moved is closed, as a simulator boots.
+/// UDID. One it never moved is closed, as a simulator boots, until its
+/// screenshots show it open (`SimulatorFold.litPanel`).
 ///
 /// Each fold holds for the boot it was recorded in: the simulator keeps its
 /// hinge while Device Hub Pro quits and opens again, so the book is kept on

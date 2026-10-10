@@ -92,6 +92,19 @@ final class SimulatorFoldTests: XCTestCase {
         XCTAssertEqual(SimulatorFold.panel(afterAngle: 180, from: .outer), .inner)
     }
 
+    /// A fold made elsewhere (Device Hub, a test) is read off the two
+    /// panels' screenshots: the dark one is the unlit one. Two dark panels
+    /// (a boot), two lit ones or a missing screenshot say nothing.
+    func testTheLitPanelIsReadOffTheScreenshots() {
+        XCTAssertEqual(SimulatorFold.litPanel(outer: .dark, inner: .homeScreen), .inner)
+        XCTAssertEqual(SimulatorFold.litPanel(outer: .dark, inner: .bootScreen), .inner)
+        XCTAssertEqual(SimulatorFold.litPanel(outer: .homeScreen, inner: .dark), .outer)
+        XCTAssertNil(SimulatorFold.litPanel(outer: .dark, inner: .dark))
+        XCTAssertNil(SimulatorFold.litPanel(outer: .homeScreen, inner: .homeScreen))
+        XCTAssertNil(SimulatorFold.litPanel(outer: nil, inner: .homeScreen))
+        XCTAssertNil(SimulatorFold.litPanel(outer: .dark, inner: nil))
+    }
+
     /// Half is 110°, past the opening threshold, so the preset shows the
     /// inner panel from closed too; 180° is the only open-flat angle.
     func testPresetsAndTheirAngles() {
