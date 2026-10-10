@@ -41,6 +41,7 @@ final class AppPreferencesTests: XCTestCase {
             "showNavigationButtons",
             "captureKeyboardShortcuts",
             "secureKeyboardEntry",
+            "simulateHardwareKeyboardByDefault",
             "showDeviceModel",
             "stayOnTopMain",
             "stayOnTopCompact",

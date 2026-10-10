@@ -94,6 +94,9 @@ final class SimulatorCanvasController {
     /// stops before the boot ends is the display not being up yet, not a
     /// failure, so it is not replaced by the view-only canvas.
     @ObservationIgnored private var followingBoot: Set<String> = []
+    /// A live canvas started for the simulator (`SimulatorHardwareKeyboardController`
+    /// connects its keyboard then, by default).
+    @ObservationIgnored var onLiveCanvasStarted: (@MainActor (_ udid: String) -> Void)?
     /// The simulator the last session started for, and the panel it shows.
     @ObservationIgnored private var startedPanel: (udid: String, panel: SimulatorSessionPanel)?
     /// Whether dtuhidd was already connected in the simulator's boot when
@@ -498,6 +501,7 @@ final class SimulatorCanvasController {
         let capabilities = Self.capabilities(liveCanvas: canvas.isLive, devicectlReady: simulators.devicectlReady)
         beginSession(session, .apple(entry.udid), capabilities)
         guard canvas.isLive else { return }
+        onLiveCanvasStarted?(entry.udid)
         readInputFlag(entry.udid, simctl: simctl)
         guard !awaitingBoot else { return }
         smokeTask = Task { [weak self] in

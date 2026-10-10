@@ -311,19 +311,15 @@ final class SimulatorMirrorSessionLiveTests: XCTestCase {
             session.send(.text(typed))
             session.send(.text("😀"))
             try await Task.sleep(for: .seconds(2))
-            let input = try await onBackground { bridge.makeInput(for: address) }
-            try await onBackground {
-                for event in SimulatorKeyStroke(usage: 0x04, modifiers: [SimulatorKeyboard.leftCommand]).events
-                    + SimulatorKeyStroke(usage: 0x06, modifiers: [SimulatorKeyboard.leftCommand]).events {
-                    try input.send(event)
-                }
-                try input.flush(timeout: .seconds(2))
-            }
-            try await Task.sleep(for: .milliseconds(500))
+            // ⌘A and ⌘C as captured keyboard shortcuts (`send(shortcut:)`,
+            // the same key with Command held on the HID keyboard).
+            XCTAssertTrue(session.acceptsShortcuts)
+            session.send(shortcut: KeyShortcut(keyCode: 0))
+            session.send(shortcut: KeyShortcut(keyCode: 8))
+            try await Task.sleep(for: .seconds(1))
             let readBack = try await simctl.pasteboard(udid: udid)
             Self.report("typed \"\(typed)\" + paste \"😀\", field read back \"\(readBack)\"")
             XCTAssertTrue(readBack.hasPrefix(typed), "the HID-typed text arrived exactly: \(readBack)")
-            try await onBackground { input.disconnect() }
         } else {
             // No table for this layout: the session would type U.S. key
             // positions, so there is nothing exact to check.
@@ -336,6 +332,12 @@ final class SimulatorMirrorSessionLiveTests: XCTestCase {
         if displays.panels == nil {
             await swipeUpFromBottom(session, width: landscapeWidth, height: landscapeHeight)
         } else {
+            // On iPhone Duo the field was Search's, whose keyboard takes the
+            // bottom edge: Safari is swiped away instead, upright.
+            try await actions.home()
+            try await simctl.checked(["openurl", udid, "https://example.com"])
+            try await Task.sleep(for: .seconds(3))
+            await waitForIdle(session, quiet: 1.0, timeout: 10)
             await swipeUpFromBottom(session, width: shown.width, height: shown.height)
         }
         try await Task.sleep(for: .seconds(1.5))
@@ -360,6 +362,11 @@ final class SimulatorMirrorSessionLiveTests: XCTestCase {
         let homeDifference = home.differingShare(homeReference)
         Self.report(String(format: "Home: %.1f%% differs from the home screen", homeDifference * 100))
         XCTAssertLessThan(homeDifference, 0.15, "Home returned to the home screen")
+
+        // Simulate Hardware Keyboard (the bridge's canary): connected and
+        // disconnected again, as a `simctl boot` simulator starts.
+        try await onBackground { try bridge.setHardwareKeyboard(connected: true, for: address) }
+        try await onBackground { try bridge.setHardwareKeyboard(connected: false, for: address) }
 
         let statistics = session.surfaceStatistics()
         Self.report(String(format: "copies upright n=%d p50 %.2f ms p95 %.2f ms; turned n=%d p50 %.2f ms p95 %.2f ms",

@@ -1,7 +1,7 @@
 /// A Mac key pressed with Command, sent to the device as the same key with the
 /// same modifiers: Capture Keyboard Shortcuts, as Xcode 27.1's Device Hub
-/// offers it. On an iOS simulator ⌘H goes home and an app's own shortcuts
-/// (⌘C, ⌘F, ⌘N, …) reach the app.
+/// offers it. On an iOS simulator an app's own shortcuts (⌘A, ⌘C, ⌘F, …)
+/// reach the app.
 public struct KeyShortcut: Sendable, Equatable {
     /// The Mac virtual key code (kVK_*): the key's position.
     public var keyCode: UInt16

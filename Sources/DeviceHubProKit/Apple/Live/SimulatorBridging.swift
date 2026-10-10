@@ -280,6 +280,11 @@ public struct SimulatorBridgeError: Error, Sendable, Equatable, CustomStringConv
 /// Loads the private simulator bridge and hands out per-simulator screens and
 /// input channels. See the file comment for the threading rule.
 extension SimulatorBridging {
+    /// A bridge without the switch (a test double, say).
+    public func setHardwareKeyboard(connected: Bool, for address: SimulatorAddress) throws {
+        throw SimulatorBridgeError(.apiUnavailable, "this bridge has no hardware keyboard switch")
+    }
+
     /// The main screen (the lowest screen ID).
     public func makeScreen(for address: SimulatorAddress) throws -> any SimulatorScreenBridging {
         try makeScreen(for: address, screenID: 0)
@@ -300,6 +305,10 @@ public protocol SimulatorBridging: Sendable {
     /// The simulator's GSEvent port (rotation, lock). Connectionless: each
     /// send looks the port up, so making one does nothing.
     func makeGSEvents(for address: SimulatorAddress) -> any SimulatorGSEventBridging
+    /// Connects or disconnects the booted simulator's hardware keyboard
+    /// (Simulate Hardware Keyboard): connected, iOS hides its software
+    /// keyboard. There is no reading it back.
+    func setHardwareKeyboard(connected: Bool, for address: SimulatorAddress) throws
 }
 
 extension SimulatorBridging {

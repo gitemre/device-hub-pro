@@ -114,6 +114,19 @@ numbers are from that fetch. The idb copies themselves are not part of this repo
 | `mach_msg(MACH_SEND_MSG \| MACH_SEND_TIMEOUT, …, 2000 ms)`; on `MACH_SEND_TIMED_OUT` nothing was queued | behaviour | idb `FBSimulatorControl/HID/SimulatorPurpleHIDTransport.swift:31-34, 81-116`; public `<mach/message.h>` |
 | The lookup returns a send right the caller owns; `COPY_SEND` leaves it, so the bridge deallocates it after each send | behaviour | runtime-observed, CoreSimulator 1171.7 (the probe's count of this process's port names stayed flat over repeated sends, and every later lookup and send succeeded) |
 
+## Hardware keyboard (`AQSBHardwareKeyboard.m`)
+
+Device ▸ Keyboard ▸ Simulate Hardware Keyboard and its default
+(`SimulatorHardwareKeyboardController`); off with the rest of the bridge
+(`DHP_DISABLE_SIMBRIDGE`). Canary: `SimulatorMirrorSessionLiveTests` connects
+the keyboard and disconnects it again; the same test sends ⌘A and ⌘C as captured shortcuts.
+
+| Name | Kind | Source |
+|---|---|---|
+| `-[SimDevice setHardwareKeyboardEnabled:keyboardType:error:]` | method (`respondsToSelector:` checked; AQSBErrorAPIUnavailable without it) | runtime-observed, CoreSimulator 1171.7 and 1174.9.2: the Objective-C runtime answers it, type encoding `B32@0:8B16C20^@24` (BOOL, unsigned char, NSError **); there is no getter |
+| YES with keyboard type 0 connects the hardware keyboard: in a focused field iOS hides its software keyboard; NO disconnects it and the software keyboard shows again | behaviour | runtime-observed, CoreSimulator 1174.9.2, iPhone Duo on iOS 27.1 (24A94232), 2026-10-10 |
+| A simulator `simctl boot` started has it disconnected | behaviour | same |
+
 ## Not used, on purpose
 
 - SimulatorKit (`SimDeviceLegacyHIDClient`, `IndigoHIDMessageFor*`,

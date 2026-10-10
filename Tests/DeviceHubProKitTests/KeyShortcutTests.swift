@@ -5,7 +5,7 @@ import XCTest
 /// (Capture Keyboard Shortcuts), and the few the Mac keeps.
 final class KeyShortcutTests: XCTestCase {
     /// ⌘H (kVK_ANSI_H, 4) is the H position (usage 0x0B) with Left Command
-    /// held around it: iOS's Home shortcut.
+    /// held around it.
     func testCommandHIsTheHKeyWithCommandHeld() throws {
         let stroke = try XCTUnwrap(KeyShortcut(keyCode: 4).simulatorStroke)
         XCTAssertEqual(stroke, SimulatorKeyStroke(usage: 0x0B, modifiers: [SimulatorKeyboard.leftCommand]))

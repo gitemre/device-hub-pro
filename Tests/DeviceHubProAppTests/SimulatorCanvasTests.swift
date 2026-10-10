@@ -280,6 +280,47 @@ final class SimulatorCanvasTests: XCTestCase {
         await waitUntil(timeout: 3, "T3") { model.simulators.tooling.tier == .t3 }
     }
 
+    /// Simulate Hardware Keyboard: the first live canvas of a boot connects
+    /// the keyboard by default (once), the menu's switch connects and
+    /// disconnects it, a refused switch reads back as it was, and with the
+    /// default off nothing is sent.
+    func testTheLiveCanvasConnectsTheHardwareKeyboardByDefault() async throws {
+        let (model, _, _) = try await readyModel()
+        let keyboard = model.services.simulatorHardwareKeyboard
+        let sent = SentSwitches()
+        keyboard.send = { _, connected, _ in await sent.append(connected) }
+        XCTAssertTrue(model.preferences.simulateHardwareKeyboardByDefault, "on by default, as in Device Hub")
+        XCTAssertTrue(keyboard.offers(Self.udid))
+        XCTAssertFalse(keyboard.isConnected(Self.udid))
+
+        model.simulatorCanvas.attach(Self.udid)
+        await waitUntil(timeout: 3, "the default") { sent.values == [true] }
+        XCTAssertTrue(keyboard.isConnected(Self.udid))
+        keyboard.liveCanvasStarted(udid: Self.udid)
+        try await Task.sleep(for: .milliseconds(100))
+        XCTAssertEqual(sent.values, [true], "once per boot")
+
+        keyboard.setConnected(false, udid: Self.udid)
+        XCTAssertFalse(keyboard.isConnected(Self.udid))
+        await waitUntil(timeout: 3, "the switch") { sent.values == [true, false] }
+
+        keyboard.send = { _, _, _ in throw SimulatorBridgeError(.apiUnavailable, "refused") }
+        keyboard.setConnected(true, udid: Self.udid)
+        await waitUntil(timeout: 3, "the revert") { !keyboard.isConnected(Self.udid) }
+    }
+
+    func testWithTheDefaultOffTheKeyboardIsLeftAlone() async throws {
+        let (model, _, _) = try await readyModel()
+        let keyboard = model.services.simulatorHardwareKeyboard
+        let sent = SentSwitches()
+        keyboard.send = { _, connected, _ in await sent.append(connected) }
+        model.preferences.setSimulateHardwareKeyboardByDefault(false)
+        model.simulatorCanvas.attach(Self.udid)
+        try await Task.sleep(for: .milliseconds(200))
+        XCTAssertEqual(sent.values, [])
+        XCTAssertFalse(keyboard.isConnected(Self.udid))
+    }
+
     /// A live session that shows nothing within the smoke check's bound is
     /// replaced by the view-only canvas, which keeps the reason; the live
     /// one is not tried again for that boot until the user asks.
@@ -972,4 +1013,11 @@ final class SimulatorCanvasMemorySharingTests: XCTestCase {
         let model = AppModel.testing()
         XCTAssertTrue(model.simulatorCanvas.memory === model.simulatorCanvasMemory)
     }
+}
+
+/// The hardware keyboard switches a test saw sent, in order.
+@MainActor
+private final class SentSwitches: Sendable {
+    private(set) var values: [Bool] = []
+    func append(_ value: Bool) { values.append(value) }
 }

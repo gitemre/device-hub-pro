@@ -45,6 +45,7 @@ final class AppPreferences {
         static let showNavigationButtons = "showNavigationButtons"
         static let captureKeyboardShortcuts = "captureKeyboardShortcuts"
         static let secureKeyboardEntry = "secureKeyboardEntry"
+        static let simulateHardwareKeyboardByDefault = "simulateHardwareKeyboardByDefault"
         static let showDeviceModel = "showDeviceModel"
         static let stayOnTopMain = "stayOnTopMain"
         static let stayOnTopCompact = "stayOnTopCompact"
@@ -89,6 +90,7 @@ final class AppPreferences {
             showNavigationButtons,
             captureKeyboardShortcuts,
             secureKeyboardEntry,
+            simulateHardwareKeyboardByDefault,
             showDeviceModel,
             stayOnTopMain,
             stayOnTopCompact,
@@ -203,6 +205,11 @@ final class AppPreferences {
     /// Settings ▸ Secure keyboard entry (`SecureKeyboardEntry`). Off on a
     /// fresh install.
     private(set) var secureKeyboardEntry: Bool
+    /// Settings ▸ Simulate hardware keyboard by default: a simulator's
+    /// hardware keyboard is connected when its live canvas first starts in a
+    /// boot (`SimulatorHardwareKeyboardController`). On unless turned off, as
+    /// in Device Hub.
+    private(set) var simulateHardwareKeyboardByDefault: Bool
     /// A foldable simulator opens in its 3D model (`DeviceModelStageView`).
     private(set) var showDeviceModel: Bool
     /// Window ▸ Stay on Top, as the user last set it for a main window and
@@ -298,6 +305,7 @@ final class AppPreferences {
         showDeviceModel = defaults.object(forKey: Keys.showDeviceModel) as? Bool ?? false
         captureKeyboardShortcuts = defaults.bool(forKey: Keys.captureKeyboardShortcuts)
         secureKeyboardEntry = defaults.bool(forKey: Keys.secureKeyboardEntry)
+        simulateHardwareKeyboardByDefault = defaults.object(forKey: Keys.simulateHardwareKeyboardByDefault) as? Bool ?? true
         stayOnTopMain = defaults.bool(forKey: Keys.stayOnTopMain)
         stayOnTopCompact = defaults.bool(forKey: Keys.stayOnTopCompact)
         androidSDKPath = defaults.string(forKey: Keys.androidSDKPath) ?? ""
@@ -385,6 +393,11 @@ final class AppPreferences {
     func setSecureKeyboardEntry(_ on: Bool) {
         secureKeyboardEntry = on
         defaults.set(on, forKey: Keys.secureKeyboardEntry)
+    }
+
+    func setSimulateHardwareKeyboardByDefault(_ on: Bool) {
+        simulateHardwareKeyboardByDefault = on
+        defaults.set(on, forKey: Keys.simulateHardwareKeyboardByDefault)
     }
 
     func setShowDeviceModel(_ shown: Bool) {
