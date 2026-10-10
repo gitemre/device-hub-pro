@@ -161,7 +161,8 @@ When the tools are installed, the app offers to create your first emulator.
   test) is read off its two panels' screenshots, and the stage shows the lit one. Where the selected Xcode ships Apple's 3D model of the device, the strip's
   **3D** button shows it in that model: the hinge folds on screen (its angle beside it), the lit
   panel shows the live simulator and takes clicks, drags and, with Keyboard Capture, typing;
-  dragging anywhere else turns the device, a pinch or a scroll off the panel zooms, a double
+  its volume and side buttons glow under the pointer and press on a click (held as long as the
+  click is); dragging anywhere else turns the device, a pinch or a scroll off the panel zooms, a double
   click faces it again, and Turn Around shows its back. The model is read from the user's Xcode at runtime, never copied
   (`DHP_DISABLE_DEVICE_MODEL=1` turns it off).
 - **Language & time.** A Controls group for emulators and phones; a row is hidden
