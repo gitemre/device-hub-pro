@@ -47,7 +47,8 @@ final class SimulatorMediaLiveTests: XCTestCase {
         try await waitUntil(timeout: .seconds(60)) { log.snapshot().last != nil || log.status != .running }
         let streamStarted = ContinuousClock.now
         let finished = try await simctl.bootStatus(udid: udid)
-        XCTAssertEqual(finished?.isFinished, true)
+        // Ended: Finished, or iPhone Duo's "Data Migration Failed" on iOS 27.1.
+        XCTAssertEqual(finished?.isTerminal, true)
         let burstSeconds = Self.seconds(ContinuousClock.now - streamStarted)
         let burstEvents = log.snapshot().last.map { Int($0.id) } ?? 0
         Self.report(String(format: "boot → Finished %.1f s; log stream during it: %d events in %.1f s (%.0f/s)",
@@ -57,10 +58,14 @@ final class SimulatorMediaLiveTests: XCTestCase {
 
         // Settled: 10 s once the home screen shows.
         let screen = simulators.setDirectory.appendingPathComponent("home.png")
-        let homeDeadline = ContinuousClock.now + .seconds(90)
+        // A foldable shows its outer panel closed; simctl's default display
+        // is its inner one.
+        let display = try await LiveTestSimulators.displays(ofDeviceType: device.deviceTypeIdentifier, simctl: simctl)
+            .panels?.outer.screenID
+        let homeDeadline = ContinuousClock.now + .seconds(120)
         var home = false
         while !home, ContinuousClock.now < homeDeadline {
-            try await simctl.screenshot(udid: udid, to: screen, timeout: .seconds(20))
+            try await simctl.screenshot(udid: udid, to: screen, timeout: .seconds(20), display: display)
             home = SimulatorReadiness.showsHomeScreen(imageAt: screen) == true
         }
         XCTAssertTrue(home, "the home screen")
@@ -119,7 +124,7 @@ final class SimulatorMediaLiveTests: XCTestCase {
 
         // A screenshot from the live canvas's frame, beside simctl's.
         try await Task.sleep(for: .seconds(3))
-        try await compareCanvasScreenshot(simulators, udid: udid)
+        try await compareCanvasScreenshot(simulators, device: device)
 
         // recordVideo stopped with SIGINT.
         let movie = simulators.setDirectory.appendingPathComponent("clip.mp4")
@@ -148,7 +153,8 @@ final class SimulatorMediaLiveTests: XCTestCase {
     /// The live canvas's frame as a PNG (`FrameImage`, tagged sRGB) against
     /// `simctl io screenshot` taken right after it, the Dynamic Island rows
     /// left out (only the framebuffer draws it).
-    private func compareCanvasScreenshot(_ simulators: LiveTestSimulators.Session, udid: String) async throws {
+    private func compareCanvasScreenshot(_ simulators: LiveTestSimulators.Session, device: SimulatorDevice) async throws {
+        let udid = device.udid
         let installed = BridgeCompatibility.installedCoreSimulatorVersion()
         guard BridgeCompatibility.verdict(coreSimulatorVersion: installed).allowsBridge else {
             Self.report("canvas screenshot skipped: the bridge is off on CoreSimulator \(installed ?? "?")")
@@ -170,7 +176,10 @@ final class SimulatorMediaLiveTests: XCTestCase {
         let png = try XCTUnwrap(FrameImage.pngData(from: frame))
         let encode = Self.seconds(ContinuousClock.now - started) * 1000
         let shot = simulators.setDirectory.appendingPathComponent("shot.png")
-        try await simulators.simctl.screenshot(udid: udid, to: shot)
+        // The screen the session shows: a foldable's outer panel (simctl
+        // captures its inner one by default).
+        let displays = try await LiveTestSimulators.displays(ofDeviceType: device.deviceTypeIdentifier, simctl: simulators.simctl)
+        try await simulators.simctl.screenshot(udid: udid, to: shot, display: displays.panels?.outer.screenID)
 
         let ours = try XCTUnwrap(Self.rgba(png))
         let theirs = try XCTUnwrap(Self.rgba(try Data(contentsOf: shot)))
