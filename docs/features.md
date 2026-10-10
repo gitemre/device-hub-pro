@@ -340,7 +340,9 @@ When the tools are installed, the app offers to create your first emulator.
   same key for the same job on both kinds: Lock (simulator) and Power (emulator) ⌘L, Siri and
   Assistant ⌥⇧⌘H, Simulate Memory Warning and Simulate Low Memory ⇧⌘M, Authorized with Face ID
   and Fingerprint Touch ⌥⇧⌘M. An emulator adds Back ⌘[, Recents ⌘], Previous App ⌥⌘[ and
-  Split Screen ⌥⌘S; a simulator adds Unauthorized with Face ID ⌥⇧⌘N and Slow Animations ⌥⌘T. ⌘←, ⌘→, ⌘↑, ⌘↓, ⌘[ and ⌘]
+  Split Screen ⌥⌘S; a simulator adds Unauthorized with Face ID ⌥⇧⌘N, Slow Animations ⌥⌘T and, as in
+  Device Hub, App Switcher ⌃⇧⌘H (Home pressed twice) and Action Button (on a simulator whose
+  frame has one). ⌘←, ⌘→, ⌘↑, ⌘↓, ⌘[ and ⌘]
   act on the device only when no text field has the focus; in a text field they keep their
   editing meaning.
 - **View menu and sidebar.** View ▸ Zoom In / Zoom Out / Zoom to Fit are ⌘+ / ⌘− / ⌘0, Hide

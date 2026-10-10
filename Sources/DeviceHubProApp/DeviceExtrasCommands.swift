@@ -1076,6 +1076,14 @@ struct ControlsMenuItems: View {
             Button("Siri") { workspace?.simulatorCanvas.siri() }
                 .keyboardShortcut("h", modifiers: [.command, .shift, .option])
                 .disabled(!simulatorMenu.canPressHome)
+            Button("App Switcher") { workspace?.simulatorCanvas.appSwitcher() }
+                .keyboardShortcut("h", modifiers: [.command, .shift, .control])
+                .disabled(!simulatorMenu.canPressHome)
+            // Only for a simulator whose chrome has an Action button.
+            if let selectedSimulator, workspace?.simulatorCanvas.actionButton(of: selectedSimulator) != nil {
+                Button("Action Button") { workspace?.simulatorCanvas.pressActionButton() }
+                    .disabled(!simulatorMenu.canPressHome)
+            }
             // Simulator.app's Device ▸ Shake (⌃⌘Z): a shake gesture is an
             // iPhone's and an iPad's, not a TV's, a watch's or a headset's
             // (not shown where it cannot work).

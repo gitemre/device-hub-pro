@@ -702,6 +702,35 @@ final class SimulatorCanvasController {
         liveSession?.press(.siri, hold: .milliseconds(700))
     }
 
+    /// Controls ▸ App Switcher (⌃⇧⌘H), as Device Hub has it: Home pressed
+    /// twice in quick succession.
+    func appSwitcher() {
+        guard let session = liveSession else { return }
+        session.press(.home, hold: Self.doublePressHold)
+        session.press(.home, hold: Self.doublePressHold)
+    }
+
+    /// How long each press of a double press is held.
+    static let doublePressHold: Duration = .milliseconds(60)
+
+    /// The Action button of `entry`'s chrome (its HID usage), nil for a
+    /// device without one: Controls ▸ Action Button is shown only then.
+    func actionButton(of entry: SimulatorEntry) -> SimulatorHardwareButton? {
+        guard let input = simulators.chromeFrame(for: entry)?.layout.buttons
+            .first(where: { $0.input.name == "action" })?.input
+        else { return nil }
+        return .usage(page: input.usagePage, usage: input.usage)
+    }
+
+    /// Controls ▸ Action Button: the chrome's Action button, pressed as a
+    /// click on it does.
+    func pressActionButton() {
+        guard let device = activeDevice(), let entry = simulators.entry(udid: device.id),
+              let button = actionButton(of: entry)
+        else { return }
+        liveSession?.press(button)
+    }
+
     /// Turns the mirrored simulator a quarter to the left or right: through
     /// devicectl once it answered for this set (T2, never in a private set),
     /// else (or when it fails) the bridge's GSEvent on the live canvas. The

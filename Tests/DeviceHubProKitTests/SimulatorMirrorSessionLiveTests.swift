@@ -363,6 +363,27 @@ final class SimulatorMirrorSessionLiveTests: XCTestCase {
         Self.report(String(format: "Home: %.1f%% differs from the home screen", homeDifference * 100))
         XCTAssertLessThan(homeDifference, 0.15, "Home returned to the home screen")
 
+        // App Switcher (Controls ▸ App Switcher): Home pressed twice in quick
+        // succession, from Settings, shows neither Settings nor the home
+        // screen; Home again leaves it.
+        try await simctl.checked(["launch", udid, "com.apple.Preferences"])
+        try await Task.sleep(for: .seconds(2))
+        await waitForIdle(session, quiet: 1.0, timeout: 10)
+        let inSettings = try XCTUnwrap(Pixels(session.frames.current))
+        session.press(.home, hold: .milliseconds(60))
+        session.press(.home, hold: .milliseconds(60))
+        try await Task.sleep(for: .seconds(1.5))
+        await waitForIdle(session, quiet: 1.0, timeout: 10)
+        let switcher = try XCTUnwrap(Pixels(session.frames.current))
+        let fromSettings = switcher.differingShare(inSettings)
+        let fromHome = switcher.differingShare(homeReference)
+        Self.report(String(format: "App Switcher: %.1f%% differs from Settings, %.1f%% from the home screen",
+                           fromSettings * 100, fromHome * 100))
+        XCTAssertGreaterThan(fromSettings, 0.2, "the app switcher left Settings")
+        XCTAssertGreaterThan(fromHome, 0.2, "the app switcher is not the home screen")
+        try await actions.home()
+        try await Task.sleep(for: .seconds(1.5))
+
         // Simulate Hardware Keyboard (the bridge's canary): connected and
         // disconnected again, as a `simctl boot` simulator starts.
         try await onBackground { try bridge.setHardwareKeyboard(connected: true, for: address) }
