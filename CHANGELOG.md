@@ -26,6 +26,8 @@ All notable changes to Device Hub Pro are recorded here. The format follows
 
 ### Fixed
 
+- In the 3D model, iPhone Duo's Tent showed its outer panel's interface upside down under the
+  hinge: a tent is held as its outer side is seen now (landscape left), a laptop as before.
 - The iOS verifier recorded its deployment target as the SDK it was built with, so iPhone Duo
   showed it in a small compatibility window; it records the real SDK now.
 
