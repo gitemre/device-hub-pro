@@ -127,4 +127,40 @@ final class ReadingsTests: XCTestCase {
         XCTAssertEqual(Readings.orientation(9).raw, "unknown")
         XCTAssertEqual(Readings.liquidGlass.raw, "unreadable")
     }
+
+    /// The hinge's status and angle; a device without one says so.
+    func testTheHingeShowsItsStatusAndAngle() {
+        XCTAssertEqual(Readings.hinge(status: "partiallyOpen", degrees: 127.78), Reading("Partially open · 127.8°", raw: "partiallyOpen 127.8"))
+        XCTAssertEqual(Readings.hinge(status: "closed", degrees: 5), Reading("Closed · 5.0°", raw: "closed 5.0"))
+        XCTAssertEqual(Readings.hinge(status: "fullyOpen", degrees: nil), Reading("Fully open", raw: "fullyOpen"))
+        XCTAssertEqual(Readings.hinge(status: nil, degrees: nil), Reading("No hinge", raw: "none"))
+    }
+
+    /// The screen in pixels with its scale, and the interface orientation.
+    func testTheScreenNamesItsPixelsAndTurn() {
+        XCTAssertEqual(
+            Readings.screen(width: 2007, height: 2853, scale: 3, interfaceOrientation: 4),
+            Reading("2007 × 2853 px @3x · Landscape right", raw: "2007x2853 landscapeRight")
+        )
+        XCTAssertEqual(Readings.screen(width: 1398, height: 2034, scale: 3, interfaceOrientation: 1).raw, "1398x2034 portrait")
+        XCTAssertEqual(Readings.screen(width: 10, height: 20, scale: 2.5, interfaceOrientation: 0).value, "10 × 20 px @2.50x · Unknown")
+    }
+
+    func testTheAppStateNamesThePhaseItLeft() throws {
+        let at = try XCTUnwrap(ReadingsDocument.date("2026-10-11T10:00:00.000Z"))
+        XCTAssertEqual(Readings.appState("active", previous: nil), Reading("Active", raw: "active"))
+        let reading = Readings.appState("active", previous: ("background", at))
+        XCTAssertEqual(reading.raw, "active")
+        XCTAssertTrue(reading.value.hasPrefix("Active · was Background until "), reading.value)
+    }
+
+    /// Modifiers in the Mac's order (⌃⌥⇧⌘), the key upper-cased; the raw
+    /// token in the same order, lower-cased.
+    func testTheLastKeyShowsItsModifiers() throws {
+        let at = try XCTUnwrap(ReadingsDocument.date("2026-10-11T10:00:00.000Z"))
+        let reading = Readings.lastKey("a", modifiers: ["command", "shift"], at: at)
+        XCTAssertTrue(reading.value.hasPrefix("⇧⌘A · "), reading.value)
+        XCTAssertEqual(reading.raw, "shift+command+a")
+        XCTAssertEqual(Readings.lastKey("k", modifiers: [], at: at).raw, "k")
+    }
 }

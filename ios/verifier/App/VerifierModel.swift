@@ -47,6 +47,9 @@ final class VerifierModel: NSObject, ObservableObject {
     private var polls = 0
     private var observers: [NSObjectProtocol] = []
     private var writeScheduled = false
+    /// The scene phase now and the one before, with when it ended.
+    private var scenePhase: String?
+    private var previousPhase: (phase: String, at: Date)?
 
     static var readingsURL: URL {
         URL.documentsDirectory.appending(path: ReadingsDocument.fileName)
@@ -68,6 +71,7 @@ final class VerifierModel: NSObject, ObservableObject {
         update("display.slowAnimations", Readings.toggle(false))
         update("appConditions.push", Readings.noPush)
         update("display.liquidGlass", Readings.liquidGlass)
+        update("device.lastKey", Readings.noKey)
         device.beginGeneratingDeviceOrientationNotifications()
         update("sensors.orientation", Readings.orientation(device.orientation.rawValue))
         UNUserNotificationCenter.current().delegate = self
@@ -121,6 +125,32 @@ final class VerifierModel: NSObject, ObservableObject {
         update("display.showBorders", Readings.toggle(snapshot.buttonShapes, detail: snapshot.buttonShapes ? "Button Shapes" : nil))
         update("accessibility.voiceOver", Readings.toggle(snapshot.voiceOver))
         update("accessibility.increaseContrast", Readings.toggle(snapshot.increasedContrast))
+    }
+
+    // MARK: Device & hardware (DeviceProbe, the scene phase)
+
+    func hingeChanged(status: String?, degrees: Double?) {
+        update("device.hinge", Readings.hinge(status: status, degrees: degrees))
+    }
+
+    func hingeUnreadable() {
+        update("device.hinge", Readings.hingeUnreadable)
+    }
+
+    func screenChanged(width: Int, height: Int, scale: Double, interfaceOrientation: Int) {
+        update("device.screen", Readings.screen(width: width, height: height, scale: scale, interfaceOrientation: interfaceOrientation))
+    }
+
+    func keyPressed(_ key: String, modifiers: [String]) {
+        update("device.lastKey", Readings.lastKey(key, modifiers: modifiers, at: Date()))
+    }
+
+    func scenePhaseChanged(_ phase: String) {
+        if let current = scenePhase, current != phase { previousPhase = (current, Date()) }
+        scenePhase = phase
+        update("device.appState", Readings.appState(phase, previous: previousPhase))
+        // The file has to be out before the app is suspended.
+        if phase == "background" { write() }
     }
 
     func opened(link url: URL) {

@@ -89,7 +89,8 @@ final class RegistryTests: XCTestCase {
     func testEveryVerifierRowMirrorsAnIOSControlsRowOrWaitsForOne() throws {
         let mapped = Set(try iosEntries().flatMap(\.ios.verifier))
         let awaiting = Set(Registry.awaitingControlsRow.keys)
-        let stale = Set(Registry.rows.map(\.id)).subtracting(mapped).subtracting(awaiting)
+        let device = Set(Registry.deviceRows.map(\.id))
+        let stale = Set(Registry.rows.map(\.id)).subtracting(mapped).subtracting(awaiting).subtracting(device)
         XCTAssertEqual(stale, [], "iOS verifier rows no iOS Controls row maps to")
         XCTAssertEqual(
             mapped.intersection(awaiting), [],
@@ -99,6 +100,15 @@ final class RegistryTests: XCTestCase {
             XCTAssertNotNil(Registry.row(id), "awaiting row \(id) is not a verifier row")
             XCTAssertFalse(controlsRow.isEmpty, id)
         }
+    }
+
+    /// The Device & hardware rows check features outside the Controls panel:
+    /// none is mapped by controls-rows.json or waits for a Controls row.
+    func testTheDeviceRowsMirrorNoControlsRow() throws {
+        let device = Set(Registry.deviceRows.map(\.id))
+        XCTAssertFalse(device.isEmpty)
+        XCTAssertEqual(device.intersection(Set(try iosEntries().flatMap(\.ios.verifier))), [])
+        XCTAssertEqual(device.intersection(Registry.awaitingControlsRow.keys), [])
     }
 
     func testMirroredRowsUseTheIOSLabelVerbatim() throws {

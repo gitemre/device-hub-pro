@@ -28,7 +28,8 @@ people and coding agents alike.
   platform the row is offered on) and adds or updates the verifier row each key maps:
   `android/verifier` for `android` (build/run: `android/verifier/README.md`), `ios/verifier`
   for `ios` (build/run: `ios/verifier/README.md`; a verifier row whose Controls row is not
-  mapped yet is listed in its `Registry.awaitingControlsRow`). The Swift
+  mapped yet is listed in its `Registry.awaitingControlsRow`; the rows of its Device & hardware
+  section check features outside the Controls panel and are mapped by none). The Swift
   (`ControlsRowManifestTests`), JUnit (`ControlsRowsManifestTest`) and iOS registry
   (`IOSVerifierRegistryTests`) suites all check that manifest.
 - Controls and features that cannot work on the selected device are not shown (no disabled
