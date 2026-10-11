@@ -57,7 +57,10 @@ ios/verifier/build.sh --install <UDID> --set <dir> --launch --no-build   # a pri
 (`$DEVELOPER_DIR`, else `xcode-select -p`; `Toolchains/XcodeDefault.xctoolchain/usr/bin/swiftc
 -sdk <Platforms/iPhoneSimulator.platform/…/iPhoneSimulator.sdk> -parse-as-library -target
 arm64-apple-ios26.0-simulator`, Swift 6 mode; no xcrun, whose wrappers can run
-`xcodebuild -runFirstLaunch`), copies `Info.plist` and checks the linker signature. With `--install` it
+`xcodebuild -runFirstLaunch`), copies `Info.plist` and checks the linker signature. The linker
+is told the SDK's own version (`-Xlinker -platform_version ios-simulator 26.0 <SDK version>`,
+read from the SDK's `SDKSettings.plist`): left to itself it records the deployment target as the
+SDK, and iOS 27.1 then showed the app on iPhone Duo in a 375 × 667 compatibility window. With `--install` it
 takes only a simulator UDID that `simctl list` shows in that set (never `booted` or
 `all`, never a physical device), runs the real simctl binary (`DHP_SIMCTL`
 overrides it; never the xcrun wrapper), installs, grants the location permission

@@ -23,6 +23,9 @@ All notable changes to Device Hub Pro are recorded here. The format follows
 
 ### Fixed
 
+- The iOS verifier recorded its deployment target as the SDK it was built with, so iPhone Duo
+  showed it in a small compatibility window; it records the real SDK now.
+
 - A simulator left Not Responding is looked at again on its own and goes live once it
   recovers.
 - iPhone Duo on iOS 27.1 reads as ready (its boot ends in a data migration failure), and its
