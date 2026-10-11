@@ -348,6 +348,12 @@ final class AppleDeviceModelTests: XCTestCase {
         XCTAssertEqual(corner.u, 0, accuracy: 1e-6)
         XCTAssertEqual(corner.v, 0, accuracy: 1e-6)
         XCTAssertEqual(AppleDeviceModel.PanelScreen.of(.outer), .outer)
+        // The outer panel's picture runs to its edges, round its camera.
+        let outer = AppleDeviceModel.PanelScreen.outer
+        XCTAssertEqual(outer.geometry(width: 1398, height: 2034).inset, [0, 0])
+        let edge = try XCTUnwrap(outer.content(u: 0, v: 1, width: 1398, height: 2034))
+        XCTAssertEqual(edge.u, 0)
+        XCTAssertEqual(edge.v, 1)
     }
 
     /// Device Hub's colour comes from a layer over the file, which it

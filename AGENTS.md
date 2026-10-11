@@ -253,7 +253,7 @@ alternative stays the fallback.
   `AppleDeviceModel.known` is used on its measured numbers; another build's file only when it loads
   with the same shape (same product class and animation length, `AppleDeviceModel.fits`, and both
   panels found), else the stage keeps the 2D chrome. Its parts are found by shape (`AppleDeviceModel.panels`), not by their
-  scrambled names. Device Hub's dark finish is selected by a USD layer written to the temporary folder
+  scrambled names. Device Hub's dark finish (the default of View ▸ Device Color) is selected by a USD layer written to the temporary folder
   that references the file where it is (`AppleDeviceModel.colorVariantLayer`), and the pill's posture
   glyphs are read from the same plug-in's asset catalog (`FoldPostureGlyphs`); neither is copied.
   Its canary is `AppleDeviceModelLiveTests` (`DHP_DEVICE_MODEL_LIVE=1`, on a Mac

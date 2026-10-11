@@ -47,6 +47,7 @@ final class AppPreferences {
         static let secureKeyboardEntry = "secureKeyboardEntry"
         static let simulateHardwareKeyboardByDefault = "simulateHardwareKeyboardByDefault"
         static let showDeviceModel = "showDeviceModel"
+        static let deviceModelColor = "deviceModelColor"
         static let stayOnTopMain = "stayOnTopMain"
         static let stayOnTopCompact = "stayOnTopCompact"
         static let settingsProfiles = "settingsProfiles"
@@ -92,6 +93,7 @@ final class AppPreferences {
             secureKeyboardEntry,
             simulateHardwareKeyboardByDefault,
             showDeviceModel,
+            deviceModelColor,
             stayOnTopMain,
             stayOnTopCompact,
             settingsProfiles,
@@ -212,6 +214,9 @@ final class AppPreferences {
     private(set) var simulateHardwareKeyboardByDefault: Bool
     /// A foldable simulator opens in its 3D model (`DeviceModelStageView`).
     private(set) var showDeviceModel: Bool
+    /// The 3D model's finish (View ▸ Device Color): one of
+    /// `AppleDeviceModel.colors`, Device Hub's dark one unless chosen.
+    private(set) var deviceModelColor: String
     /// Window ▸ Stay on Top, as the user last set it for a main window and
     /// for the compact mirror: new windows start with it (each window then
     /// toggles on its own). Persisted; off on a fresh install.
@@ -303,6 +308,9 @@ final class AppPreferences {
         zoomHintDismissed = defaults.bool(forKey: Keys.zoomHintDismissed)
         showNavigationButtons = defaults.object(forKey: Keys.showNavigationButtons) as? Bool ?? true
         showDeviceModel = defaults.object(forKey: Keys.showDeviceModel) as? Bool ?? false
+        deviceModelColor = (defaults.string(forKey: Keys.deviceModelColor)).flatMap {
+            AppleDeviceModel.colors.contains($0) ? $0 : nil
+        } ?? AppleDeviceModel.deviceHubColor
         captureKeyboardShortcuts = defaults.bool(forKey: Keys.captureKeyboardShortcuts)
         secureKeyboardEntry = defaults.bool(forKey: Keys.secureKeyboardEntry)
         simulateHardwareKeyboardByDefault = defaults.object(forKey: Keys.simulateHardwareKeyboardByDefault) as? Bool ?? true
@@ -403,6 +411,12 @@ final class AppPreferences {
     func setShowDeviceModel(_ shown: Bool) {
         showDeviceModel = shown
         defaults.set(shown, forKey: Keys.showDeviceModel)
+    }
+
+    func setDeviceModelColor(_ color: String) {
+        guard AppleDeviceModel.colors.contains(color) else { return }
+        deviceModelColor = color
+        defaults.set(color, forKey: Keys.deviceModelColor)
     }
 
     func setShowNavigationButtons(_ shown: Bool) {

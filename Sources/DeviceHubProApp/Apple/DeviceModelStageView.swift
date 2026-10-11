@@ -29,6 +29,9 @@ struct DeviceModelStageView: View {
     let foldProgress: @MainActor () -> SimulatorFoldProgress?
     let litPanel: SimulatorFoldPanel
     let presentation: DeviceModelPresentation
+    /// The model's finish (`AppleDeviceModel.colors`); the stage makes the
+    /// view anew when it changes.
+    let color: String
     /// The view's size, which the camera fits the device in.
     let size: CGSize
     /// The clockwise quarter turns that show a frame of (width, height)
@@ -86,6 +89,7 @@ struct DeviceModelStageView: View {
         DeviceModelCanvas(
             scene: scene,
             model: model,
+            color: color,
             forwardsKeyboard: appModel.preferences.keyboardForwardingEnabled,
             capturesShortcuts: appModel.preferences.captureKeyboardShortcuts,
             securesKeyboard: appModel.preferences.secureKeyboardEntry,
@@ -137,6 +141,7 @@ struct DeviceModelStageView: View {
 struct DeviceModelCanvas: NSViewRepresentable {
     let scene: DeviceModelScene
     let model: AppleDeviceModel
+    let color: String
     /// The Mac keyboard reaches the simulator (Keyboard Capture), as on the
     /// 2D stage.
     let forwardsKeyboard: Bool
@@ -150,7 +155,7 @@ struct DeviceModelCanvas: NSViewRepresentable {
 
     func makeNSView(context: Context) -> DeviceModelCanvasView {
         let view = DeviceModelCanvasView()
-        view.attach(scene: scene, model: model, unusable: unusable)
+        view.attach(scene: scene, model: model, color: color, unusable: unusable)
         updateNSView(view, context: context)
         return view
     }
@@ -311,11 +316,11 @@ final class DeviceModelCanvasView: NSView {
         scene?.pointerEnded(at: point, translation: CGSize(width: point.x - start.x, height: point.y - start.y))
     }
 
-    func attach(scene: DeviceModelScene, model: AppleDeviceModel, unusable: @escaping @MainActor () -> Void) {
+    func attach(scene: DeviceModelScene, model: AppleDeviceModel, color: String, unusable: @escaping @MainActor () -> Void) {
         self.scene = scene
         scene.onNeedsRender = { [weak self] in self?.needsRender = true }
         loadTask = Task { [weak self] in
-            let root = await scene.load(model)
+            let root = await scene.load(model, color: color)
             guard !Task.isCancelled else { return }
             guard let root, let self, let renderer = try? RealityRenderer() else {
                 unusable()
@@ -596,12 +601,14 @@ final class DeviceModelScene {
     /// How long the camera takes to move to a laptop or a tent.
     static let holdDuration: Double = 0.6
 
-    func load(_ model: AppleDeviceModel) async -> Entity? {
+    func load(_ model: AppleDeviceModel, color: String) async -> Entity? {
         if let root { return root }
-        // Device Hub's colour first (a layer over the file), else the file
-        // as it is.
+        self.color = color
+        // The colour asked for (a layer over the file, unless it is the
+        // file's own), else the file as it is.
         var loaded: (entity: Entity, found: ModelEntity, animation: AnimationResource)?
-        for url in [Self.colorVariantFile(for: model), model.url].compactMap({ $0 }) where loaded == nil {
+        let colored = color == AppleDeviceModel.fileColor ? nil : Self.colorVariantFile(for: model, color: color)
+        for url in [colored, model.url].compactMap({ $0 }) where loaded == nil {
             guard let entity = try? await Entity(contentsOf: url) else { continue }
             var found: ModelEntity?
             func find(_ node: Entity) {
@@ -712,10 +719,13 @@ final class DeviceModelScene {
         layout()
     }
 
-    /// The studio's exposure for the presentation.
+    /// The studio's exposure for the presentation: the dark finish seen from
+    /// the front a little brighter, as Device Hub shows it.
     private var exposure: Float {
-        presentation == .free ? Self.studioExposure : Self.frontExposure
+        presentation != .free && color == AppleDeviceModel.deviceHubColor ? Self.frontExposure : Self.studioExposure
     }
+    /// The finish loaded (`load(_:color:)`).
+    @ObservationIgnored private var color = AppleDeviceModel.fileColor
 
     /// Shows the device as `presentation` asks; facing the camera again,
     /// unzoomed, when it leaves the free view.
@@ -1209,13 +1219,12 @@ final class DeviceModelScene {
     /// How long a key takes to move out or in.
     static let keyMotion: Double = 0.08
 
-    /// A layer showing `model` in Device Hub's colour
-    /// (`AppleDeviceModel.colorVariantLayer`), written to the temporary
-    /// folder; nil when it cannot be written.
-    static func colorVariantFile(for model: AppleDeviceModel) -> URL? {
+    /// A layer showing `model` in `color` (`AppleDeviceModel.colorVariantLayer`),
+    /// written to the temporary folder; nil when it cannot be written.
+    static func colorVariantFile(for model: AppleDeviceModel, color: String) -> URL? {
         let folder = FileManager.default.temporaryDirectory.appendingPathComponent("DeviceHubPro-DeviceModels", isDirectory: true)
-        let file = folder.appendingPathComponent("\(model.spec.productClass)-\(AppleDeviceModel.deviceHubColor).usda")
-        let layer = AppleDeviceModel.colorVariantLayer(referencing: model.url, color: AppleDeviceModel.deviceHubColor)
+        let file = folder.appendingPathComponent("\(model.spec.productClass)-\(color).usda")
+        let layer = AppleDeviceModel.colorVariantLayer(referencing: model.url, color: color)
         do {
             try FileManager.default.createDirectory(at: folder, withIntermediateDirectories: true)
             try Data(layer.utf8).write(to: file, options: .atomic)
