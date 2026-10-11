@@ -234,7 +234,12 @@ public enum AvdConfig {
     /// line ending; every other byte stays. Throws when the file cannot be
     /// read or written.
     public static func setValue(_ value: String, forKey key: String, avdName: String, avdHome: URL? = nil) throws {
-        let url = configURL(avdName: avdName, avdHome: avdHome)
+        try setValue(value, forKey: key, in: configURL(avdName: avdName, avdHome: avdHome))
+    }
+
+    /// `setValue(_:forKey:avdName:avdHome:)` for any of the AVD's ini files
+    /// (its `<name>.ini` too).
+    static func setValue(_ value: String, forKey key: String, in url: URL) throws {
         let text = try String(contentsOf: url, encoding: .utf8)
         let line = "\(key)=\(value)"
         var lines = linesWithEndings(text)
@@ -288,7 +293,7 @@ public enum AvdConfig {
         return out
     }
 
-    private static func valuesFile(_ url: URL) -> [String: String] {
+    static func valuesFile(_ url: URL) -> [String: String] {
         guard let text = try? String(contentsOf: url, encoding: .utf8) else {
             return [:]
         }

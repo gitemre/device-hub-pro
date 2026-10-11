@@ -29,6 +29,12 @@ All notable changes to Device Hub Pro are recorded here. The format follows
 
 ### Fixed
 
+- An Android 17 emulator made with an older Android SDK (Command-line Tools 19 or earlier)
+  failed to start on an Apple silicon Mac ("The emulator exited during startup", shown as
+  API 0): those tools write its Android version as 0, and the emulator then runs it in software,
+  which macOS refused. Start and Create put the version back from the system image. A start
+  also stops early, with the reason, when the emulator's system image is missing or incomplete
+  or built for Intel, and the startup alert names the software fallback when it happens.
 - In the 3D model, iPhone Duo's Tent showed its outer panel's interface upside down under the
   hinge: a tent is held as its outer side is seen now (landscape left), a laptop as before.
 - The iOS verifier recorded its deployment target as the SDK it was built with, so iPhone Duo

@@ -151,6 +151,15 @@ final class EmulatorBootController {
         }
         // The check above waited on `ps`: a Stop may have landed meanwhile.
         if registry.isStoppedByUser(avd) { return .stoppedByUser }
+        // Not running, so its files may change: an AVD an old avdmanager
+        // made for a newer image gets its Android version back (else the
+        // emulator runs it in software, which macOS can refuse), and one
+        // that cannot start here says why before the emulator tries.
+        let sdkRoots = EmulatorPreflight.sdkRoots(emulatorURL: manager.emulatorURL)
+        _ = try? EmulatorPreflight.repairTarget(avdName: avd, sdkRoots: sdkRoots)
+        if let problem = EmulatorPreflight.problem(avdName: avd, sdkRoots: sdkRoots) {
+            return .failed(problem)
+        }
         // The manager picks it: a free, reserved port from 8554 on, except
         // on a test's own-process manager (see `reserveGrpcPort()`).
         let requestedPort = manager.reserveGrpcPort()
