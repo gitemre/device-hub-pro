@@ -38,6 +38,14 @@ device=0
 profile=""
 identity=""
 
+# The SDK the app is built with, which the linker must record in
+# LC_BUILD_VERSION: left to itself it records the deployment target (26.0),
+# and iOS then treats the app as built with that SDK (on iPhone Duo, iOS 27.1
+# showed it in a 375 × 667 compatibility window).
+sdk_version() {
+    plutil -extract Version raw "$1/SDKSettings.plist"
+}
+
 usage() {
     sed -n '2,26p' "$0" | sed 's/^# \{0,1\}//'
     exit "${1:-0}"
@@ -127,6 +135,7 @@ if [ "$device" -eq 1 ]; then
         -sdk "$sdk" \
         -parse-as-library \
         -target arm64-apple-ios26.0 \
+        -Xlinker -platform_version -Xlinker ios -Xlinker 26.0 -Xlinker "$(sdk_version "$sdk")" \
         -swift-version 6 \
         -O \
         -module-name DeviceHubProVerifier \
@@ -176,6 +185,7 @@ if [ "$build" -eq 1 ]; then
         -sdk "$sdk" \
         -parse-as-library \
         -target arm64-apple-ios26.0-simulator \
+        -Xlinker -platform_version -Xlinker ios-simulator -Xlinker 26.0 -Xlinker "$(sdk_version "$sdk")" \
         -swift-version 6 \
         -O \
         -module-name DeviceHubProVerifier \
