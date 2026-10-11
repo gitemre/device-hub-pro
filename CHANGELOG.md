@@ -6,6 +6,8 @@ All notable changes to Device Hub Pro are recorded here. The format follows
 
 ## [Unreleased]
 
+## [1.1.1] - 2026-10-11
+
 ### Added
 
 - **iPhone Duo (Xcode 27.1):** the stage's pill folds a foldable simulator as Device Hub's
@@ -35,11 +37,8 @@ All notable changes to Device Hub Pro are recorded here. The format follows
   which macOS refused. Start and Create put the version back from the system image. A start
   also stops early, with the reason, when the emulator's system image is missing or incomplete
   or built for Intel, and the startup alert names the software fallback when it happens.
-- In the 3D model, iPhone Duo's Tent showed its outer panel's interface upside down under the
-  hinge: a tent is held as its outer side is seen now (landscape left), a laptop as before.
 - The iOS verifier recorded its deployment target as the SDK it was built with, so iPhone Duo
   showed it in a small compatibility window; it records the real SDK now.
-
 - A simulator left Not Responding is looked at again on its own and goes live once it
   recovers.
 - iPhone Duo on iOS 27.1 reads as ready (its boot ends in a data migration failure), and its
