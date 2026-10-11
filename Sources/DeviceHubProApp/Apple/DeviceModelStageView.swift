@@ -654,7 +654,11 @@ final class DeviceModelScene {
         )
         deviceEntity.position = openCenter - SIMD3(framing.center.x, framing.center.y, 0)
         let book = simd_quatf(angle: framing.bookTurn, axis: [0, 1, 0])
-        let roll = simd_quatf(angle: rollAngle, axis: [0, 0, 1])
+        // The roll is how the lit panel is held, seen from its own face. A
+        // tent is turned round to show its outer panel, so the same hold
+        // seen from the model's front is the mirror turn (a tent held
+        // landscape left stands with the hinge on top).
+        let roll = simd_quatf(angle: rollAngle * (1 - 2 * tentWeight), axis: [0, 0, 1])
         // On its side the hinge runs across the view: a laptop tips about it
         // until its lower half lies flat, seen from a little above; a tent
         // stands on both edges, the hinge on top, turned to show its outer

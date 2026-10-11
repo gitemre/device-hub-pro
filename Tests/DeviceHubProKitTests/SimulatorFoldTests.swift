@@ -173,8 +173,9 @@ final class SimulatorFoldTests: XCTestCase {
     }
 
     /// Steps go out in order: a tent from the open device sweeps the hinge
-    /// closed, holds the device on its side, and sweeps it to 70°, each sweep
-    /// from the angle sent last.
+    /// closed, holds the device on its side (landscape left, as its outer
+    /// panel is seen), and sweeps it to 70°, each sweep from the angle sent
+    /// last.
     func testTheSenderSendsStepsInOrder() throws {
         let bridge = FakeSimulatorBridge()
         let sender = SimulatorFoldSender(bridge: bridge)
@@ -184,7 +185,7 @@ final class SimulatorFoldTests: XCTestCase {
         sender.waitUntilIdle(timeout: 10)
         let expected = [SimulatorFold.hingeEvent(degrees: 180)]
             + SimulatorFold.sweepAngles(from: 180, to: 0).map { SimulatorFold.hingeEvent(degrees: Double($0)) }
-            + [SimulatorFold.poseEvent(.landscapeRight)]
+            + [SimulatorFold.poseEvent(.landscapeLeft)]
             + SimulatorFold.sweepAngles(from: 0, to: 70).map { SimulatorFold.hingeEvent(degrees: Double($0)) }
         XCTAssertEqual(try XCTUnwrap(bridge.inputs.first?.sent), expected)
         XCTAssertEqual(sender.lastAngle(for: duo), 70)
@@ -299,10 +300,10 @@ final class SimulatorFoldTests: XCTestCase {
             SimulatorHeldPosture.laptop.steps(from: .outer, angle: 0),
             [.sweep(from: 0, to: 180), .pause(0.4), .pose(.landscapeRight), .sweep(from: 180, to: 105)]
         )
-        XCTAssertEqual(SimulatorHeldPosture.tent.steps(from: .outer, angle: 0), [.pose(.landscapeRight), .sweep(from: 0, to: 70)])
+        XCTAssertEqual(SimulatorHeldPosture.tent.steps(from: .outer, angle: 0), [.pose(.landscapeLeft), .sweep(from: 0, to: 70)])
         XCTAssertEqual(
             SimulatorHeldPosture.tent.steps(from: .inner, angle: 180),
-            [.sweep(from: 180, to: 0), .pause(0.4), .pose(.landscapeRight), .sweep(from: 0, to: 70)]
+            [.sweep(from: 180, to: 0), .pause(0.4), .pose(.landscapeLeft), .sweep(from: 0, to: 70)]
         )
         for posture in SimulatorHeldPosture.allCases {
             XCTAssertEqual(SimulatorFold.panel(afterAngle: posture.angle, from: posture.panel), posture.panel)

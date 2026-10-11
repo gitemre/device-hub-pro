@@ -6,7 +6,8 @@ import XCTest
 /// senders on a foldable simulator of its own (`DHP_IOS_LIVE=1`,
 /// `DHP_IOS_LIVE_DEVICE_TYPE=com.apple.CoreSimulator.SimDeviceType.iPhone-Duo`,
 /// Xcode 27.1): each fold preset as the app reads the hinge and the panel it
-/// is on, a ⌘ shortcut, and Home.
+/// is on, a ⌘ shortcut, Home, and the laptop and the tent as the app reads
+/// the way they are held.
 final class SimulatorFoldVerifierLiveTests: XCTestCase {
     func testTheVerifierReadsTheFoldAShortcutAndHome() async throws {
         let toolchain = try await LiveTestSimulators.toolchain()
@@ -90,6 +91,21 @@ final class SimulatorFoldVerifierLiveTests: XCTestCase {
         _ = try await simctl.launch(udid: udid, bundleIdentifier: IOSVerifierLiveTests.bundle)
         let back = try await verifier.wait(for: "device.appState", bound: .seconds(10)) { $0 == "active" }
         XCTAssertEqual(back, "active", "opened again")
+
+        // On its side: a laptop shows the inner panel, a tent the outer one
+        // from the device's other face, so each is held its own way round.
+        // UIDevice reads both landscape right (a tent held as a laptop read
+        // landscape left on its outer panel, its interface upside down under
+        // the hinge).
+        fold.send(SimulatorHeldPosture.tent.steps(from: .outer, angle: 0), to: address)
+        _ = try await expect("closed", on: outer, "Tent")
+        let tent = try await verifier.wait(for: "sensors.orientation", bound: .seconds(10)) { $0 == "landscapeRight" }
+        XCTAssertEqual(tent, "landscapeRight", "a tent")
+        fold.send(SimulatorHeldPosture.laptop.steps(from: .outer, angle: 70), to: address)
+        _ = try await expect("partiallyOpen", on: inner, "Laptop")
+        let laptop = try await verifier.wait(for: "sensors.orientation", bound: .seconds(10)) { $0 == "landscapeRight" }
+        XCTAssertEqual(laptop, "landscapeRight", "a laptop")
+        Self.report("held: tent \(tent ?? "nothing"), laptop \(laptop ?? "nothing")")
         try? await simctl.terminate(udid: udid, bundleIdentifier: IOSVerifierLiveTests.bundle)
     }
 

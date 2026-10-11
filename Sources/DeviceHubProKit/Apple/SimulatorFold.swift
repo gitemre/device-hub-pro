@@ -282,8 +282,17 @@ public enum SimulatorHeldPosture: String, CaseIterable, Identifiable, Sendable {
         }
     }
 
-    /// Both lie on the device's side.
-    public static let orientation: SimulatorOrientation = .landscapeRight
+    /// Both lie on the device's side, the hinge across the view, but each
+    /// shows a panel on its own face of the device: the laptop's inner one
+    /// is held landscape right, and the same turn seen from the tent's outer
+    /// side is landscape left (iOS 27.1: a tent held landscape right showed
+    /// its outer panel's interface upside down under the hinge).
+    public var orientation: SimulatorOrientation {
+        switch self {
+        case .laptop: return .landscapeRight
+        case .tent: return .landscapeLeft
+        }
+    }
 
     /// How long the guest takes to light the other panel, once the hinge
     /// got there, before the device turns.
@@ -301,7 +310,7 @@ public enum SimulatorHeldPosture: String, CaseIterable, Identifiable, Sendable {
             steps += [.sweep(from: from, to: extreme), .pause(Self.panelSwitchPause)]
             from = extreme
         }
-        return steps + [.pose(SimulatorFold.pose(for: Self.orientation)), .sweep(from: from, to: angle)]
+        return steps + [.pose(SimulatorFold.pose(for: orientation)), .sweep(from: from, to: angle)]
     }
 }
 
