@@ -6,6 +6,17 @@ All notable changes to Device Hub Pro are recorded here. The format follows
 
 ## [Unreleased]
 
+### Fixed
+
+- An emulator now starts and mirrors on a Mac whose `~/.emulator_console_auth_token` is empty
+  (the documented way to switch the emulator console's authentication off). `adb emu` prints
+  nothing for such a console, so the app could not tell which emulator was which: Start waited
+  three minutes for the VM and ended with "did not come online in time" (the VM left running,
+  listed under its model name), and the mirror read "Emulator not responding" and "The emulator
+  isn't sending its screen". The app now talks to the emulator's console itself, authenticating
+  only when the console asks for it, and falls back to the emulator's own boot property for its
+  AVD name; adb is asked only when the console cannot be reached.
+
 ## [1.1.1] - 2026-10-11
 
 ### Added

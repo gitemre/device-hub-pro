@@ -20,7 +20,12 @@ launches itself (stub processes), so they never match, attach to, stop or kill a
 running on the Mac, and never probe the default gRPC ports (8554–8563). Other VMs
 are only read from `ps`, so that deleting, renaming, resetting, starting or powering
 on an AVD that one of them runs is refused. The ports the Kit and app suites dial
-are either port 0 (nothing can listen on it) or a loopback listener the test owns.
+are either port 0 (nothing can listen on it) or a loopback listener the test owns. That
+includes the emulator console: a client a test builds with `AdbClient(adbURL:)` or
+`AdbClient.unresolved()` has no console transport (`talksToEmulatorConsoles` is false), so its
+`emu` commands go to its fake or stub adb; only `AdbClient.locate()` (the live tests and the app)
+and `AdbClient.unresolvedForApp()` (the app) dial a console, on 127.0.0.1 and then ::1, and the
+console tests dial a scripted server of their own.
 
 Which device a live test uses depends on the test:
 

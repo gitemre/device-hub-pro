@@ -1,0 +1,7 @@
+allows you to control (e.g. start/stop) the execution of the virtual device
+
+available sub-commands:
+    name             query virtual device name
+    grpc             query the grpc port
+
+KO:  bad sub-command

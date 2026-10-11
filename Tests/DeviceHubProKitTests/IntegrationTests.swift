@@ -86,6 +86,46 @@ final class IntegrationTests: XCTestCase {
         }
     }
 
+    /// The app's own console path against a running emulator (read only):
+    /// the direct console's `avd name` is the name the emulator booted
+    /// Android with (`ro.boot.qemu.avd_name`), `AdbClient` finds the same
+    /// name and the discovery file's path through it. It works with an empty,
+    /// a missing or a matching `~/.emulator_console_auth_token` (the console
+    /// answers `avd name` before authentication and the client authenticates
+    /// only when the greeting asks it to); a token the console refuses skips
+    /// the test.
+    func testTheDirectConsoleNamesTheAvdTheEmulatorBootedWith() async throws {
+        guard let adb = AdbClient.locate() else {
+            throw XCTSkip("adb not found")
+        }
+        XCTAssertTrue(adb.talksToEmulatorConsoles)
+        guard let device = LiveTestDevices.allowed(try await adb.listDevices()).first(where: \.isEmulator),
+              let port = EmulatorConsole.port(forSerial: device.serial)
+        else {
+            throw XCTSkip("no online emulator")
+        }
+        let booted = try await adb.shell(serial: device.serial, ["getprop", "ro.boot.qemu.avd_name"])
+            .trimmingCharacters(in: .whitespacesAndNewlines)
+        guard !booted.isEmpty else {
+            throw XCTSkip("the emulator does not report its AVD name as a boot property")
+        }
+
+        let answer: String
+        do {
+            answer = try await LiveEmulatorConsole().run(["avd", "name"], port: port, timeout: .seconds(10))
+        } catch EmulatorConsoleError.authenticationRejected {
+            throw XCTSkip("the Mac's console token does not match this emulator's console")
+        }
+        XCTAssertEqual(AdbParsing.avdName(from: answer), booted)
+        XCTAssertTrue(answer.hasSuffix("\r\nOK\r\n"), answer)
+
+        let named = try await adb.avdName(serial: device.serial)
+        XCTAssertEqual(named, booted)
+
+        let path = try await adb.emuCommand(serial: device.serial, ["avd", "discoverypath"])
+        XCTAssertNotNil(AdbParsing.discoveryPath(from: path), path)
+    }
+
     /// Wireless pairing needs a phone in pairing mode, which this environment
     /// does not have. What can be live-verified is the error mapping against
     /// the real adb: pairing/connecting to a closed local port must throw with
