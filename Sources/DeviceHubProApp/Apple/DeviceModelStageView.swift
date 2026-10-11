@@ -458,6 +458,11 @@ final class DeviceModelScene {
     /// The open device's centre in the stand's frame, and its flat size
     /// there: x across both halves, y the thickness, z the height.
     @ObservationIgnored private var openCenter = SIMD3<Float>(repeating: 0)
+    /// Where the hinge's middle puts the model (the device's position with
+    /// the hinge at the origin), and how far the hinge's back stands out
+    /// closed: half one half's thickness. In the view's units.
+    @ObservationIgnored private var hingeCenter = SIMD3<Float>(repeating: 0)
+    @ObservationIgnored private var hingeReach: Float = 0
     @ObservationIgnored private var deviceSize = SIMD3<Float>(repeating: 0)
     /// The hinge as shown (degrees, 0 closed, 180 flat).
     @ObservationIgnored private var shownOpening: Double = 180
@@ -494,6 +499,15 @@ final class DeviceModelScene {
     @ObservationIgnored private var spec: AppleDeviceModel.Spec?
     /// This load's panel materials (RealityKit numbers them anew each load).
     @ObservationIgnored private var panels: AppleDeviceModel.PanelMaterials?
+    /// The body's materials (all but the panels') as the file draws them,
+    /// for the turnable view, and as Device Hub draws them seen from the
+    /// front (`AppleDeviceModel.FrontLook`), by material index.
+    @ObservationIgnored private var bodyLooks: (studio: [Int: any RealityKit.Material], front: [Int: any RealityKit.Material]) = ([:], [:])
+    /// The studio's key and fill lights and its room, and the sky the
+    /// front-on view is lit by alone.
+    @ObservationIgnored private var studioLights: [Entity] = []
+    @ObservationIgnored private var studioRoom: EnvironmentResource?
+    @ObservationIgnored private var frontSky: EnvironmentResource?
     /// The flat panels' bounds in the model's space (inner, outer): where a
     /// pointer lands on them is worked out from these and the fold.
     @ObservationIgnored private var panelBounds: (inner: (SIMD3<Float>, SIMD3<Float>), outer: (SIMD3<Float>, SIMD3<Float>))?
@@ -577,11 +591,12 @@ final class DeviceModelScene {
     /// (664 and 649 px at 2x, 2026-10-11), as a camera about 8 heights away
     /// draws it.
     static let frontDistance: Float = 8
-    /// The studio's exposure seen from the front: Device Hub's dark iPhone
-    /// Duo shows the metal round its face dark gray (luma 48–75 at 2x) and
-    /// its sides mid gray (#646464), which the turnable view's exposure drew
-    /// nearly black (luma 5) and 2 drew olive (about 105).
-    static let frontExposure: Float = 1.3
+    /// How much farther the camera stands from a device open flat than from
+    /// its facing panel otherwise, eased in from half open (130°): Device Hub
+    /// draws iPhone Duo open 0.3–0.56 % smaller than closed and half open
+    /// 1.23–1.49 % larger (two windows, 2026-10-11), where the facing panel
+    /// alone drew it open 0.22 % larger than closed.
+    static let flatDistanceBias: Float = 0.0067
     /// How much of the sphere the device turns in the view frames while it
     /// faces the camera: a little less than all of it, so the device fills
     /// the stage at rest (its corners reach the sphere only when turned
@@ -603,7 +618,6 @@ final class DeviceModelScene {
 
     func load(_ model: AppleDeviceModel, color: String) async -> Entity? {
         if let root { return root }
-        self.color = color
         // The colour asked for (a layer over the file, unless it is the
         // file's own), else the file as it is.
         var loaded: (entity: Entity, found: ModelEntity, animation: AnimationResource)?
@@ -644,6 +658,11 @@ final class DeviceModelScene {
         // over them stays Apple's (`AppleDeviceModel.panels`).
         component.materials[panels.inner] = UnlitMaterial(color: .black)
         component.materials[panels.outer] = UnlitMaterial(color: .black)
+        bodyLooks = ([:], [:])
+        for (index, material) in component.materials.enumerated() where index != panels.inner && index != panels.outer {
+            bodyLooks.studio[index] = material
+            bodyLooks.front[index] = Self.frontLook(of: material)
+        }
         found.components.set(component)
         self.panels = panels
         func flatBounds(_ material: Int) -> (SIMD3<Float>, SIMD3<Float>)? {
@@ -676,6 +695,14 @@ final class DeviceModelScene {
         entity.scale *= factor
         openCenter = -bounds.center * factor
         deviceSize = bounds.extents * factor
+        if let (inner, outer) = panelBounds {
+            let face = found.convert(position: [0, inner.1.y, 0], to: stand)
+            let back = found.convert(position: [0, outer.0.y, 0], to: stand)
+            hingeCenter = SIMD3(-face.x, -face.y, openCenter.z)
+            hingeReach = abs(face.y - back.y) / 2
+        } else {
+            hingeCenter = openCenter
+        }
         let root = Entity()
         root.addChild(turntable)
         camera.camera.fieldOfViewInDegrees = Self.fieldOfView
@@ -683,14 +710,18 @@ final class DeviceModelScene {
         root.addChild(camera)
         // The studio lights the metal and the back; a soft key and fill give
         // the matte back its fall-off.
+        studioLights = []
         for (direction, intensity) in [(SIMD3<Float>(0.4, 0.8, 1), Float(300)), (SIMD3<Float>(-0.8, -0.3, 0.6), Float(100))] {
             let light = DirectionalLight()
             light.light.intensity = intensity
             light.look(at: .zero, from: direction, relativeTo: nil)
             root.addChild(light)
+            studioLights.append(light)
         }
-        if let environment = await Self.studioLight() {
-            root.components.set(ImageBasedLightComponent(source: .single(environment), intensityExponent: exposure))
+        studioRoom = await Self.studioLight()
+        frontSky = await Self.frontSkyLight()
+        if let environment = studioRoom ?? frontSky {
+            root.components.set(ImageBasedLightComponent(source: .single(environment), intensityExponent: Self.studioExposure))
             // On the model itself: the receiver is not passed down from the
             // file's root, and polished metal lit by the key alone is black.
             found.components.set(ImageBasedLightReceiverComponent(imageBasedLight: root))
@@ -705,6 +736,7 @@ final class DeviceModelScene {
         self.controller = controller
         self.spec = model.spec
         self.root = root
+        applyLook()
         layout()
         if let pending = pendingOpening { fold(toOpening: pending) }
         if let pendingSession {
@@ -719,13 +751,29 @@ final class DeviceModelScene {
         layout()
     }
 
-    /// The studio's exposure for the presentation: the dark finish seen from
-    /// the front a little brighter, as Device Hub shows it.
-    private var exposure: Float {
-        presentation != .free && color == AppleDeviceModel.deviceHubColor ? Self.frontExposure : Self.studioExposure
+    /// Lights and dresses the body for the presentation: seen from the
+    /// front as Device Hub draws it, lit by `frontSkyLight` alone; turnable
+    /// in the file's own materials, in the studio.
+    private func applyLook() {
+        let front = presentation != .free
+        let materials = front ? bodyLooks.front : bodyLooks.studio
+        func dress(_ entity: ModelEntity) {
+            guard var component = entity.components[ModelComponent.self] else { return }
+            for (index, material) in materials where component.materials.indices.contains(index) {
+                component.materials[index] = material
+            }
+            entity.components.set(component)
+        }
+        if let modelEntity { dress(modelEntity) }
+        for key in keyEntities { dress(key.entity) }
+        for light in studioLights { light.isEnabled = !front }
+        if let root, let environment = front ? frontSky ?? studioRoom : studioRoom ?? frontSky {
+            root.components.set(ImageBasedLightComponent(
+                source: .single(environment),
+                intensityExponent: front && frontSky != nil ? 0 : Self.studioExposure
+            ))
+        }
     }
-    /// The finish loaded (`load(_:color:)`).
-    @ObservationIgnored private var color = AppleDeviceModel.fileColor
 
     /// Shows the device as `presentation` asks; facing the camera again,
     /// unzoomed, when it leaves the free view.
@@ -733,10 +781,7 @@ final class DeviceModelScene {
         guard presentation != self.presentation else { return }
         let wasFree = self.presentation == .free
         self.presentation = presentation
-        if wasFree != (presentation == .free), let root, var light = root.components[ImageBasedLightComponent.self] {
-            light.intensityExponent = exposure
-            root.components.set(light)
-        }
+        if wasFree != (presentation == .free) { applyLook() }
         if presentation != .free {
             resetTask?.cancel()
             spinTask?.cancel()
@@ -762,9 +807,14 @@ final class DeviceModelScene {
         defer { setNeedsRender() }
         guard let deviceEntity, deviceSize.x > 0 else { return }
         let framing = AppleDeviceModel.framing(
-            opening: shownOpening, width: deviceSize.x, height: deviceSize.z, thickness: deviceSize.y
+            opening: shownOpening, width: deviceSize.x, height: deviceSize.z, thickness: deviceSize.y,
+            hingeReach: hingeReach
         )
-        deviceEntity.position = openCenter - SIMD3(framing.center.x, framing.center.y, 0)
+        // The framing counts from the hinge: on the inner panel's face, in
+        // the middle across (the model's bounds' centre is lower, in the
+        // thickness of the device, which put a half-open device 10 pt off
+        // the middle once turned as a book).
+        deviceEntity.position = hingeCenter - SIMD3(framing.center.x, framing.center.y, 0)
         let book = simd_quatf(angle: framing.bookTurn, axis: [0, 1, 0])
         // The roll is how the lit panel is held, seen from its own face. A
         // tent is turned round to show its outer panel, so the same hold
@@ -803,7 +853,9 @@ final class DeviceModelScene {
             // taller than open, its half-open hinge 3.3 % shorter).
             let tanHalf = Float(viewSize.height / max(height, 1)) / 2 / Self.frontDistance
             camera.camera.fieldOfViewInDegrees = 2 * atan(tanHalf) * 180 / .pi
-            camera.position = [0, 0, facingPanelDepth() + deviceSize.z * Self.frontDistance]
+            let flat = Float(min(max((shownOpening - 130) / 50, 0), 1))
+            let bias = Self.flatDistanceBias * flat * flat * (3 - 2 * flat)
+            camera.position = [0, 0, facingPanelDepth() + deviceSize.z * Self.frontDistance * (1 + bias)]
             return
         }
         camera.camera.fieldOfViewInDegrees = Self.fieldOfView
@@ -1272,11 +1324,8 @@ final class DeviceModelScene {
                 best = (hit.distance, region.u0 + hit.a * (region.u1 - region.u0), hit.b)
             }
         }
-        // The picture sits inside the panel's black border.
-        let texture = frame.turns % 2 == 1 ? (frame.height, frame.width) : (frame.width, frame.height)
-        guard let best, let point = AppleDeviceModel.PanelScreen.of(panel).content(u: best.u, v: best.v, width: texture.0, height: texture.1)
-        else { return nil }
-        return AppleDeviceModel.PanelHit.framePixel(u: point.u, v: point.v, turns: frame.turns, width: frame.width, height: frame.height)
+        guard let best else { return nil }
+        return AppleDeviceModel.PanelHit.framePixel(u: best.u, v: best.v, turns: frame.turns, width: frame.width, height: frame.height)
     }
 
     /// A bright, slightly warm photographer's studio in high dynamic range
@@ -1315,6 +1364,56 @@ final class DeviceModelScene {
                     y: CGFloat(height) - (down + boxHeight / 2) * CGFloat(height),
                     width: boxWidth * CGFloat(width), height: boxHeight * CGFloat(height)
                 ))
+            }
+        }
+        guard let image = context.makeImage() else { return nil }
+        return try? await EnvironmentResource(equirectangular: image)
+    }
+
+    /// `material` as Device Hub draws it from the front: pure black for the
+    /// black round a panel, else in the neutral grey as bright as its colour
+    /// (`AppleDeviceModel.FrontLook`).
+    static func frontLook(of material: any RealityKit.Material) -> any RealityKit.Material {
+        guard var lit = material as? PhysicallyBasedMaterial,
+              let tint = lit.baseColor.tint.usingColorSpace(.sRGB)
+        else { return material }
+        let color = SIMD3<Float>(Float(tint.redComponent), Float(tint.greenComponent), Float(tint.blueComponent))
+        let look = AppleDeviceModel.FrontLook.Material(
+            baseColor: color,
+            hasBaseTexture: lit.baseColor.texture != nil,
+            metallic: lit.metallic.scale,
+            roughness: lit.roughness.scale
+        )
+        if AppleDeviceModel.FrontLook.isBlack(look) { return UnlitMaterial(color: .black) }
+        let grey = CGFloat(AppleDeviceModel.FrontLook.grey(of: color))
+        lit.baseColor.tint = NSColor(srgbRed: grey, green: grey, blue: grey, alpha: tint.alphaComponent)
+        return lit
+    }
+
+    /// `AppleDeviceModel.FrontLook`'s sky, in high dynamic range (linear
+    /// grey, floats), laid out on the map as it was fitted: toward the
+    /// viewer the half round the map's left and right edges, across its
+    /// right half against its left.
+    static func frontSkyLight() async -> EnvironmentResource? {
+        let width = 512, height = 256
+        guard let space = CGColorSpace(name: CGColorSpace.extendedLinearGray),
+              let context = CGContext(
+                data: nil, width: width, height: height, bitsPerComponent: 32, bytesPerRow: width * 4, space: space,
+                bitmapInfo: CGImageAlphaInfo.none.rawValue | CGBitmapInfo.floatComponents.rawValue
+                    | CGBitmapInfo.byteOrder32Little.rawValue
+              ),
+              let data = context.data
+        else { return nil }
+        let pixels = data.bindMemory(to: Float.self, capacity: width * height)
+        for row in 0..<height {
+            let elevation = Float.pi / 2 - Float(row) / Float(height - 1) * .pi
+            for column in 0..<width {
+                let around = (Float(column) / Float(width) - 0.5) * 2 * .pi
+                pixels[row * width + column] = AppleDeviceModel.FrontLook.sky(
+                    elevation: elevation,
+                    towardViewer: max(0, -cos(around)) * cos(elevation),
+                    across: sin(around) * cos(elevation)
+                )
             }
         }
         guard let image = context.makeImage() else { return nil }
@@ -1427,7 +1526,9 @@ final class DeviceModelScene {
         let size = turns % 2 == 1 ? (frame.height, frame.width) : (frame.width, frame.height)
         guard let texture = feeder.texture(for: panel, width: size.0, height: size.1) else { return }
         if feeder.needsMaterial(panel), var component = modelEntity.components[ModelComponent.self] {
-            var material = UnlitMaterial()
+            // The simulator's own pixels: tone mapping, which the lit
+            // device takes, greyed and dimmed them (Device Hub's are not).
+            var material = UnlitMaterial(applyPostProcessToneMap: false)
             material.color = .init(texture: .init(texture))
             component.materials[index] = material
             modelEntity.components.set(component)
@@ -1499,7 +1600,7 @@ final class PanelTextureFeeder {
     func clear(_ panel: SimulatorFoldPanel) -> Bool {
         guard let target = textures[panel] else { return false }
         last[panel] = nil
-        renderer.submit(PanelRenderer.Job(buffer: nil, queue: target.queue, turns: 0, blur: 0, screen: .zero), for: panel)
+        renderer.submit(PanelRenderer.Job(buffer: nil, queue: target.queue, turns: 0, blur: 0), for: panel)
         return true
     }
 
@@ -1523,11 +1624,7 @@ final class PanelTextureFeeder {
         let turned = turns % 2 == 1 ? (height, width) : (width, height)
         guard turned == (target.width, target.height) else { return false }
         if blur <= 0 { last[panel] = (buffer, turns) }
-        let screen = AppleDeviceModel.PanelScreen.of(panel).geometry(width: target.width, height: target.height)
-        renderer.submit(PanelRenderer.Job(
-            buffer: buffer, queue: target.queue, turns: turns, blur: blur,
-            screen: SIMD4(screen.inset.x, screen.inset.y, screen.radius, 0)
-        ), for: panel)
+        renderer.submit(PanelRenderer.Job(buffer: buffer, queue: target.queue, turns: turns, blur: blur), for: panel)
         return true
     }
 }
@@ -1543,9 +1640,6 @@ final class PanelRenderer: @unchecked Sendable {
         let queue: TextureResource.DrawableQueue
         let turns: Int
         let blur: Float
-        /// The picture's border across and down the drawable (fractions)
-        /// and its corners' radius in pixels (`AppleDeviceModel.PanelScreen`).
-        let screen: SIMD4<Float>
     }
 
     private let device = MTLCreateSystemDefaultDevice()
@@ -1606,24 +1700,11 @@ final class PanelRenderer: @unchecked Sendable {
         PanelVertex in [[stage_in]],
         texture2d<float> frame [[texture(0)]],
         constant int &turns [[buffer(0)]],
-        constant float &blur [[buffer(1)]],
-        constant float4 &screen [[buffer(2)]],
-        constant float4 &size [[buffer(3)]]
+        constant float &blur [[buffer(1)]]
     ) {
         constexpr sampler nearest(coord::normalized, filter::nearest, address::clamp_to_edge);
         constexpr sampler smooth(coord::normalized, filter::linear, address::clamp_to_edge);
-        // The picture inside the panel's black border, its corners rounded
-        // (a rounded rectangle's distance, a pixel of edge).
-        float2 inset = screen.xy;
-        float2 p = (in.uv - 0.5) * size.xy;
-        float2 q = abs(p) - ((0.5 - inset) * size.xy - screen.z);
-        float edge = length(max(q, 0.0)) + min(max(q.x, q.y), 0.0) - screen.z;
-        float coverage = clamp(0.5 - edge, 0.0, 1.0);
-        if (coverage <= 0.0) {
-            return float4(0.0, 0.0, 0.0, 1.0);
-        }
-        float2 uv = (in.uv - inset) / (1.0 - 2.0 * inset);
-        bool scaled = inset.x > 0.0 || inset.y > 0.0;
+        float2 uv = in.uv;
         switch ((turns % 4 + 4) % 4) {
             case 1: uv = float2(uv.y, 1.0 - uv.x); break;
             case 2: uv = float2(1.0 - uv.x, 1.0 - uv.y); break;
@@ -1631,8 +1712,7 @@ final class PanelRenderer: @unchecked Sendable {
             default: break;
         }
         if (blur <= 0.0) {
-            float4 color = scaled ? frame.sample(smooth, uv) : frame.sample(nearest, uv);
-            return float4(color.rgb * coverage, 1.0);
+            return frame.sample(nearest, uv);
         }
         float2 texel = blur / float2(frame.get_width(), frame.get_height());
         float4 sum = float4(0.0);
@@ -1644,7 +1724,7 @@ final class PanelRenderer: @unchecked Sendable {
                 total += weight;
             }
         }
-        return float4((sum / total).rgb * coverage, 1.0);
+        return sum / total;
     }
     """
 
@@ -1710,14 +1790,10 @@ final class PanelRenderer: @unchecked Sendable {
         guard let encoder = commands.makeRenderCommandEncoder(descriptor: pass) else { return }
         var quarterTurns = Int32(job.turns)
         var blurStep = job.blur
-        var screen = job.screen
-        var size = SIMD4<Float>(Float(drawable.texture.width), Float(drawable.texture.height), 0, 0)
         encoder.setRenderPipelineState(pipeline)
         encoder.setFragmentTexture(source, index: 0)
         encoder.setFragmentBytes(&quarterTurns, length: MemoryLayout<Int32>.size, index: 0)
         encoder.setFragmentBytes(&blurStep, length: MemoryLayout<Float>.size, index: 1)
-        encoder.setFragmentBytes(&screen, length: MemoryLayout<SIMD4<Float>>.size, index: 2)
-        encoder.setFragmentBytes(&size, length: MemoryLayout<SIMD4<Float>>.size, index: 3)
         encoder.drawPrimitives(type: .triangle, vertexStart: 0, vertexCount: 3)
         encoder.endEncoding()
         commands.addCompletedHandler { _ in

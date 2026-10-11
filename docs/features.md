@@ -161,11 +161,13 @@ When the tools are installed, the app offers to create your first emulator.
   fold while the simulator stays booted, so quitting and opening it again shows the device as it
   was left; a simulator something else opened (Device Hub, a test) is read off its two panels'
   screenshots, and the stage shows the lit one. Where the selected Xcode ships Apple's 3D model of
-  the device, the stage draws it as Device Hub does: the model in its dark finish (View ▸ Device
-  Color picks the light one), seen from the front through a long lens, as large as its 2D frame (the stage's zoom and scale modes size it)
-  and one size in every posture; the hinge folds on screen where the simulator's hinge is at each
-  frame, the panel going dark keeping its last picture, blurred, until it stops; the lit panel
-  shows the live simulator (the inner one inside its black border) and takes clicks, drags and, with Keyboard
+  the device, the stage draws it as Device Hub does: seen from the front through a long lens, its
+  body in neutral greys under one even light (its dark finish by default; View ▸ Device Color picks
+  the light one), the black round each panel pure black, centred and sized as Device Hub's Zoom to
+  Fit and Physical Size draw it (the stage's zoom and scale modes size it) and one size in every
+  posture; the hinge folds on screen where the simulator's hinge is at each frame, the panel going
+  dark keeping its last picture, blurred, until it stops; the lit panel shows the live simulator's
+  own colours to its rounded edges and takes clicks, drags and, with Keyboard
   Capture, typing; its volume and side buttons move out under the pointer and in on a click (held
   as long as the click is), as a device frame's keys do. View ▸ Show 3D Model lets the mouse turn
   it (a drag anywhere off the panel; a pinch or a scroll zooms, a double click faces it again,

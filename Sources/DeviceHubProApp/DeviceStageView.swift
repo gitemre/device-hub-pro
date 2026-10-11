@@ -1304,18 +1304,35 @@ struct MirrorStageContent: View {
         }
     }
 
-    /// A foldable's front-on 3D model as the stage sizes it: as tall
-    /// (view points) as its closed 2D frame, fitted as `AppleChromeDeviceView`
-    /// fits a frame, and the points per panel pixel that makes. Device Hub
-    /// keeps one size for every posture: iPhone Duo 657–658 px tall closed,
-    /// half open and open at 2x (2026-10-11), and our 2D outer frame 659 px
-    /// at the same zoom.
+    /// A foldable's front-on 3D model as the stage sizes it: as tall (view
+    /// points) as Device Hub draws it, and the points per pixel of its
+    /// closed 2D frame that makes. Device Hub's Zoom to Fit leaves room for
+    /// the open device turned any way (its bounding sphere): iPhone Duo
+    /// `frontFitHeight` of the fit area's height tall, or `frontFitWidth` of
+    /// its width when that is less, and one size in every posture (Xcode
+    /// 27.1, 2026-10-11: closed, its outline 446.5–448.7 pt high in a window
+    /// 930 pt high, where our fit area is 806.7 pt; 349.3 pt in one 903 pt
+    /// wide, ours 635 pt). The model's outline stands 0.85 % taller than
+    /// `height` (its keys, its frame nearer the camera than its panel). The
+    /// stage's zoom scales the area, so its scale modes keep their meaning.
+    static let frontFitHeight: CGFloat = 0.550
+    static let frontFitWidth: CGFloat = 0.5455
+
     static func frontModel(outerFrame: AppleChromeFrame, available: CGSize) -> (height: CGFloat, pointsPerPixel: CGFloat) {
         let native = DeviceCompositionPlanner.appleChrome(outerFrame).layoutSize
-        let box = CGSize(width: max(available.width - 16, 1), height: max(available.height - 16, 1))
-        // Layout units are panel pixels; the closed device stands upright.
-        let scale = PoseFit.scale(angle: 0, nativeSize: native, box: box)
-        return (native.height * scale, scale)
+        let height = max(min(available.height * frontFitHeight, available.width * frontFitWidth), 1)
+        return (height, height / max(native.height, 1))
+    }
+
+    /// Publishes the front-on model's scale in its outer panel's pixels,
+    /// the frame the stage zoom's scale modes count in.
+    private func publishFrontScale(_ scale: CGFloat) {
+        guard workspace.simulatorFold.deviceModel != nil, !model.preferences.showDeviceModel,
+              let outer = workspace.simulatorFold.outerPanelPixels
+        else { return }
+        let state = workspace.mirror.mirrorViewState
+        if state.devicePixelSize != outer { state.devicePixelSize = outer }
+        state.publishVideoScale(Double(scale))
     }
 
     private func front(_ frame: AppleChromeFrame) -> (height: CGFloat, pointsPerPixel: CGFloat) {
@@ -1362,6 +1379,7 @@ struct MirrorStageContent: View {
                                 // A new finish is a new model: the stage loads it.
                                 .id(model.preferences.deviceModelColor)
                                 .frame(width: available.width, height: available.height)
+                                .offset(y: model.preferences.showDeviceModel ? 0 : -ParityMetrics.foldModelLift)
                             } else {
                                 AppleChromeDeviceView(session: session, frame: frame, available: available)
                             }
@@ -1373,13 +1391,14 @@ struct MirrorStageContent: View {
                         // count in that panel and scale, so iPhone Duo opens
                         // at its 2D size and keeps it in every posture, as in
                         // Device Hub.
+                        // A session that moves to the inner panel sets its own
+                        // size (the mirror's seed picture): put the outer one
+                        // back, or Physical Size went grey with the device open.
                         .onChange(of: front(frame).pointsPerPixel, initial: true) { _, scale in
-                            guard workspace.simulatorFold.deviceModel != nil, !model.preferences.showDeviceModel,
-                                  let outer = workspace.simulatorFold.outerPanelPixels
-                            else { return }
-                            let state = workspace.mirror.mirrorViewState
-                            if state.devicePixelSize != outer { state.devicePixelSize = outer }
-                            state.publishVideoScale(Double(scale))
+                            publishFrontScale(scale)
+                        }
+                        .onChange(of: workspace.mirror.mirrorViewState.devicePixelSize) { _, _ in
+                            publishFrontScale(front(frame).pointsPerPixel)
                         }
                     } else {
                         AppleChromeDeviceView(session: session, frame: frame, available: available)

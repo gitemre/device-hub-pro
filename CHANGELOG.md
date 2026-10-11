@@ -12,7 +12,8 @@ All notable changes to Device Hub Pro are recorded here. The format follows
   does (Closed, Partially Open and Open beside Rotate, with Laptop and Tent), Device ▸ Fold /
   Unfold and Orientation do it from the menu, and the stage follows the lit panel. Where Xcode
   ships Apple's 3D model of the device, the stage draws the live simulator in it as Device Hub
-  does, from the front: the hinge folds on screen in step with the simulator's, the panel takes
+  does, from the front (its greys, its black round the panels, its size and place in each
+  posture): the hinge folds on screen in step with the simulator's, the panel takes
   clicks, drags and typing, and its volume and side buttons move out under the pointer and press
   in on a click; View ▸ Show 3D Model lets the mouse turn and zoom it, and View ▸ Device Color
   picks its finish (Device Hub's dark one by default).

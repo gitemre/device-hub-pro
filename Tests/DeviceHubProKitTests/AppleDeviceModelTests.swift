@@ -327,33 +327,44 @@ final class AppleDeviceModelTests: XCTestCase {
         XCTAssertNil(AppleDeviceModel.panels(in: []))
     }
 
-    /// A panel's picture sits inside Device Hub's black border: the long
-    /// and short sides each take their own, whichever way the texture lies,
-    /// and a point on the border reaches no pixel.
-    func testThePictureSitsInsideThePanelsBorder() throws {
-        let inner = AppleDeviceModel.PanelScreen.inner
-        let landscape = inner.geometry(width: 2853, height: 2007)
-        XCTAssertEqual(landscape.inset.x, 14.5 / 914, accuracy: 1e-6)
-        XCTAssertEqual(landscape.inset.y, 14.5 / 648, accuracy: 1e-6)
-        XCTAssertEqual(landscape.radius, 52 / 648 * 2007, accuracy: 0.01)
-        let portrait = inner.geometry(width: 2007, height: 2853)
-        XCTAssertEqual(portrait.inset.x, landscape.inset.y)
-        XCTAssertEqual(portrait.inset.y, landscape.inset.x)
+    /// Seen from the front, the black round a panel is drawn pure black: a
+    /// fully rough, not metallic, near-black material of its own colour;
+    /// metal, a glossier black and a textured part keep their light.
+    func testTheFrontLookDrawsTheFacesBlackPureBlack() {
+        typealias Look = AppleDeviceModel.FrontLook
+        XCTAssertTrue(Look.isBlack(.init(baseColor: [0.03, 0.03, 0.03], hasBaseTexture: false, metallic: 0, roughness: 1)))
+        XCTAssertTrue(Look.isBlack(.init(baseColor: [0, 0, 0], hasBaseTexture: false, metallic: 0, roughness: 1)))
+        XCTAssertFalse(Look.isBlack(.init(baseColor: [0.25, 0.3, 0.35], hasBaseTexture: false, metallic: 1, roughness: 0.05)))
+        XCTAssertFalse(Look.isBlack(.init(baseColor: [0, 0, 0], hasBaseTexture: false, metallic: 0, roughness: 0.8)))
+        XCTAssertFalse(Look.isBlack(.init(baseColor: [0, 0, 0], hasBaseTexture: false, metallic: 1, roughness: 1)))
+        XCTAssertFalse(Look.isBlack(.init(baseColor: [1, 1, 1], hasBaseTexture: true, metallic: 0, roughness: 1)))
+        XCTAssertFalse(Look.isBlack(.init(baseColor: [0.06, 0.02, 0.02], hasBaseTexture: false, metallic: 0, roughness: 1)))
+    }
 
-        XCTAssertNil(inner.content(u: 0.005, v: 0.5, width: 2853, height: 2007), "on the border")
-        let middle = try XCTUnwrap(inner.content(u: 0.5, v: 0.5, width: 2853, height: 2007))
-        XCTAssertEqual(middle.u, 0.5, accuracy: 1e-6)
-        XCTAssertEqual(middle.v, 0.5, accuracy: 1e-6)
-        let corner = try XCTUnwrap(inner.content(u: landscape.inset.x, v: landscape.inset.y, width: 2853, height: 2007))
-        XCTAssertEqual(corner.u, 0, accuracy: 1e-6)
-        XCTAssertEqual(corner.v, 0, accuracy: 1e-6)
-        XCTAssertEqual(AppleDeviceModel.PanelScreen.of(.outer), .outer)
-        // The outer panel's picture runs to its edges, round its camera.
-        let outer = AppleDeviceModel.PanelScreen.outer
-        XCTAssertEqual(outer.geometry(width: 1398, height: 2034).inset, [0, 0])
-        let edge = try XCTUnwrap(outer.content(u: 0, v: 1, width: 1398, height: 2034))
-        XCTAssertEqual(edge.u, 0)
-        XCTAssertEqual(edge.v, 1)
+    /// The body's colours turn into the neutral greys as bright: a grey
+    /// keeps its value, white and black stay, a blue reads by its luminance.
+    func testTheFrontLookGreysByLuminance() {
+        typealias Look = AppleDeviceModel.FrontLook
+        XCTAssertEqual(Look.grey(of: [0.5, 0.5, 0.5]), 0.5, accuracy: 1e-5)
+        XCTAssertEqual(Look.grey(of: [1, 1, 1]), 1, accuracy: 1e-5)
+        XCTAssertEqual(Look.grey(of: [0, 0, 0]), 0, accuracy: 1e-6)
+        // Pure blue's luminance is 0.0722 in linear light: sRGB 0.2986.
+        XCTAssertEqual(Look.grey(of: [0, 0, 1]), 0.2986, accuracy: 1e-3)
+        XCTAssertLessThan(Look.grey(of: [0, 0, 1]), Look.grey(of: [0, 1, 0]))
+    }
+
+    /// The front's sky: each stop at its elevation, joined straight
+    /// between, `front` times that toward the viewer, `side` to one side.
+    func testTheFrontLooksSkyJoinsItsStops() {
+        typealias Look = AppleDeviceModel.FrontLook
+        XCTAssertEqual(Look.sky(elevation: .pi / 2, towardViewer: 0), Look.overhead, accuracy: 1e-5)
+        XCTAssertEqual(Look.sky(elevation: .pi / 4, towardViewer: 0), Look.above, accuracy: 1e-5)
+        XCTAssertEqual(Look.sky(elevation: 0, towardViewer: 0), Look.horizon, accuracy: 1e-5)
+        XCTAssertEqual(Look.sky(elevation: -.pi / 4, towardViewer: 0), Look.below, accuracy: 1e-5)
+        XCTAssertEqual(Look.sky(elevation: -.pi / 2, towardViewer: 0), Look.underneath, accuracy: 1e-5)
+        XCTAssertEqual(Look.sky(elevation: 3 * .pi / 8, towardViewer: 0), (Look.above + Look.overhead) / 2, accuracy: 1e-5)
+        XCTAssertEqual(Look.sky(elevation: 0, towardViewer: 1), Look.horizon * Look.front, accuracy: 1e-5)
+        XCTAssertEqual(Look.sky(elevation: 0, towardViewer: 0, across: 1), Look.horizon * (1 + Look.side), accuracy: 1e-5)
     }
 
     /// Device Hub's colour comes from a layer over the file, which it

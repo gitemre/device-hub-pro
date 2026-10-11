@@ -287,6 +287,11 @@ enum ParityMetrics {
     static let foldPillDividerWidth: CGFloat = 1
     static let foldPillDividerHeight: CGFloat = 20
     static let foldPillDividerGap: CGFloat = 1.45
+    /// How far above the fit area's middle Device Hub draws a foldable's
+    /// front-on 3D model: iPhone Duo's outline centred 5–7 px (at 2x)
+    /// higher than ours in each posture, in windows of the same frame
+    /// (Xcode 27.1, 2026-10-11).
+    static let foldModelLift: CGFloat = 3
     /// The audit's "≈16–17 pt" was an eyeball estimate; the reference icons
     /// ink 29–30 px at 2x, which 15 pt symbols reproduce (camera/record
     /// exact; the apps glyph is SF's nearest to DH's Material `grid_view`).
