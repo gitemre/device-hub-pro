@@ -353,6 +353,21 @@ private struct AppCommands: Commands {
                 Divider()
             }
 
+            // A foldable simulator shows as Device Hub draws it, from the
+            // front; its 3D model turns and zooms here. Listed only where
+            // Xcode ships the model.
+            if workspace?.simulatorFold.deviceModel != nil {
+                Toggle("Show 3D Model", isOn: Binding(
+                    get: { model?.preferences.showDeviceModel ?? false },
+                    set: { model?.preferences.setShowDeviceModel($0) }
+                ))
+                if model?.preferences.showDeviceModel == true {
+                    Button("Turn Around") { workspace?.simulatorFold.turnAround() }
+                }
+
+                Divider()
+            }
+
             // Enabled whenever the toolbar's zoom works, a simulator's canvas
             // included.
             Button("Zoom In") { workspace?.window.zoomIn() }

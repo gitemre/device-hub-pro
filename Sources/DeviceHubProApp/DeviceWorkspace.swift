@@ -1392,11 +1392,19 @@ extension DeviceWorkspace {
     /// the stream's size and the panel's density are known (an AVD's `xDpi`
     /// comes from `dumpsys display`, a simulator's `hdpi` from its device
     /// type).
+    /// The displays the stage zoom's scale modes read: a foldable
+    /// simulator in its 3D model always its outer panel's, which the model
+    /// is sized by in every posture (`MirrorStageContent.frontModel`).
+    private var zoomDisplayShapes: [DisplayShape] {
+        if simulatorFold.deviceModel != nil, let outer = simulatorFold.outerDisplayShape { return [outer] }
+        return mirror.liveDisplayShapes
+    }
+
     func physicalPointsPerPixel() -> Double? {
         guard let pixels = mirror.mirrorViewState.devicePixelSize, pixels.width > 0, pixels.height > 0 else {
             return nil
         }
-        let shape = DisplayShape.matching(frame: pixels, in: mirror.liveDisplayShapes)
+        let shape = DisplayShape.matching(frame: pixels, in: zoomDisplayShapes)
         guard let dpi = ZoomMath.devicePixelsPerInch(
             xDpi: shape?.xDpi,
             densityDpi: shape?.densityDpi,
@@ -1419,7 +1427,7 @@ extension DeviceWorkspace {
         guard let pixels = mirror.mirrorViewState.devicePixelSize, pixels.width > 0, pixels.height > 0 else {
             return nil
         }
-        let shape = DisplayShape.matching(frame: pixels, in: mirror.liveDisplayShapes)
+        let shape = DisplayShape.matching(frame: pixels, in: zoomDisplayShapes)
         let density = shape?.densityDpi ?? mirror.mirrorViewState.displayDensityDpi
         return ZoomMath.pointAccuratePointsPerPixel(
             densityDpi: density.map(Double.init),
@@ -1435,7 +1443,7 @@ extension DeviceWorkspace {
         guard let pixels = mirror.mirrorViewState.devicePixelSize, pixels.width > 0, pixels.height > 0 else {
             return nil
         }
-        let shape = DisplayShape.matching(frame: pixels, in: mirror.liveDisplayShapes)
+        let shape = DisplayShape.matching(frame: pixels, in: zoomDisplayShapes)
         return ZoomMath.pixelAccuratePointsPerPixel(
             backingScaleFactor: Self.backingScaleFactor(),
             panelLongSide: shape.map { Double(max($0.width, $0.height)) },

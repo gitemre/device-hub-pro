@@ -150,23 +150,28 @@ When the tools are installed, the app offers to create your first emulator.
   (`hw.resizable.configs` in `config.ini`) the toolbar's Resize mode button and Device ▸
   Enter Resize Mode offer the emulator's display presets (the New Emulator menus do not
   offer the Resizable profile).
-- **Foldable simulators (iPhone Duo, Xcode 27.1).** The fold strip under a foldable simulator
-  folds it: Closed, Half and Opened, Laptop and Tent (half open on its side), and the hinge
-  slider; Device ▸ Fold / Unfold does the same from the menu. As in Xcode's Device Hub, a preset
-  moves the hinge over about half a second (apps see the fold, not a jump) and Half opens to
-  Device Hub's angle; Device ▸ Orientation holds it portrait, upside down, landscape left or right,
-  face up or face down, and the stage's rotate turns it. The stage follows the lit panel: the outer one closed,
-  the inner one open. The app remembers the fold while the simulator stays booted, so quitting and
-  opening it again shows the device as it was left; a simulator something else opened (Device Hub, a
-  test) is read off its two panels' screenshots, and the stage shows the lit one. Where the selected Xcode ships Apple's 3D model of the device, the strip's
-  **3D** button shows it in that model: the hinge folds on screen (its angle beside it) where the
-  simulator's hinge is at each frame, the panel going dark keeping its last picture, blurred,
-  until it stops; the lit panel shows the live simulator and takes clicks, drags and, with
-  Keyboard Capture, typing;
-  its volume and side buttons move out under the pointer and in on a click (held as long as the
-  click is), as a device frame's keys do; dragging anywhere else turns the device, a pinch or a scroll off the panel zooms, a double
-  click faces it again, and Turn Around shows its back. The model is read from the user's Xcode at runtime, never copied
-  (`DHP_DISABLE_DEVICE_MODEL=1` turns it off).
+- **Foldable simulators (iPhone Duo, Xcode 27.1).** The stage's pill folds it, as Xcode's
+  Device Hub does: Rotate shares a capsule with Closed, Partially Open and Open (Device Hub's own
+  glyphs, read from the user's Xcode), and Laptop and Tent (half open on its side) sit beside
+  them; the current posture shows in the accent colour. Device ▸ Fold / Unfold does the same from
+  the menu. As in Device Hub, a preset moves the hinge over about half a second (apps see the
+  fold, not a jump) and Partially Open opens to Device Hub's angle; Device ▸ Orientation holds it
+  portrait, upside down, landscape left or right, face up or face down, and Rotate turns it. The
+  stage follows the lit panel: the outer one closed, the inner one open. The app remembers the
+  fold while the simulator stays booted, so quitting and opening it again shows the device as it
+  was left; a simulator something else opened (Device Hub, a test) is read off its two panels'
+  screenshots, and the stage shows the lit one. Where the selected Xcode ships Apple's 3D model of
+  the device, the stage draws it as Device Hub does: the model in its dark finish, seen from the
+  front through a long lens, as large as its 2D frame (the stage's zoom and scale modes size it)
+  and one size in every posture; the hinge folds on screen where the simulator's hinge is at each
+  frame, the panel going dark keeping its last picture, blurred, until it stops; the lit panel
+  shows the live simulator inside its black border and takes clicks, drags and, with Keyboard
+  Capture, typing; its volume and side buttons move out under the pointer and in on a click (held
+  as long as the click is), as a device frame's keys do. View ▸ Show 3D Model lets the mouse turn
+  it (a drag anywhere off the panel; a pinch or a scroll zooms, a double click faces it again,
+  and View ▸ Turn Around shows its back), the hinge's angle beside it while it folds. The model is
+  read from the user's Xcode at runtime, never copied (`DHP_DISABLE_DEVICE_MODEL=1` turns it off,
+  and the device shows in its 2D frame).
 - **Language & time.** A Controls group for emulators and phones; a row is hidden
   when the device lacks its mechanism. Language is a searchable picker over the
   device's own language list (Android 8+), with suggested languages and Restore,

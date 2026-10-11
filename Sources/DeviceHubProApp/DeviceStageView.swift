@@ -1243,7 +1243,9 @@ private struct MirrorContainer: View {
             session: session,
             chrome: chrome,
             available: available,
-            showsFoldControls: workspace.hardware.showsFoldControls || workspace.simulatorFold.showsFoldControls,
+            // A foldable simulator's postures sit in the stage's pill.
+            showsFoldControls: workspace.hardware.showsFoldControls,
+            showsFoldableModel: workspace.simulatorFold.showsFoldControls,
             showsNavigationBar: NavigationBarSpec.isShown(
                 preference: model.preferences.showNavigationButtons,
                 device: workspace.context.device,
@@ -1271,6 +1273,9 @@ struct MirrorStageContent: View {
     /// Main stage only: `CompactMirrorView` keeps the default `false` and
     /// stays flat.
     var showsFoldControls = false
+    /// Main stage only: a foldable simulator in its 3D model
+    /// (`DeviceModelStageView`); the compact window keeps its 2D chrome.
+    var showsFoldableModel = false
     /// Main stage only: the Back / Home / Recents bar under an Android
     /// handheld (`NavigationBarSpec.isShown`).
     var showsNavigationBar = false
@@ -1299,6 +1304,24 @@ struct MirrorStageContent: View {
         }
     }
 
+    /// A foldable's front-on 3D model as the stage sizes it: as tall
+    /// (view points) as its closed 2D frame, fitted as `AppleChromeDeviceView`
+    /// fits a frame, and the points per panel pixel that makes. Device Hub
+    /// keeps one size for every posture: iPhone Duo 657–658 px tall closed,
+    /// half open and open at 2x (2026-10-11), and our 2D outer frame 659 px
+    /// at the same zoom.
+    static func frontModel(outerFrame: AppleChromeFrame, available: CGSize) -> (height: CGFloat, pointsPerPixel: CGFloat) {
+        let native = DeviceCompositionPlanner.appleChrome(outerFrame).layoutSize
+        let box = CGSize(width: max(available.width - 16, 1), height: max(available.height - 16, 1))
+        // Layout units are panel pixels; the closed device stands upright.
+        let scale = PoseFit.scale(angle: 0, nativeSize: native, box: box)
+        return (native.height * scale, scale)
+    }
+
+    private func front(_ frame: AppleChromeFrame) -> (height: CGFloat, pointsPerPixel: CGFloat) {
+        Self.frontModel(outerFrame: workspace.simulatorFold.outerChrome ?? frame, available: available)
+    }
+
     var body: some View {
         ZStack {
             if workspace.window.showDeviceFrame {
@@ -1306,20 +1329,25 @@ struct MirrorStageContent: View {
                 case .skin(let skin):
                     framedContent(skin: skin)
                 case .appleChrome(let frame):
-                    if showsFoldControls {
-                        // A foldable simulator (iPhone Duo): the fold strip
-                        // under its chrome, as under a foldable emulator; in
-                        // its 3D model when the window asks for it.
-                        FoldStripStage(available: available, stripHeight: foldStripHeight) { fitted in
-                            if DeviceModelStageView.isShown(chrome: chrome, workspace: workspace, preferences: model.preferences),
-                               let deviceModel = workspace.simulatorFold.deviceModel {
+                    if showsFoldableModel {
+                        // A foldable simulator (iPhone Duo) as Device Hub
+                        // 27.1 draws it: its 3D model seen from the front
+                        // through a long lens, as tall as its open 2D frame;
+                        // turned and zoomed with View ▸ Show 3D Model; its 2D
+                        // chrome where Xcode ships no model. The postures sit
+                        // in the stage's pill.
+                        Group {
+                            if let deviceModel = workspace.simulatorFold.deviceModel {
                                 DeviceModelStageView(
                                     model: deviceModel,
                                     session: session,
                                     opening: workspace.simulatorFold.hingeAngle ?? 0,
                                     foldProgress: { [fold = workspace.simulatorFold] in fold.foldProgress() },
                                     litPanel: workspace.simulatorFold.litPanel,
-                                    size: fitted,
+                                    presentation: model.preferences.showDeviceModel
+                                        ? .free
+                                        : .front(height: front(frame).height),
+                                    size: available,
                                     panelTurns: Self.modelPanelTurns(
                                         frame: frame,
                                         session: session,
@@ -1330,14 +1358,26 @@ struct MirrorStageContent: View {
                                         - workspace.simulatorFold.restingTurns) % 4 + 4) % 4,
                                     spinRequests: workspace.simulatorFold.spinRequests
                                 )
-                                .frame(width: fitted.width, height: fitted.height)
+                                .frame(width: available.width, height: available.height)
                             } else {
-                                AppleChromeDeviceView(session: session, frame: frame, available: fitted)
+                                AppleChromeDeviceView(session: session, frame: frame, available: available)
                             }
-                        } strip: {
-                            StageAccessoryStrip(showsNavigation: false, showsFold: true, offersDeviceModel: true)
                         }
                         .task(id: ObjectIdentifier(session)) { workspace.simulatorFold.prepareFold() }
+                        // The front-on model draws the outer panel as its 2D
+                        // chrome would, whichever panel is lit: the stage
+                        // zoom's scale modes (Physical Size, Point Accurate)
+                        // count in that panel and scale, so iPhone Duo opens
+                        // at its 2D size and keeps it in every posture, as in
+                        // Device Hub.
+                        .onChange(of: front(frame).pointsPerPixel, initial: true) { _, scale in
+                            guard workspace.simulatorFold.deviceModel != nil, !model.preferences.showDeviceModel,
+                                  let outer = workspace.simulatorFold.outerPanelPixels
+                            else { return }
+                            let state = workspace.mirror.mirrorViewState
+                            if state.devicePixelSize != outer { state.devicePixelSize = outer }
+                            state.publishVideoScale(Double(scale))
+                        }
                     } else {
                         AppleChromeDeviceView(session: session, frame: frame, available: available)
                     }

@@ -46,6 +46,27 @@ final class SimulatorFoldController: FoldControlDriving {
         foldableEntry.flatMap { simulators.deviceModel(for: $0) }
     }
 
+    /// The outer panel's 2D chrome (`SimulatorInventory.outerChromeFrame`).
+    var outerChrome: AppleChromeFrame? {
+        foldableEntry.flatMap { simulators.outerChromeFrame(for: $0) }
+    }
+
+    /// The outer panel's display (`SimulatorInventory.outerDisplayShape`).
+    var outerDisplayShape: DisplayShape? {
+        foldableEntry.flatMap { simulators.outerDisplayShape(for: $0) }
+    }
+
+    /// The outer panel's size in pixels, portrait.
+    var outerPanelPixels: CGSize? {
+        guard let entry = foldableEntry, let outer = simulators.foldPanels(for: entry)?.outer else { return nil }
+        return CGSize(width: min(outer.width, outer.height), height: max(outer.width, outer.height))
+    }
+
+    /// The posture button the stage's pill shows as current.
+    var postureChoice: SimulatorFoldPostureChoice? {
+        foldableEntry.map { SimulatorFold.postureChoice(for: simulators.folds.record(of: $0.udid)) }
+    }
+
     /// The panel lit now (what the stage's session shows).
     var litPanel: SimulatorFoldPanel {
         foldableEntry.map { simulators.litPanel(of: $0) } ?? .outer

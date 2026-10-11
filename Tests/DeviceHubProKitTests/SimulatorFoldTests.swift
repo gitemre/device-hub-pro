@@ -331,6 +331,23 @@ final class SimulatorFoldTests: XCTestCase {
         XCTAssertEqual(input.connectAttempts, 1)
     }
 
+    /// The pill shows Device Hub's posture by the hinge (closed under 20°,
+    /// open only flat), and a laptop or a tent while the device is held so.
+    func testThePillsChoiceFollowsTheHingeAndTheHold() {
+        func choice(_ angle: Double, _ panel: SimulatorFoldPanel, _ pose: SimulatorDevicePose?) -> SimulatorFoldPostureChoice {
+            SimulatorFold.postureChoice(for: SimulatorFoldRecord(angle: angle, panel: panel, pose: pose))
+        }
+        XCTAssertEqual(choice(0, .outer, .portrait), .preset(.closed))
+        XCTAssertEqual(choice(19, .outer, nil), .preset(.closed))
+        XCTAssertEqual(choice(130, .inner, .portrait), .preset(.halfOpened))
+        XCTAssertEqual(choice(179, .inner, .portrait), .preset(.halfOpened), "179° reads partially open")
+        XCTAssertEqual(choice(180, .inner, .portrait), .preset(.opened))
+        XCTAssertEqual(choice(105, .inner, SimulatorFold.pose(for: .landscapeRight)), .held(.laptop))
+        XCTAssertEqual(choice(70, .outer, SimulatorFold.pose(for: .landscapeLeft)), .held(.tent))
+        XCTAssertEqual(choice(100, .inner, SimulatorFold.pose(for: .landscapeRight)), .preset(.halfOpened), "moved off the laptop's hinge")
+        XCTAssertEqual(choice(105, .inner, .portrait), .preset(.halfOpened), "upright again")
+    }
+
     /// A preset holds the device upright first, as Device Hub does, then
     /// sweeps from where the hinge is.
     func testAPresetHoldsTheDeviceUprightThenSweeps() {

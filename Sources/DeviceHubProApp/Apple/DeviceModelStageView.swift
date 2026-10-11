@@ -14,9 +14,11 @@ import Synchronization
 /// camera again.
 ///
 /// The device is posed as it is held: half open, it turns so both halves
-/// face the camera alike, the hinge away (`AppleDeviceModel.framing`); a fold
-/// shows the hinge's angle beside it, and the panel going dark keeps its last
-/// picture, blurred, while the device folds.
+/// face the camera alike, the hinge away (`AppleDeviceModel.framing`); the
+/// panel going dark keeps its last picture, blurred, while the device folds.
+/// As Device Hub shows it (`DeviceModelPresentation.front`) the device stays
+/// facing the camera; turnable (`.free`), a fold also shows the hinge's angle
+/// beside it.
 struct DeviceModelStageView: View {
     let model: AppleDeviceModel
     let session: any MirrorSessionProtocol
@@ -26,6 +28,7 @@ struct DeviceModelStageView: View {
     /// simulator, which a fold follows (nil when the hinge moved otherwise).
     let foldProgress: @MainActor () -> SimulatorFoldProgress?
     let litPanel: SimulatorFoldPanel
+    let presentation: DeviceModelPresentation
     /// The view's size, which the camera fits the device in.
     let size: CGSize
     /// The clockwise quarter turns that show a frame of (width, height)
@@ -44,10 +47,11 @@ struct DeviceModelStageView: View {
 
     private var scene: DeviceModelScene { holder.scene }
 
-    /// Whether the stage shows the mirrored foldable in its 3D model: asked
-    /// for, a usable model in the user's Xcode, and the device drawn in its
-    /// Apple chrome (Show Device Frame on). The stage, its zoom and the fold
-    /// strip's 3D controls all go by this.
+    /// Whether the stage shows the mirrored foldable in its turnable 3D
+    /// model (`DeviceModelPresentation.free`): asked for (View ▸ Show 3D
+    /// Model), a usable model in the user's Xcode, and the device drawn in
+    /// its Apple chrome (Show Device Frame on). The stage zoom is off then
+    /// (the model has its own); the front-on model zooms as the 2D frame.
     static func isShown(chrome: DeviceChrome, workspace: DeviceWorkspace, preferences: AppPreferences) -> Bool {
         guard case .appleChrome = chrome else { return false }
         return workspace.window.showDeviceFrame && preferences.showDeviceModel
@@ -88,7 +92,7 @@ struct DeviceModelStageView: View {
             unusable: { [simulators = appModel.simulators, model] in simulators.setDeviceModelUnusable(model) }
         )
         .overlay(alignment: .leading) {
-            if let readout = scene.readout {
+            if presentation == .free, let readout = scene.readout {
                 Text(verbatim: "\(readout)°")
                     .font(.system(size: 13, weight: .medium).monospacedDigit())
                     .foregroundStyle(.secondary)
@@ -98,6 +102,9 @@ struct DeviceModelStageView: View {
             }
         }
         .animation(.easeOut(duration: 0.2), value: scene.readout == nil)
+        .onChange(of: presentation, initial: true) { _, presentation in
+            scene.present(presentation)
+        }
         .onChange(of: size, initial: true) { _, size in
             scene.fit(in: size)
         }
@@ -358,17 +365,27 @@ final class DeviceModelCanvasView: NSView {
         resizeDrawable()
     }
 
-    /// The drawable at the screen's pixels; on a 1× screen twice that, for
-    /// the layer to scale down (the renderer has no multisampling).
+    /// The drawable at twice the screen's pixels, for the layer to scale
+    /// down (2 × 2 samples a pixel): the renderer has no multisampling, and
+    /// at the screen's own pixels the metal edge of a device seen from the
+    /// front broke into specks along its top and bottom (iPhone Duo on a 2×
+    /// screen, 2026-10-11). Its longer side stays within `maxDrawableSide`.
     private func resizeDrawable() {
         let scale = window?.backingScaleFactor ?? 2
-        let supersample: CGFloat = scale < 2 ? 2 : 1
         metalLayer.contentsScale = scale
-        let size = CGSize(width: max(bounds.width * scale * supersample, 1), height: max(bounds.height * scale * supersample, 1))
+        var size = CGSize(width: max(bounds.width * scale * 2, 1), height: max(bounds.height * scale * 2, 1))
+        let longest = max(size.width, size.height)
+        if longest > Self.maxDrawableSide {
+            size = CGSize(width: size.width * Self.maxDrawableSide / longest, height: size.height * Self.maxDrawableSide / longest)
+        }
         guard metalLayer.drawableSize != size else { return }
         metalLayer.drawableSize = size
         needsRender = true
     }
+
+    /// The largest drawable side drawn (a zoomed stage on a large screen
+    /// would ask for more than the GPU's textures allow).
+    static let maxDrawableSide: CGFloat = 8192
 
     @objc private func tick(_ link: CADisplayLink) {
         guard needsRender, !rendering, let renderer, bounds.width > 1, bounds.height > 1,
@@ -394,6 +411,18 @@ final class DeviceModelCanvasView: NSView {
 /// A drawable handed to the renderer's completion, which presents it.
 private struct DrawableHandoff: @unchecked Sendable {
     let drawable: CAMetalDrawable
+}
+
+/// How the stage shows a foldable's 3D model.
+enum DeviceModelPresentation: Equatable {
+    /// As Device Hub 27.1 draws iPhone Duo: from the front through a long
+    /// lens (the camera `DeviceModelScene.frontDistance` device heights
+    /// away), the device `height` view points tall whatever its fold, never
+    /// turned by the mouse.
+    case front(height: CGFloat)
+    /// Turned and zoomed by the mouse, filling the view
+    /// (View ▸ Show 3D Model).
+    case free
 }
 
 @MainActor
@@ -436,6 +465,7 @@ final class DeviceModelScene {
     @ObservationIgnored private var resetTask: Task<Void, Never>?
     /// The viewer's zoom (pinch, scroll): the camera's distance divided by it.
     @ObservationIgnored private var zoomFactor: Float = 1
+    @ObservationIgnored private var presentation: DeviceModelPresentation = .free
     /// Turn Around's progress (radians about the vertical axis).
     @ObservationIgnored private var spinAngle: Float = 0
     @ObservationIgnored private var spinTask: Task<Void, Never>?
@@ -536,6 +566,17 @@ final class DeviceModelScene {
     /// device's hinge reads with depth (at 137° the V at the hinge is 0.048
     /// of the device's height; 35° gave 0.037, 45° 0.045).
     static let fieldOfView: Float = 48
+    /// How far Device Hub's camera stands from a foldable, in device heights
+    /// (`DeviceModelPresentation.front`): iPhone Duo half open (a sent 130°)
+    /// was 2.3 % taller 59 % of the way out to its edge than at the hinge
+    /// (664 and 649 px at 2x, 2026-10-11), as a camera about 8 heights away
+    /// draws it.
+    static let frontDistance: Float = 8
+    /// The studio's exposure seen from the front: Device Hub's dark iPhone
+    /// Duo shows the metal round its face dark gray (luma 48–75 at 2x) and
+    /// its sides mid gray (#646464), which the turnable view's exposure drew
+    /// nearly black (luma 5) and 2 drew olive (about 105).
+    static let frontExposure: Float = 1.3
     /// How much of the sphere the device turns in the view frames while it
     /// faces the camera: a little less than all of it, so the device fills
     /// the stage at rest (its corners reach the sphere only when turned
@@ -557,17 +598,23 @@ final class DeviceModelScene {
 
     func load(_ model: AppleDeviceModel) async -> Entity? {
         if let root { return root }
-        guard let entity = try? await Entity(contentsOf: model.url) else { return nil }
-        var found: ModelEntity?
-        func find(_ node: Entity) {
-            if let candidate = node as? ModelEntity, candidate.components[ModelComponent.self] != nil { found = candidate }
-            node.children.forEach(find)
+        // Device Hub's colour first (a layer over the file), else the file
+        // as it is.
+        var loaded: (entity: Entity, found: ModelEntity, animation: AnimationResource)?
+        for url in [Self.colorVariantFile(for: model), model.url].compactMap({ $0 }) where loaded == nil {
+            guard let entity = try? await Entity(contentsOf: url) else { continue }
+            var found: ModelEntity?
+            func find(_ node: Entity) {
+                if let candidate = node as? ModelEntity, candidate.components[ModelComponent.self] != nil { found = candidate }
+                node.children.forEach(find)
+            }
+            find(entity)
+            guard let found, let animation = entity.availableAnimations.first,
+                  model.fits(animationDuration: animation.definition.duration)
+            else { continue }
+            loaded = (entity, found, animation)
         }
-        find(entity)
-        guard let found, let animation = entity.availableAnimations.first,
-              model.fits(animationDuration: animation.definition.duration),
-              var component = found.components[ModelComponent.self]
-        else { return nil }
+        guard let (entity, found, animation) = loaded, var component = found.components[ModelComponent.self] else { return nil }
         var parts: [AppleDeviceModel.Part] = []
         for mesh in component.mesh.contents.models {
             for part in mesh.parts {
@@ -636,7 +683,7 @@ final class DeviceModelScene {
             root.addChild(light)
         }
         if let environment = await Self.studioLight() {
-            root.components.set(ImageBasedLightComponent(source: .single(environment), intensityExponent: Self.studioExposure))
+            root.components.set(ImageBasedLightComponent(source: .single(environment), intensityExponent: exposure))
             // On the model itself: the receiver is not passed down from the
             // file's root, and polished metal lit by the key alone is black.
             found.components.set(ImageBasedLightReceiverComponent(imageBasedLight: root))
@@ -662,6 +709,34 @@ final class DeviceModelScene {
     /// Fits the camera to a view of `size` points.
     func fit(in size: CGSize) {
         viewSize = size
+        layout()
+    }
+
+    /// The studio's exposure for the presentation.
+    private var exposure: Float {
+        presentation == .free ? Self.studioExposure : Self.frontExposure
+    }
+
+    /// Shows the device as `presentation` asks; facing the camera again,
+    /// unzoomed, when it leaves the free view.
+    func present(_ presentation: DeviceModelPresentation) {
+        guard presentation != self.presentation else { return }
+        let wasFree = self.presentation == .free
+        self.presentation = presentation
+        if wasFree != (presentation == .free), let root, var light = root.components[ImageBasedLightComponent.self] {
+            light.intensityExponent = exposure
+            root.components.set(light)
+        }
+        if presentation != .free {
+            resetTask?.cancel()
+            spinTask?.cancel()
+            spinTask = nil
+            turnStart = nil
+            yaw = 0
+            pitch = 0
+            spinAngle = 0
+            zoomFactor = 1
+        }
         layout()
     }
 
@@ -708,6 +783,20 @@ final class DeviceModelScene {
             * roll
             * book
         guard viewSize.width > 0, viewSize.height > 0 else { return }
+        if case .front(let height) = presentation {
+            // A long lens a fixed number of device heights away keeps
+            // Device Hub's perspective at any size; its field of view makes
+            // the device `height` points tall. Measured from the middle of
+            // the panel facing the camera (its nearest and farthest corners),
+            // so the device keeps its size in every posture, as in Device Hub
+            // (from the open device's plane, ours drew iPhone Duo closed 3.4 %
+            // taller than open, its half-open hinge 3.3 % shorter).
+            let tanHalf = Float(viewSize.height / max(height, 1)) / 2 / Self.frontDistance
+            camera.camera.fieldOfViewInDegrees = 2 * atan(tanHalf) * 180 / .pi
+            camera.position = [0, 0, facingPanelDepth() + deviceSize.z * Self.frontDistance]
+            return
+        }
+        camera.camera.fieldOfViewInDegrees = Self.fieldOfView
         let vertical = Self.fieldOfView * .pi / 180 / 2
         let horizontal = atan(Float(viewSize.width / viewSize.height) * tan(vertical))
         // Tight while the device faces the camera; the whole sphere it turns
@@ -715,6 +804,19 @@ final class DeviceModelScene {
         let turnedAway = max(abs(sin(yaw + spinAngle)), abs(sin(pitch)))
         let fit = Self.fit + (1 - Self.fit) * turnedAway
         camera.position = [0, 0, framing.radius * fit / sin(min(vertical, horizontal)) / zoomFactor]
+    }
+
+    /// The depth (the view's z) half way between the nearest and the
+    /// farthest corner of the panel that faces the camera: the inner one
+    /// unless the device is closed. Zero before the model loads.
+    private func facingPanelDepth() -> Float {
+        guard let model = modelEntity, let bounds = panelBounds else { return 0 }
+        let facing: SimulatorFoldPanel = shownOpening < SimulatorFold.outerPanelBelow ? .outer : .inner
+        let depths = AppleDeviceModel.PanelHit.regions(of: facing, inner: bounds.inner, outer: bounds.outer, opening: shownOpening)
+            .flatMap { [$0.origin, $0.alongU, $0.alongV, $0.alongU + $0.alongV - $0.origin] }
+            .map { model.convert(position: $0, to: nil).z }
+        guard let near = depths.max(), let far = depths.min() else { return 0 }
+        return (near + far) / 2
     }
 
     /// Turns the device by a drag's `translation` from where it began.
@@ -734,7 +836,7 @@ final class DeviceModelScene {
     /// Zooms the camera by `factor`, within 0.6× (the whole device small)
     /// and 2× (a close look at the panel, the camera still outside the device).
     func zoom(by factor: CGFloat) {
-        guard factor.isFinite, factor > 0 else { return }
+        guard presentation == .free, factor.isFinite, factor > 0 else { return }
         zoomFactor = min(max(zoomFactor * Float(factor), Self.zoomRange.lowerBound), Self.zoomRange.upperBound)
         layout()
     }
@@ -765,7 +867,7 @@ final class DeviceModelScene {
     /// Reduce Motion on it turns the device a half turn at once instead
     /// (again to face it back).
     func spin() {
-        guard root != nil, spinTask == nil else { return }
+        guard presentation == .free, root != nil, spinTask == nil else { return }
         if MotionMetrics.reduceMotion {
             resetTask?.cancel()
             yaw = remainder(yaw + .pi, 2 * .pi)
@@ -980,6 +1082,8 @@ final class DeviceModelScene {
             lastTouch = point
             session.send(TouchCommand(phase: .move, x: point.x, y: point.y))
         case .turn:
+            // Device Hub's front-on device does not turn.
+            guard presentation == .free else { return }
             if hypot(translation.width, translation.height) >= Self.clickSlop { turn(by: translation) }
         case .key, nil:
             break
@@ -995,7 +1099,7 @@ final class DeviceModelScene {
             lastTouch = nil
         case .turn:
             endTurn()
-            guard hypot(translation.width, translation.height) < Self.clickSlop else { return }
+            guard presentation == .free, hypot(translation.width, translation.height) < Self.clickSlop else { return }
             if let last = lastTurnClick, Date().timeIntervalSince(last) < Self.doubleClickInterval {
                 lastTurnClick = nil
                 resetTurn(zoom: true)
@@ -1105,11 +1209,27 @@ final class DeviceModelScene {
     /// How long a key takes to move out or in.
     static let keyMotion: Double = 0.08
 
+    /// A layer showing `model` in Device Hub's colour
+    /// (`AppleDeviceModel.colorVariantLayer`), written to the temporary
+    /// folder; nil when it cannot be written.
+    static func colorVariantFile(for model: AppleDeviceModel) -> URL? {
+        let folder = FileManager.default.temporaryDirectory.appendingPathComponent("DeviceHubPro-DeviceModels", isDirectory: true)
+        let file = folder.appendingPathComponent("\(model.spec.productClass)-\(AppleDeviceModel.deviceHubColor).usda")
+        let layer = AppleDeviceModel.colorVariantLayer(referencing: model.url, color: AppleDeviceModel.deviceHubColor)
+        do {
+            try FileManager.default.createDirectory(at: folder, withIntermediateDirectories: true)
+            try Data(layer.utf8).write(to: file, options: .atomic)
+            return file
+        } catch {
+            return nil
+        }
+    }
+
     /// The camera's ray through `location` (view points), in the scene's
     /// space.
     private func ray(at location: CGPoint) -> (origin: SIMD3<Float>, direction: SIMD3<Float>)? {
         guard viewSize.width > 0, viewSize.height > 0 else { return nil }
-        let tanHalf = tan(Self.fieldOfView * .pi / 180 / 2)
+        let tanHalf = tan(camera.camera.fieldOfViewInDegrees * .pi / 180 / 2)
         let aspect = Float(viewSize.width / viewSize.height)
         let ndc = SIMD2<Float>(Float(location.x / viewSize.width) * 2 - 1, 1 - Float(location.y / viewSize.height) * 2)
         let origin = camera.position(relativeTo: nil)
@@ -1143,8 +1263,11 @@ final class DeviceModelScene {
                 best = (hit.distance, region.u0 + hit.a * (region.u1 - region.u0), hit.b)
             }
         }
-        guard let best else { return nil }
-        return AppleDeviceModel.PanelHit.framePixel(u: best.u, v: best.v, turns: frame.turns, width: frame.width, height: frame.height)
+        // The picture sits inside the panel's black border.
+        let texture = frame.turns % 2 == 1 ? (frame.height, frame.width) : (frame.width, frame.height)
+        guard let best, let point = AppleDeviceModel.PanelScreen.of(panel).content(u: best.u, v: best.v, width: texture.0, height: texture.1)
+        else { return nil }
+        return AppleDeviceModel.PanelHit.framePixel(u: point.u, v: point.v, turns: frame.turns, width: frame.width, height: frame.height)
     }
 
     /// A bright, slightly warm photographer's studio in high dynamic range
@@ -1367,7 +1490,7 @@ final class PanelTextureFeeder {
     func clear(_ panel: SimulatorFoldPanel) -> Bool {
         guard let target = textures[panel] else { return false }
         last[panel] = nil
-        renderer.submit(PanelRenderer.Job(buffer: nil, queue: target.queue, turns: 0, blur: 0), for: panel)
+        renderer.submit(PanelRenderer.Job(buffer: nil, queue: target.queue, turns: 0, blur: 0, screen: .zero), for: panel)
         return true
     }
 
@@ -1391,7 +1514,11 @@ final class PanelTextureFeeder {
         let turned = turns % 2 == 1 ? (height, width) : (width, height)
         guard turned == (target.width, target.height) else { return false }
         if blur <= 0 { last[panel] = (buffer, turns) }
-        renderer.submit(PanelRenderer.Job(buffer: buffer, queue: target.queue, turns: turns, blur: blur), for: panel)
+        let screen = AppleDeviceModel.PanelScreen.of(panel).geometry(width: target.width, height: target.height)
+        renderer.submit(PanelRenderer.Job(
+            buffer: buffer, queue: target.queue, turns: turns, blur: blur,
+            screen: SIMD4(screen.inset.x, screen.inset.y, screen.radius, 0)
+        ), for: panel)
         return true
     }
 }
@@ -1407,6 +1534,9 @@ final class PanelRenderer: @unchecked Sendable {
         let queue: TextureResource.DrawableQueue
         let turns: Int
         let blur: Float
+        /// The picture's border across and down the drawable (fractions)
+        /// and its corners' radius in pixels (`AppleDeviceModel.PanelScreen`).
+        let screen: SIMD4<Float>
     }
 
     private let device = MTLCreateSystemDefaultDevice()
@@ -1467,11 +1597,24 @@ final class PanelRenderer: @unchecked Sendable {
         PanelVertex in [[stage_in]],
         texture2d<float> frame [[texture(0)]],
         constant int &turns [[buffer(0)]],
-        constant float &blur [[buffer(1)]]
+        constant float &blur [[buffer(1)]],
+        constant float4 &screen [[buffer(2)]],
+        constant float4 &size [[buffer(3)]]
     ) {
         constexpr sampler nearest(coord::normalized, filter::nearest, address::clamp_to_edge);
         constexpr sampler smooth(coord::normalized, filter::linear, address::clamp_to_edge);
-        float2 uv = in.uv;
+        // The picture inside the panel's black border, its corners rounded
+        // (a rounded rectangle's distance, a pixel of edge).
+        float2 inset = screen.xy;
+        float2 p = (in.uv - 0.5) * size.xy;
+        float2 q = abs(p) - ((0.5 - inset) * size.xy - screen.z);
+        float edge = length(max(q, 0.0)) + min(max(q.x, q.y), 0.0) - screen.z;
+        float coverage = clamp(0.5 - edge, 0.0, 1.0);
+        if (coverage <= 0.0) {
+            return float4(0.0, 0.0, 0.0, 1.0);
+        }
+        float2 uv = (in.uv - inset) / (1.0 - 2.0 * inset);
+        bool scaled = inset.x > 0.0 || inset.y > 0.0;
         switch ((turns % 4 + 4) % 4) {
             case 1: uv = float2(uv.y, 1.0 - uv.x); break;
             case 2: uv = float2(1.0 - uv.x, 1.0 - uv.y); break;
@@ -1479,7 +1622,8 @@ final class PanelRenderer: @unchecked Sendable {
             default: break;
         }
         if (blur <= 0.0) {
-            return frame.sample(nearest, uv);
+            float4 color = scaled ? frame.sample(smooth, uv) : frame.sample(nearest, uv);
+            return float4(color.rgb * coverage, 1.0);
         }
         float2 texel = blur / float2(frame.get_width(), frame.get_height());
         float4 sum = float4(0.0);
@@ -1491,7 +1635,7 @@ final class PanelRenderer: @unchecked Sendable {
                 total += weight;
             }
         }
-        return sum / total;
+        return float4((sum / total).rgb * coverage, 1.0);
     }
     """
 
@@ -1557,10 +1701,14 @@ final class PanelRenderer: @unchecked Sendable {
         guard let encoder = commands.makeRenderCommandEncoder(descriptor: pass) else { return }
         var quarterTurns = Int32(job.turns)
         var blurStep = job.blur
+        var screen = job.screen
+        var size = SIMD4<Float>(Float(drawable.texture.width), Float(drawable.texture.height), 0, 0)
         encoder.setRenderPipelineState(pipeline)
         encoder.setFragmentTexture(source, index: 0)
         encoder.setFragmentBytes(&quarterTurns, length: MemoryLayout<Int32>.size, index: 0)
         encoder.setFragmentBytes(&blurStep, length: MemoryLayout<Float>.size, index: 1)
+        encoder.setFragmentBytes(&screen, length: MemoryLayout<SIMD4<Float>>.size, index: 2)
+        encoder.setFragmentBytes(&size, length: MemoryLayout<SIMD4<Float>>.size, index: 3)
         encoder.drawPrimitives(type: .triangle, vertexStart: 0, vertexCount: 3)
         encoder.endEncoding()
         commands.addCompletedHandler { _ in

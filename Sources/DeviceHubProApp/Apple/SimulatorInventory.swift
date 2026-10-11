@@ -208,6 +208,19 @@ final class SimulatorInventory {
         return chromeFrames[identifier] ?? nil
     }
 
+    /// A foldable `entry`'s outer panel display (its device type's own),
+    /// whichever panel is lit.
+    func outerDisplayShape(for entry: SimulatorEntry) -> DisplayShape? {
+        entry.deviceTypeIdentifier.flatMap { displayShapes[$0] ?? nil }
+    }
+
+    /// A foldable `entry`'s outer panel chrome (its device type's own),
+    /// whichever panel is lit: the closed device's 2D frame, which its
+    /// front-on 3D model is sized to.
+    func outerChromeFrame(for entry: SimulatorEntry) -> AppleChromeFrame? {
+        entry.deviceTypeIdentifier.flatMap { chromeFrames[$0] ?? nil }
+    }
+
     // MARK: - A foldable's panels
 
     /// `entry`'s two panels when its device type is a foldable whose

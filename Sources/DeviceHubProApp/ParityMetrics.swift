@@ -277,6 +277,16 @@ enum ParityMetrics {
     /// glass bleeds ≈0.5 pt per side, so the layout spacing is 8 pt.
     static let pillSpacing: CGFloat = 8
     static let pillCircleDiameter: CGFloat = 36
+    /// A foldable simulator's second capsule (DH 27.1 27A266a+, iPhone Duo,
+    /// 2026-10-11, measured at 1.49 px per guest point): Rotate, a divider,
+    /// then Closed, Partially Open and Open on the pill's 34 pt pitch, in
+    /// one 36 pt capsule 145.6 pt wide (Rotate's centre 19.5 pt from its
+    /// left edge, Open's 20.4 pt from its right). The divider is 1 x 20 pt,
+    /// centred, #eaeaea over the capsule's #fdfdfd, and Rotate's and
+    /// Closed's centres are 37.9 pt apart: 1.45 pt either side of it.
+    static let foldPillDividerWidth: CGFloat = 1
+    static let foldPillDividerHeight: CGFloat = 20
+    static let foldPillDividerGap: CGFloat = 1.45
     /// The audit's "≈16–17 pt" was an eyeball estimate; the reference icons
     /// ink 29–30 px at 2x, which 15 pt symbols reproduce (camera/record
     /// exact; the apps glyph is SF's nearest to DH's Material `grid_view`).
