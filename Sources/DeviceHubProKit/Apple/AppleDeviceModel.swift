@@ -305,13 +305,17 @@ public struct AppleDeviceModel: Sendable, Hashable {
     /// it turns in gradually below, so a closed one faces the camera.
     public static let bookTurnFullAt: Double = 45
 
-    public static func framing(opening: Double, width: Float, height: Float, thickness: Float) -> FoldFraming {
+    /// `hingeReach` is how far the hinge's rounded back stands out past
+    /// the hinge once the device is closed (it turns out as the device
+    /// folds): Device Hub centres the closed device with it, iPhone Duo's
+    /// spine 0.25 of the model's centimetres to the left of the hinge.
+    public static func framing(opening: Double, width: Float, height: Float, thickness: Float, hingeReach: Float = 0) -> FoldFraming {
         let degrees = min(max(opening.isFinite ? opening : 0, 0), 180)
         let fold = Float((180 - degrees) * .pi / 180)
         let half = width / 2
-        // The outer edge of the half that stays, of the half that folds, and
-        // the hinge.
-        let points: [SIMD2<Float>] = [[half, 0], [-half * cos(fold), half * sin(fold)], [0, 0]]
+        // The outer edge of the half that stays, of the half that folds, the
+        // hinge and its back.
+        let points: [SIMD2<Float>] = [[half, 0], [-half * cos(fold), half * sin(fold)], [0, 0], [-hingeReach * sin(fold / 2), 0]]
         let lower = points.dropFirst().reduce(points[0], simd_min)
         let upper = points.dropFirst().reduce(points[0], simd_max)
         let center = (lower + upper) / 2
@@ -322,44 +326,6 @@ public struct AppleDeviceModel: Sendable, Hashable {
             center: center,
             radius: (reach * reach + height * height / 4).squareRoot() + thickness / 2
         )
-    }
-
-    /// Where a panel's picture sits on the model's panel, as Device Hub
-    /// draws iPhone Duo (Xcode 27.1, 2026-10-11, at 2x: the open device
-    /// 924 px wide, its panel 914 × 648 inside a 5 px rim): the inner one
-    /// inside a black border 14.5 px wide all round, its corners rounded
-    /// 52 px (a frame drawn to the panel's edges ran under that border). The
-    /// outer one fills its panel: its camera is a hole in the picture, which
-    /// iOS lays its status bar round, so a border moved the picture off it.
-    public struct PanelScreen: Sendable, Equatable {
-        /// The border as a fraction of the panel's long and its short side,
-        /// and the corners' radius as a fraction of its short side.
-        public let longInset: Float
-        public let shortInset: Float
-        public let cornerRadius: Float
-
-        public static let inner = PanelScreen(longInset: 14.5 / 914, shortInset: 14.5 / 648, cornerRadius: 52 / 648)
-        public static let outer = PanelScreen(longInset: 0, shortInset: 0, cornerRadius: 0)
-
-        public static func of(_ panel: SimulatorFoldPanel) -> PanelScreen {
-            panel == .inner ? .inner : .outer
-        }
-
-        /// The border across and down a `width` × `height` texture laid on
-        /// the panel (fractions), and the corners' radius in its pixels.
-        public func geometry(width: Int, height: Int) -> (inset: SIMD2<Float>, radius: Float) {
-            let inset: SIMD2<Float> = width >= height ? [longInset, shortInset] : [shortInset, longInset]
-            return (inset, cornerRadius * Float(min(width, height)))
-        }
-
-        /// The point of the picture under (u, v) of such a texture; nil on
-        /// the border.
-        public func content(u: Float, v: Float, width: Int, height: Int) -> (u: Float, v: Float)? {
-            let inset = geometry(width: width, height: height).inset
-            let point = (SIMD2<Float>(u, v) - inset) / (1 - 2 * inset)
-            guard (0...1).contains(point.x), (0...1).contains(point.y) else { return nil }
-            return (point.x, point.y)
-        }
     }
 
     /// Where a pointer lands on a panel of the 3D model, worked out on the
@@ -454,6 +420,75 @@ public struct AppleDeviceModel: Sendable, Hashable {
             let x = min(max(uv.0 * Float(width), 0), Float(max(width - 1, 0)))
             let y = min(max(uv.1 * Float(height), 0), Float(max(height - 1, 0)))
             return (Int32(x), Int32(y))
+        }
+    }
+
+    /// How Device Hub draws the model seen from the front (Xcode 27.1,
+    /// measured in its window at 2x, 2026-10-11): the body in neutral greys
+    /// whatever the finish's tint (its frame, keys and hinge read R = G = B),
+    /// the black round each panel (the face inside the frame, the glass over
+    /// the panel's edge, the camera hole's cover) pure black, and the panels'
+    /// pictures as the simulator draws them.
+    public enum FrontLook {
+        /// A material as far as the look tells them apart: its base colour
+        /// (sRGB) and whether a texture shades it, how metallic and rough.
+        public struct Material: Sendable, Equatable {
+            public var baseColor: SIMD3<Float>
+            public var hasBaseTexture: Bool
+            public var metallic: Float
+            public var roughness: Float
+
+            public init(baseColor: SIMD3<Float>, hasBaseTexture: Bool, metallic: Float, roughness: Float) {
+                self.baseColor = baseColor
+                self.hasBaseTexture = hasBaseTexture
+                self.metallic = metallic
+                self.roughness = roughness
+            }
+        }
+
+        /// Whether `material` is drawn pure black: a fully rough, not metallic
+        /// one of a near-black colour of its own. In iPhone Duo's file these
+        /// are the face plate round the inner panel, the glass over both
+        /// panels' edges and the camera hole's cover; lit, they read grey
+        /// (the 19 px between the open device's edge and its picture, where
+        /// Device Hub draws 4 px of frame and 15 of black).
+        public static func isBlack(_ material: Material) -> Bool {
+            !material.hasBaseTexture && material.metallic == 0 && material.roughness == 1
+                && material.baseColor.max() < 0.05
+        }
+
+        /// The neutral grey (sRGB) as bright as `color` (sRGB): its luminance
+        /// in linear light.
+        public static func grey(of color: SIMD3<Float>) -> Float {
+            func linear(_ value: Float) -> Float { value <= 0.04045 ? value / 12.92 : pow((value + 0.055) / 1.055, 2.4) }
+            let luminance = 0.2126 * linear(color.x) + 0.7152 * linear(color.y) + 0.0722 * linear(color.z)
+            let clamped = min(max(luminance, 0), 1)
+            return clamped <= 0.0031308 ? clamped * 12.92 : 1.055 * pow(clamped, 1 / 2.4) - 0.055
+        }
+
+        /// The sky the body is lit by, in linear light: `overhead`, at 45°,
+        /// round the horizon, at −45° and below, joined straight in
+        /// elevation; `front` times as bright toward the viewer, and a tenth
+        /// darker to one side (`side`). Fitted to Device Hub's frame on ten
+        /// sides of the device closed, half open and open (the median grey
+        /// of each side's band): 2.8 grey levels apart on average.
+        public static let overhead: Float = 2
+        public static let above: Float = 1.67
+        public static let horizon: Float = 1.25
+        public static let below: Float = 1.25
+        public static let underneath: Float = 1.1
+        public static let front: Float = 1.9
+        public static let side: Float = -0.1
+
+        /// The sky's light at `elevation` radians above the horizon,
+        /// `towardViewer` (0 to 1) of the way round to face the viewer, and
+        /// `across` (−1 to 1) of the way round to one side.
+        public static func sky(elevation: Float, towardViewer: Float, across: Float = 0) -> Float {
+            let stops = [underneath, below, horizon, above, overhead]
+            let position = min(max(elevation / (.pi / 4) + 2, 0), 4)
+            let index = min(Int(position), 3)
+            let light = stops[index] + (stops[index + 1] - stops[index]) * (position - Float(index))
+            return light * (1 + (front - 1) * min(max(towardViewer, 0), 1)) * max(0.05, 1 + side * across)
         }
     }
 
