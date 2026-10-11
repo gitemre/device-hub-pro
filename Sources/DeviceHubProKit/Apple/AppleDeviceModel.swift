@@ -324,6 +324,42 @@ public struct AppleDeviceModel: Sendable, Hashable {
         )
     }
 
+    /// Where a panel's picture sits on the model's panel, as Device Hub
+    /// draws iPhone Duo (Xcode 27.1, 2026-10-11, at 2x: the open device
+    /// 924 px wide, its panel 914 × 648 inside a 5 px rim, closed 465 × 647):
+    /// inside a black border 14.5 px wide all round, its corners rounded
+    /// 52 px. A frame drawn to the panel's edges ran under that border.
+    public struct PanelScreen: Sendable, Equatable {
+        /// The border as a fraction of the panel's long and its short side,
+        /// and the corners' radius as a fraction of its short side.
+        public let longInset: Float
+        public let shortInset: Float
+        public let cornerRadius: Float
+
+        public static let inner = PanelScreen(longInset: 14.5 / 914, shortInset: 14.5 / 648, cornerRadius: 52 / 648)
+        public static let outer = PanelScreen(longInset: 14.5 / 647, shortInset: 14.5 / 465, cornerRadius: 52 / 465)
+
+        public static func of(_ panel: SimulatorFoldPanel) -> PanelScreen {
+            panel == .inner ? .inner : .outer
+        }
+
+        /// The border across and down a `width` × `height` texture laid on
+        /// the panel (fractions), and the corners' radius in its pixels.
+        public func geometry(width: Int, height: Int) -> (inset: SIMD2<Float>, radius: Float) {
+            let inset: SIMD2<Float> = width >= height ? [longInset, shortInset] : [shortInset, longInset]
+            return (inset, cornerRadius * Float(min(width, height)))
+        }
+
+        /// The point of the picture under (u, v) of such a texture; nil on
+        /// the border.
+        public func content(u: Float, v: Float, width: Int, height: Int) -> (u: Float, v: Float)? {
+            let inset = geometry(width: width, height: height).inset
+            let point = (SIMD2<Float>(u, v) - inset) / (1 - 2 * inset)
+            guard (0...1).contains(point.x), (0...1).contains(point.y) else { return nil }
+            return (point.x, point.y)
+        }
+    }
+
     /// Where a pointer lands on a panel of the 3D model, worked out on the
     /// flat panels' bounds (the model's own space: x across, y up from the
     /// open device's face, z down the device) and the fold: the half at
@@ -417,6 +453,33 @@ public struct AppleDeviceModel: Sendable, Hashable {
             let y = min(max(uv.1 * Float(height), 0), Float(max(height - 1, 0)))
             return (Int32(x), Int32(y))
         }
+    }
+
+    /// The `color` variant Device Hub draws iPhone Duo in (Xcode 27.1, light
+    /// appearance, 2026-10-11): the file's own selection is "Light".
+    public static let deviceHubColor = "Dark"
+
+    /// A USD layer showing the file at `url` in its `color` variant
+    /// `variant` (the file's root prim carries the variant set "color",
+    /// "Light" and "Dark"): it references the file where it is, so nothing
+    /// of it is copied, and leaves the root's type to the file (a SkelRoot).
+    public static func colorVariantLayer(referencing url: URL, color variant: String) -> String {
+        """
+        #usda 1.0
+        (
+            defaultPrim = "root"
+        )
+
+        def "root" (
+            prepend references = @\(url.path)@
+            variants = {
+                string color = "\(variant)"
+            }
+        )
+        {
+        }
+
+        """
     }
 
     /// The model `productClass` names in the Xcode at `developerDir`: a

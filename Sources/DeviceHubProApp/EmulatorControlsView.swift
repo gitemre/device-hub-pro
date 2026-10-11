@@ -309,8 +309,12 @@ struct DeviceControlPill: View {
             .glassHairline(in: Capsule())
             .dhGlassRim(in: Capsule())
 
-            // A TV, a watch and a car do not rotate: no Rotate button.
-            if workspace.deviceRotates {
+            // A foldable simulator: Rotate shares a capsule with the
+            // postures, as in Device Hub 27.1. A TV, a watch and a car do not
+            // rotate: no Rotate button.
+            if workspace.simulatorFold.showsFoldControls {
+                foldPill
+            } else if workspace.deviceRotates {
             EmulatorPressButton(
                 size: CGSize(
                     width: ParityMetrics.pillCircleDiameter,
@@ -338,6 +342,72 @@ struct DeviceControlPill: View {
             .glassHairline(in: Circle())
             .dhGlassRim(in: Circle())
             }
+        }
+    }
+
+    /// A foldable simulator's second capsule, as Device Hub 27.1 draws iPhone
+    /// Duo's: Rotate, a divider, then Closed, Partially Open and Open, with a
+    /// laptop and a tent beside them; the current posture in the accent
+    /// colour, each named in its tooltip.
+    private var foldPill: some View {
+        HStack(spacing: 0) {
+            EmulatorPressButton(
+                size: pillButtonSize,
+                hitSize: ParityMetrics.pillButtonHitSize,
+                platter: .capsule(ParityMetrics.pillPlatterSize),
+                onTap: { await rotate(left: true) },
+                onLongPress: { await rotate(left: false) },
+                menuItems: [
+                    EmulatorMenuItem(title: "Rotate Left", isEnabled: canRotate) { await rotate(left: true) },
+                    EmulatorMenuItem(title: "Rotate Right", isEnabled: canRotate) { await rotate(left: false) },
+                ],
+                accessibilityTitle: "Rotate Left",
+                showsTooltip: false
+            ) {
+                if let model = workspace.simulatorFold.deviceModel, let bundle = FoldPostureGlyphs.bundle(for: model),
+                   FoldPostureGlyphs.hasSymbol(FoldPostureGlyphs.rotateName, model: model) {
+                    Image(FoldPostureGlyphs.rotateName, bundle: bundle)
+                        .font(.system(size: ParityMetrics.pillIconSize, weight: .medium))
+                } else {
+                    PillRotateGlyph()
+                }
+            }
+            .disabled(!canRotate)
+
+            Rectangle()
+                .fill(.separator)
+                .frame(width: ParityMetrics.foldPillDividerWidth, height: ParityMetrics.foldPillDividerHeight)
+                .padding(.horizontal, ParityMetrics.foldPillDividerGap)
+
+            ForEach(SimulatorFoldPostureChoice.pillOrder, id: \.title) { choice in
+                EmulatorPressButton(
+                    size: pillButtonSize,
+                    hitSize: ParityMetrics.pillButtonHitSize,
+                    platter: .capsule(ParityMetrics.pillPlatterSize),
+                    onTap: { select(choice) },
+                    accessibilityTitle: choice.title,
+                    showsTooltip: false,
+                    help: choice.title
+                ) {
+                    FoldPostureGlyph(
+                        choice: choice,
+                        model: workspace.simulatorFold.deviceModel,
+                        isCurrent: workspace.simulatorFold.postureChoice == choice
+                    )
+                }
+            }
+        }
+        .padding(.horizontal, ParityMetrics.pillCapsulePadding)
+        .background(ParityMetrics.pillLift, in: Capsule())
+        .liquidGlass(interactive: true, tint: ParityMetrics.pillTint, in: Capsule())
+        .glassHairline(in: Capsule())
+        .dhGlassRim(in: Capsule())
+    }
+
+    private func select(_ choice: SimulatorFoldPostureChoice) {
+        switch choice {
+        case .preset(let posture): workspace.simulatorFold.setPostureAnimated(posture)
+        case .held(let posture): workspace.simulatorFold.setHeldPosture(posture)
         }
     }
 

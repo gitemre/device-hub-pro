@@ -326,4 +326,38 @@ final class AppleDeviceModelTests: XCTestCase {
         XCTAssertNil(AppleDeviceModel.panels(in: Self.duoParts.filter { $0.material != 7 }))
         XCTAssertNil(AppleDeviceModel.panels(in: []))
     }
+
+    /// A panel's picture sits inside Device Hub's black border: the long
+    /// and short sides each take their own, whichever way the texture lies,
+    /// and a point on the border reaches no pixel.
+    func testThePictureSitsInsideThePanelsBorder() throws {
+        let inner = AppleDeviceModel.PanelScreen.inner
+        let landscape = inner.geometry(width: 2853, height: 2007)
+        XCTAssertEqual(landscape.inset.x, 14.5 / 914, accuracy: 1e-6)
+        XCTAssertEqual(landscape.inset.y, 14.5 / 648, accuracy: 1e-6)
+        XCTAssertEqual(landscape.radius, 52 / 648 * 2007, accuracy: 0.01)
+        let portrait = inner.geometry(width: 2007, height: 2853)
+        XCTAssertEqual(portrait.inset.x, landscape.inset.y)
+        XCTAssertEqual(portrait.inset.y, landscape.inset.x)
+
+        XCTAssertNil(inner.content(u: 0.005, v: 0.5, width: 2853, height: 2007), "on the border")
+        let middle = try XCTUnwrap(inner.content(u: 0.5, v: 0.5, width: 2853, height: 2007))
+        XCTAssertEqual(middle.u, 0.5, accuracy: 1e-6)
+        XCTAssertEqual(middle.v, 0.5, accuracy: 1e-6)
+        let corner = try XCTUnwrap(inner.content(u: landscape.inset.x, v: landscape.inset.y, width: 2853, height: 2007))
+        XCTAssertEqual(corner.u, 0, accuracy: 1e-6)
+        XCTAssertEqual(corner.v, 0, accuracy: 1e-6)
+        XCTAssertEqual(AppleDeviceModel.PanelScreen.of(.outer), .outer)
+    }
+
+    /// Device Hub's colour comes from a layer over the file, which it
+    /// references where it is and does not retype.
+    func testTheColourLayerReferencesTheFile() {
+        let url = URL(fileURLWithPath: "/Applications/Xcode.app/Contents/SharedFrameworks/DeviceKit.framework/V68.usdz")
+        let layer = AppleDeviceModel.colorVariantLayer(referencing: url, color: AppleDeviceModel.deviceHubColor)
+        XCTAssertTrue(layer.hasPrefix("#usda 1.0"))
+        XCTAssertTrue(layer.contains("prepend references = @\(url.path)@"))
+        XCTAssertTrue(layer.contains("string color = \"Dark\""))
+        XCTAssertTrue(layer.contains("def \"root\" ("), "typeless: the file's SkelRoot stands")
+    }
 }

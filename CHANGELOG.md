@@ -8,13 +8,13 @@ All notable changes to Device Hub Pro are recorded here. The format follows
 
 ### Added
 
-- **iPhone Duo (Xcode 27.1):** the fold strip folds a foldable simulator (Closed, Half,
-  Opened, Laptop, Tent and the hinge slider, as Device Hub moves it), Device ▸ Fold / Unfold
-  and Orientation do it from the menu, and the stage follows the lit panel. Where Xcode ships
-  Apple's 3D model of the device, the **3D** button shows the live simulator in it: the hinge
-  folds on screen in step with the simulator's, the panel takes clicks, drags and typing, the
-  device turns and zooms, and its volume and side buttons move out under the pointer and press
-  in on a click.
+- **iPhone Duo (Xcode 27.1):** the stage's pill folds a foldable simulator as Device Hub's
+  does (Closed, Partially Open and Open beside Rotate, with Laptop and Tent), Device ▸ Fold /
+  Unfold and Orientation do it from the menu, and the stage follows the lit panel. Where Xcode
+  ships Apple's 3D model of the device, the stage draws the live simulator in it as Device Hub
+  does, from the front: the hinge folds on screen in step with the simulator's, the panel takes
+  clicks, drags and typing, and its volume and side buttons move out under the pointer and press
+  in on a click; View ▸ Show 3D Model lets the mouse turn and zoom it.
 - **Keyboard settings,** as Device Hub has them: Capture keyboard shortcuts (⌘ shortcuts go
   to the device while the keyboard is captured), Secure keyboard entry, and Simulate hardware
   keyboard by default, with Device ▸ Keyboard ▸ Simulate Hardware Keyboard per simulator.

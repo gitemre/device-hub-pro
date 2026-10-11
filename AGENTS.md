@@ -245,15 +245,18 @@ alternative stays the fallback.
   is held (Laptop, Tent, the stage's rotate, Device ▸ Orientation) through the same service's
   orientation picker (`SimulatorFold.poseEvent`), whose canary is the same command with
   `--avp '{"source":"orientation-picker-control","type":"enum","value":"landscape-left"}'`, and
-  `--orient` reports each panel's interface. Off, or without the live canvas, the fold strip is not
-  offered.
+  `--orient` reports each panel's interface. Off, or without the live canvas, the pill's postures are
+  not offered.
 - **Device model** (`DHP_DISABLE_DEVICE_MODEL`): a foldable simulator's 3D view reads Apple's model
   of the device (iPhone Duo's `V68.usdz`) from the user's Xcode at runtime (`AppleDeviceModel`):
   never copied into the repository, the app or a fixture. A file whose SHA-256 is one of
   `AppleDeviceModel.known` is used on its measured numbers; another build's file only when it loads
   with the same shape (same product class and animation length, `AppleDeviceModel.fits`, and both
   panels found), else the stage keeps the 2D chrome. Its parts are found by shape (`AppleDeviceModel.panels`), not by their
-  scrambled names. Its canary is `AppleDeviceModelLiveTests` (`DHP_DEVICE_MODEL_LIVE=1`, on a Mac
+  scrambled names. Device Hub's dark finish is selected by a USD layer written to the temporary folder
+  that references the file where it is (`AppleDeviceModel.colorVariantLayer`), and the pill's posture
+  glyphs are read from the same plug-in's asset catalog (`FoldPostureGlyphs`); neither is copied.
+  Its canary is `AppleDeviceModelLiveTests` (`DHP_DEVICE_MODEL_LIVE=1`, on a Mac
   whose selected Xcode ships a known model, or with `DHP_DEVICE_MODEL_DEVELOPER_DIR` naming such an
   Xcode's `Contents/Developer`). Off, or without a usable model, the stage keeps the 2D
   chrome.

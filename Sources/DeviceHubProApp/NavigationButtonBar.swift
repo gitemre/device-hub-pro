@@ -52,13 +52,11 @@ enum NavigationBarSpec {
 /// Everything the stage keeps in the band under the device: the navigation
 /// bar right under it, then the fold strip of a foldable emulator.
 struct StageAccessoryStrip: View {
-    @Environment(AppModel.self) private var model
     @Environment(DeviceWorkspace.self) private var workspace
     let showsNavigation: Bool
+    /// A foldable emulator's fold strip (a foldable simulator's postures sit
+    /// in the stage's pill).
     let showsFold: Bool
-    /// The stage can show the device in 3D here (a foldable simulator in its
-    /// Apple chrome): the 3D toggle and Turn Around are offered.
-    var offersDeviceModel = false
 
     var body: some View {
         VStack(spacing: 6) {
@@ -68,32 +66,8 @@ struct StageAccessoryStrip: View {
                 }
             }
             if showsFold {
-                // A foldable simulator's hinge always has a slider; an
-                // emulator's needs its console port.
-                if workspace.simulatorFold.showsFoldControls {
-                    HStack(spacing: 8) {
-                        FoldControlStrip(driver: workspace.simulatorFold, showsSlider: true)
-                        if offersDeviceModel, workspace.simulatorFold.deviceModel != nil {
-                            Toggle("3D", isOn: Binding(
-                                get: { model.preferences.showDeviceModel },
-                                set: { model.preferences.setShowDeviceModel($0) }
-                            ))
-                            .toggleStyle(.button)
-                            .help("Show the device in 3D: drag to turn it, double-click to face it again")
-                            if model.preferences.showDeviceModel {
-                                Button {
-                                    workspace.simulatorFold.turnAround()
-                                } label: {
-                                    Image(systemName: "rotate.3d")
-                                }
-                                .help("Turn Around: show the back of the device")
-                                .accessibilityLabel("Turn Around")
-                            }
-                        }
-                    }
-                } else {
-                    FoldControlStrip(driver: workspace.hardware, showsSlider: workspace.context.port != nil)
-                }
+                // The hinge's slider needs the emulator's console port.
+                FoldControlStrip(driver: workspace.hardware, showsSlider: workspace.context.port != nil)
             }
         }
     }

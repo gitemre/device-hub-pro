@@ -170,6 +170,19 @@ public enum SimulatorFold {
         return .halfOpened
     }
 
+    /// The posture button the stage's pill shows as current for `record`:
+    /// a laptop or a tent while the device is held on its side at that
+    /// posture's hinge and panel, else Device Hub's three by the hinge
+    /// (`posture(forAngle:)`: closed, partially open, open flat).
+    public static func postureChoice(for record: SimulatorFoldRecord) -> SimulatorFoldPostureChoice {
+        let angle = Int(sentAngle(record.angle))
+        for held in SimulatorHeldPosture.allCases
+        where record.pose == pose(for: held.orientation) && record.panel == held.panel && angle == Int(held.angle) {
+            return .held(held)
+        }
+        return .preset(posture(forAngle: record.angle))
+    }
+
     /// How a panel's picture rests: iPhone Duo's inner panel is turned 270°
     /// (`nativeRotation`) and reported `uiOrientation` 3 (a quarter
     /// clockwise) as soon as it lit; 90° and 180° follow by symmetry (no
@@ -288,6 +301,13 @@ public struct SimulatorFoldSweep: Sendable, Equatable {
         let linear = seconds * SimulatorFold.sweepRate / Double(SimulatorFold.sweepFrames)
         return Double(from) + Double(to - from) * SimulatorFold.sweepEasing(linear)
     }
+}
+
+/// A posture button on the stage's pill: one of Device Hub's three, or a
+/// posture past them.
+public enum SimulatorFoldPostureChoice: Sendable, Equatable {
+    case preset(PostureKind)
+    case held(SimulatorHeldPosture)
 }
 
 /// How far `SimulatorFoldSender` got with a batch of steps it was handed.
