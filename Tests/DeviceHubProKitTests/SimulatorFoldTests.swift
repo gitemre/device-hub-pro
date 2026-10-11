@@ -224,6 +224,113 @@ final class SimulatorFoldTests: XCTestCase {
         XCTAssertEqual(SimulatorFold.sweepAngles(from: 0, to: 1), [1])
     }
 
+    /// Each angle of a sweep has its frame's time, frames 1/60 s apart; the
+    /// angles are `sweepAngles`. The curve settles: from 180 to 0 the angle
+    /// rounds to 0 at frame 31 of 36, and no frame after repeats it.
+    func testASweepScheduleTimesEachAngle() {
+        let schedule = SimulatorFold.sweepSchedule(from: 180, to: 0)
+        XCTAssertEqual(schedule.map(\.angle), SimulatorFold.sweepAngles(from: 180, to: 0))
+        XCTAssertEqual(SimulatorFold.sweepFrames, 36)
+        XCTAssertEqual(schedule.last?.frame, 31)
+        XCTAssertEqual(schedule.last?.angle, 0)
+        let frames = schedule.map(\.frame)
+        XCTAssertEqual(frames, frames.sorted())
+        XCTAssertEqual(Set(frames).count, frames.count)
+        XCTAssertTrue(SimulatorFold.sweepSchedule(from: 90, to: 90).isEmpty)
+    }
+
+    /// A sweep says where the hinge is at any instant, on the curve its
+    /// angles follow: its start before it began, its end once it ended.
+    func testASweepSaysWhereTheHingeIs() {
+        let began = ContinuousClock.now
+        let sweep = SimulatorFoldSweep(from: 180, to: 0, began: began)
+        XCTAssertEqual(sweep.angle(at: began - .milliseconds(50)), 180)
+        XCTAssertEqual(sweep.angle(at: began), 180)
+        XCTAssertEqual(sweep.angle(at: sweep.end), 0)
+        XCTAssertEqual(sweep.angle(at: sweep.end + .seconds(1)), 0)
+        XCTAssertEqual(sweep.end - began, .milliseconds(600))
+        // Half way through the time, seven eighths of the way (cubic ease out).
+        XCTAssertEqual(sweep.angle(at: began + .milliseconds(300)), 22.5, accuracy: 0.001)
+        // Frame 12 of 36 leaves at 200 ms with the angle drawn at 200 ms.
+        let frame12 = SimulatorFold.sweepSchedule(from: 180, to: 0).first { $0.frame == 12 }
+        XCTAssertEqual(Double(frame12?.angle ?? -1), sweep.angle(at: began + .milliseconds(200)), accuracy: 0.5)
+    }
+
+    /// Each batch says how far it got: waiting behind another, sweeping,
+    /// then done; a forgotten simulator's batches are done.
+    func testTheSenderReportsABatchsProgress() throws {
+        let bridge = FakeSimulatorBridge()
+        let sender = SimulatorFoldSender(bridge: bridge)
+        let duo = SimulatorAddress(udid: "F01DAB1E-0000-0000-0000-000000000001")
+        let first = sender.send([.sweep(from: 180, to: 0)], to: duo)
+        let second = sender.send(SimulatorFold.presetSteps(for: .opened, from: 0), to: duo)
+        XCTAssertNotEqual(first, second)
+        XCTAssertEqual(sender.progress(of: second, for: duo), .waiting, "behind the first sweep")
+        let deadline = Date().addingTimeInterval(5)
+        var seen: SimulatorFoldSweep?
+        while Date() < deadline {
+            if case .sweeping(let sweep) = sender.progress(of: second, for: duo) {
+                seen = sweep
+                break
+            }
+            Thread.sleep(forTimeInterval: 0.005)
+        }
+        let sweep = try XCTUnwrap(seen, "the second batch's sweep began")
+        XCTAssertEqual(sweep.from, 0)
+        XCTAssertEqual(sweep.to, 180)
+        XCTAssertEqual(sender.progress(of: first, for: duo), .done)
+        sender.waitUntilIdle(timeout: 5)
+        XCTAssertEqual(sender.progress(of: second, for: duo), .done)
+        XCTAssertEqual(sender.progress(of: 0, for: duo), .done, "an empty send")
+
+        let third = sender.send([.pause(5)], to: duo)
+        Thread.sleep(forTimeInterval: 0.05)
+        XCTAssertEqual(sender.progress(of: third, for: duo), .waiting)
+        sender.forget(duo)
+        XCTAssertEqual(sender.progress(of: third, for: duo), .done, "dropped with the simulator")
+    }
+
+    /// A sweep keeps its duration when each send takes a while (a busy
+    /// guest took about 8 ms a send, and a sleep after each made 36 frames
+    /// last 0.7 s while the stage drew 0.6).
+    func testASlowChannelDoesNotStretchASweep() throws {
+        var configuration = FakeSimulatorBridge.Configuration()
+        configuration.sendDelay = 0.008
+        let bridge = FakeSimulatorBridge(configuration)
+        let sender = SimulatorFoldSender(bridge: bridge)
+        let duo = SimulatorAddress(udid: "F01DAB1E-0000-0000-0000-000000000001")
+        sender.prepare(duo)
+        sender.waitUntilIdle()
+        let began = ContinuousClock.now
+        sender.send([.sweep(from: 180, to: 0)], to: duo)
+        sender.waitUntilIdle(timeout: 5)
+        let took = ContinuousClock.now - began
+        XCTAssertEqual(try XCTUnwrap(bridge.inputs.first?.sent.last), SimulatorFold.hingeEvent(degrees: 0))
+        // The last angle leaves on frame 31's time (517 ms), its send 8 ms on.
+        let last = Duration.seconds(Double(try XCTUnwrap(SimulatorFold.sweepSchedule(from: 180, to: 0).last).frame) / 60)
+        XCTAssertGreaterThanOrEqual(took, last)
+        XCTAssertLessThan(took, last + .milliseconds(60), "\(took)")
+    }
+
+    /// `prepare` connects the channel before the first fold, once.
+    func testPrepareConnectsTheChannelAhead() throws {
+        let bridge = FakeSimulatorBridge()
+        let sender = SimulatorFoldSender(bridge: bridge)
+        let duo = SimulatorAddress(udid: "F01DAB1E-0000-0000-0000-000000000001")
+        sender.prepare(duo)
+        sender.prepare(duo)
+        sender.waitUntilIdle()
+        let input = try XCTUnwrap(bridge.inputs.first)
+        XCTAssertEqual(bridge.inputs.count, 1)
+        XCTAssertTrue(input.isConnected)
+        XCTAssertEqual(input.connectAttempts, 1)
+        XCTAssertTrue(input.sent.isEmpty, "nothing sent")
+        sender.send(degrees: 90, to: duo)
+        sender.waitUntilIdle()
+        XCTAssertEqual(bridge.inputs.count, 1, "the fold uses it")
+        XCTAssertEqual(input.connectAttempts, 1)
+    }
+
     /// A preset holds the device upright first, as Device Hub does, then
     /// sweeps from where the hinge is.
     func testAPresetHoldsTheDeviceUprightThenSweeps() {

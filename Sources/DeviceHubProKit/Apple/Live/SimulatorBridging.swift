@@ -404,6 +404,8 @@ public final class FakeSimulatorBridge: SimulatorBridging {
         public var connectReport = SimulatorHIDConnectReport(attempts: 1, barrierMilliseconds: 5, totalMilliseconds: 205)
         /// Thrown by every GSEvent send.
         public var gsEventError: SimulatorBridgeError?
+        /// How long each input send takes (a busy guest).
+        public var sendDelay: TimeInterval = 0
 
         public init() {}
     }
@@ -471,7 +473,8 @@ public final class FakeSimulatorBridge: SimulatorBridging {
             address: address,
             failingConnects: configuration.failingConnects,
             connectError: configuration.connectError,
-            report: configuration.connectReport
+            report: configuration.connectReport,
+            sendDelay: configuration.sendDelay
         )
         state.withLock { $0.inputs.append(input) }
         return input
@@ -628,11 +631,19 @@ public final class FakeSimulatorInput: SimulatorInputBridging {
     private let state: Mutex<State>
     private let connectError: SimulatorBridgeError
     private let report: SimulatorHIDConnectReport
+    private let sendDelay: TimeInterval
 
-    init(address: SimulatorAddress, failingConnects: Int, connectError: SimulatorBridgeError, report: SimulatorHIDConnectReport) {
+    init(
+        address: SimulatorAddress,
+        failingConnects: Int,
+        connectError: SimulatorBridgeError,
+        report: SimulatorHIDConnectReport,
+        sendDelay: TimeInterval = 0
+    ) {
         self.address = address
         self.connectError = connectError
         self.report = report
+        self.sendDelay = sendDelay
         state = Mutex(State(remainingFailures: failingConnects))
     }
 
@@ -669,6 +680,7 @@ public final class FakeSimulatorInput: SimulatorInputBridging {
         for point in points where !(0...1).contains(point.x) || !(0...1).contains(point.y) {
             throw SimulatorBridgeError(.invalidArgument, "fake: touch (\(point.x), \(point.y)) is out of range")
         }
+        if sendDelay > 0 { Thread.sleep(forTimeInterval: sendDelay) }
         try state.withLock { state in
             _ = try Self.connect(&state, error: connectError, report: report)
             state.sent.append(event)

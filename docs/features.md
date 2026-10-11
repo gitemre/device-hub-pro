@@ -159,8 +159,10 @@ When the tools are installed, the app offers to create your first emulator.
   the inner one open. The app remembers the fold while the simulator stays booted, so quitting and
   opening it again shows the device as it was left; a simulator something else opened (Device Hub, a
   test) is read off its two panels' screenshots, and the stage shows the lit one. Where the selected Xcode ships Apple's 3D model of the device, the strip's
-  **3D** button shows it in that model: the hinge folds on screen (its angle beside it), the lit
-  panel shows the live simulator and takes clicks, drags and, with Keyboard Capture, typing;
+  **3D** button shows it in that model: the hinge folds on screen (its angle beside it) where the
+  simulator's hinge is at each frame, the panel going dark keeping its last picture, blurred,
+  until it stops; the lit panel shows the live simulator and takes clicks, drags and, with
+  Keyboard Capture, typing;
   its volume and side buttons move out under the pointer and in on a click (held as long as the
   click is), as a device frame's keys do; dragging anywhere else turns the device, a pinch or a scroll off the panel zooms, a double
   click faces it again, and Turn Around shows its back. The model is read from the user's Xcode at runtime, never copied

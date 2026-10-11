@@ -1317,6 +1317,7 @@ struct MirrorStageContent: View {
                                     model: deviceModel,
                                     session: session,
                                     opening: workspace.simulatorFold.hingeAngle ?? 0,
+                                    foldProgress: { [fold = workspace.simulatorFold] in fold.foldProgress() },
                                     litPanel: workspace.simulatorFold.litPanel,
                                     size: fitted,
                                     panelTurns: Self.modelPanelTurns(
@@ -1336,6 +1337,7 @@ struct MirrorStageContent: View {
                         } strip: {
                             StageAccessoryStrip(showsNavigation: false, showsFold: true, offersDeviceModel: true)
                         }
+                        .task(id: ObjectIdentifier(session)) { workspace.simulatorFold.prepareFold() }
                     } else {
                         AppleChromeDeviceView(session: session, frame: frame, available: available)
                     }
