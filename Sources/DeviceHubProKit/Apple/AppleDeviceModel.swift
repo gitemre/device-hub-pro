@@ -122,17 +122,20 @@ public struct AppleDeviceModel: Sendable, Hashable {
         return PanelMaterials(inner: inner.material, outer: outer.material)
     }
 
-    /// A hardware key on the model's edge: the button it presses and the box
-    /// it takes in the model's own space.
+    /// A hardware key on the model's edge: the button it presses, the box it
+    /// takes in the model's own space, and the way out of the edge it stands
+    /// on (the way it moves when pressed is the other).
     public struct Key: Sendable, Equatable {
         public var button: SimulatorHardwareButton
         public var lower: SIMD3<Float>
         public var upper: SIMD3<Float>
+        public var outward: SIMD3<Float>
 
-        public init(button: SimulatorHardwareButton, lower: SIMD3<Float>, upper: SIMD3<Float>) {
+        public init(button: SimulatorHardwareButton, lower: SIMD3<Float>, upper: SIMD3<Float>, outward: SIMD3<Float>) {
             self.button = button
             self.lower = lower
             self.upper = upper
+            self.outward = outward
         }
     }
 
@@ -147,6 +150,23 @@ public struct AppleDeviceModel: Sendable, Hashable {
         /// How far round each key a click still presses it (the model's
         /// units, centimetres): a key stands only 0.04 proud of the edge.
         public static let margin: Float = 0.15
+
+        /// How far a key moves out under the pointer and in while pressed
+        /// (centimetres), as an Apple chrome's key rolls out and in: its
+        /// rollover is about 1 % of the device's width (iPhone Duo's outer
+        /// chrome moves the side button 5 of its points), which on the 8.2 cm
+        /// wide model is 0.1; a key's own 0.04 would not show.
+        public static let hoverTravel: Float = 0.1
+        public static let pressTravel: Float = 0.06
+
+        /// The key a part of the model belongs to (its bounds inside the
+        /// key's box): the parts a key is drawn from, its body and finishes.
+        public func keyIndex(ofPartFrom lower: SIMD3<Float>, to upper: SIMD3<Float>) -> Int? {
+            let slack = SIMD3<Float>(repeating: 0.005)
+            return keys.firstIndex { key in
+                all(lower .>= key.lower - slack) && all(upper .<= key.upper + slack)
+            }
+        }
 
         /// The key a ray from `origin` along `direction` (the model's space)
         /// meets first, nil when it meets none, or a body first: the keys'
@@ -227,9 +247,9 @@ public struct AppleDeviceModel: Sendable, Hashable {
         let sideKeys = merged(side, along: 2), topKeys = merged(upper, along: 0)
         guard sideKeys.count == 2, topKeys.count == 2 else { return nil }
         let keys = [
-            Key(button: .side, lower: sideKeys[0].lower, upper: sideKeys[0].upper),
-            Key(button: .volumeDown, lower: topKeys[0].lower, upper: topKeys[0].upper),
-            Key(button: .volumeUp, lower: topKeys[1].lower, upper: topKeys[1].upper),
+            Key(button: .side, lower: sideKeys[0].lower, upper: sideKeys[0].upper, outward: [1, 0, 0]),
+            Key(button: .volumeDown, lower: topKeys[0].lower, upper: topKeys[0].upper, outward: [0, 0, -1]),
+            Key(button: .volumeUp, lower: topKeys[1].lower, upper: topKeys[1].upper, outward: [0, 0, -1]),
         ]
         // The edge band the keys sit in, from the keys' own thickness.
         let bandLower = keys.map(\.lower.y).min() ?? 0, bandUpper = keys.map(\.upper.y).max() ?? 0
