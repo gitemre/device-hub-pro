@@ -1347,6 +1347,7 @@ struct MirrorStageContent: View {
                                     presentation: model.preferences.showDeviceModel
                                         ? .free
                                         : .front(height: front(frame).height),
+                                    color: model.preferences.deviceModelColor,
                                     size: available,
                                     panelTurns: Self.modelPanelTurns(
                                         frame: frame,
@@ -1358,6 +1359,8 @@ struct MirrorStageContent: View {
                                         - workspace.simulatorFold.restingTurns) % 4 + 4) % 4,
                                     spinRequests: workspace.simulatorFold.spinRequests
                                 )
+                                // A new finish is a new model: the stage loads it.
+                                .id(model.preferences.deviceModelColor)
                                 .frame(width: available.width, height: available.height)
                             } else {
                                 AppleChromeDeviceView(session: session, frame: frame, available: available)

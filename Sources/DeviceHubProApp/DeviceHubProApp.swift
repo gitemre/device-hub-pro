@@ -364,6 +364,16 @@ private struct AppCommands: Commands {
                 if model?.preferences.showDeviceModel == true {
                     Button("Turn Around") { workspace?.simulatorFold.turnAround() }
                 }
+                // The model's two finishes: Device Hub's dark one unless
+                // chosen.
+                Menu("Device Color") {
+                    ForEach(AppleDeviceModel.colors, id: \.self) { color in
+                        Toggle(color, isOn: Binding(
+                            get: { model?.preferences.deviceModelColor == color },
+                            set: { if $0 { model?.preferences.setDeviceModelColor(color) } }
+                        ))
+                    }
+                }
 
                 Divider()
             }

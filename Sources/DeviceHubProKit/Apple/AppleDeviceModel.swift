@@ -326,9 +326,11 @@ public struct AppleDeviceModel: Sendable, Hashable {
 
     /// Where a panel's picture sits on the model's panel, as Device Hub
     /// draws iPhone Duo (Xcode 27.1, 2026-10-11, at 2x: the open device
-    /// 924 px wide, its panel 914 × 648 inside a 5 px rim, closed 465 × 647):
+    /// 924 px wide, its panel 914 × 648 inside a 5 px rim): the inner one
     /// inside a black border 14.5 px wide all round, its corners rounded
-    /// 52 px. A frame drawn to the panel's edges ran under that border.
+    /// 52 px (a frame drawn to the panel's edges ran under that border). The
+    /// outer one fills its panel: its camera is a hole in the picture, which
+    /// iOS lays its status bar round, so a border moved the picture off it.
     public struct PanelScreen: Sendable, Equatable {
         /// The border as a fraction of the panel's long and its short side,
         /// and the corners' radius as a fraction of its short side.
@@ -337,7 +339,7 @@ public struct AppleDeviceModel: Sendable, Hashable {
         public let cornerRadius: Float
 
         public static let inner = PanelScreen(longInset: 14.5 / 914, shortInset: 14.5 / 648, cornerRadius: 52 / 648)
-        public static let outer = PanelScreen(longInset: 14.5 / 647, shortInset: 14.5 / 465, cornerRadius: 52 / 465)
+        public static let outer = PanelScreen(longInset: 0, shortInset: 0, cornerRadius: 0)
 
         public static func of(_ panel: SimulatorFoldPanel) -> PanelScreen {
             panel == .inner ? .inner : .outer
@@ -455,9 +457,11 @@ public struct AppleDeviceModel: Sendable, Hashable {
         }
     }
 
-    /// The `color` variant Device Hub draws iPhone Duo in (Xcode 27.1, light
-    /// appearance, 2026-10-11): the file's own selection is "Light".
+    /// The file's `color` variants: its own selection, and the one Device Hub
+    /// draws iPhone Duo in (Xcode 27.1, light appearance, 2026-10-11).
+    public static let fileColor = "Light"
     public static let deviceHubColor = "Dark"
+    public static let colors = [fileColor, deviceHubColor]
 
     /// A USD layer showing the file at `url` in its `color` variant
     /// `variant` (the file's root prim carries the variant set "color",

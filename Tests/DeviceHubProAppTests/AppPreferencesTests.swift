@@ -43,6 +43,7 @@ final class AppPreferencesTests: XCTestCase {
             "secureKeyboardEntry",
             "simulateHardwareKeyboardByDefault",
             "showDeviceModel",
+            "deviceModelColor",
             "stayOnTopMain",
             "stayOnTopCompact",
             "settingsProfiles",
