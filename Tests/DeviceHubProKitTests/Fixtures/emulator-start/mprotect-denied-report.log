@@ -1,0 +1,8 @@
+qemu-system-aarch64: qemu_mprotect__osdep: mprotect failed: Permission denied
+WARNING      | Token/JWT auth requested without tls, restricting access to localhost.
+INFO         | Warning: QMetaObject::connectSlotsByName: No matching signal for on_rgbcSensorValueWidget_valueChanged() (:0, )
+INFO         | Warning: QMetaObject::connectSlotsByName: No matching signal for on_posture_valueChanged(int) (:0, )
+INFO         | Warning: QObject::connect: Cannot queue arguments of type 'std::vector<android::emulation::control::SnapshotInfo>'
+(Make sure 'std::vector<android::emulation::control::SnapshotInfo>' is registered using qRegisterMetaType().) (:0, )
+WARNING      | Device 'encrypt' does not have the requested snapshot 'default_boot'
+WARNING      | Failed to load snapshot 'default_boot'

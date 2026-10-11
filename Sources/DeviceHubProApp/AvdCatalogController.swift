@@ -266,6 +266,13 @@ final class AvdCatalogController {
         } catch {
             return "\(error)"
         }
+        // An older avdmanager names a newer image's Android version 0.
+        if let emulator = EmulatorManager.locateBinary() {
+            _ = try? EmulatorPreflight.repairTarget(
+                avdName: name,
+                sdkRoots: EmulatorPreflight.sdkRoots(emulatorURL: emulator)
+            )
+        }
         if let problem = Self.completeNewAvdConfig(
             avdName: name,
             deviceId: deviceId,

@@ -12,11 +12,19 @@ import XCTest
 /// `Running multiple emulators with the same AVD`, `Not enough space to
 /// create userdata partition`, `Broken AVD system path`, the Vulkan / EGL
 /// initialisation errors); no capture of those exists.
+///
+/// `hvf-not-enabled-target-zero-vm.log` is the head of emulator 37.2.12's
+/// output (2026-10-11, the same virtual machine) starting an Android 17 AVD
+/// whose target an old avdmanager wrote as `android-0`: up to the line where
+/// it gives up the hypervisor. `mprotect-denied-report.log` is from a
+/// user's report of 1.0.0 on an Apple silicon Mac, such an AVD crashing
+/// there (its last two lines, a process number and a path with the user's
+/// name, left out).
 final class EmulatorStartFailureTests: XCTestCase {
-    private func fixture() throws -> String {
+    private func fixture(_ name: String = "hvf-unsupported-vm.log") throws -> String {
         let url = URL(fileURLWithPath: #filePath)
             .deletingLastPathComponent()
-            .appendingPathComponent("Fixtures/emulator-start/hvf-unsupported-vm.log")
+            .appendingPathComponent("Fixtures/emulator-start/\(name)")
         return try String(contentsOf: url, encoding: .utf8)
     }
 
@@ -64,6 +72,18 @@ final class EmulatorStartFailureTests: XCTestCase {
             let failure = EmulatorStartFailure.exited("during startup", logTail: log)
             XCTAssertTrue(failure.message.contains(expected), "\(log) -> \(failure.message)")
         }
+    }
+
+    /// An emulator that gives up the hypervisor runs Android in software,
+    /// which macOS refused on the reporting Mac: both logs say so plainly.
+    func testSoftwareEmulationIsNamed() throws {
+        for name in ["hvf-not-enabled-target-zero-vm.log", "mprotect-denied-report.log"] {
+            let failure = EmulatorStartFailure.exited("during startup", logTail: try fixture(name))
+            XCTAssertTrue(failure.message.contains("hypervisor"), "\(name) -> \(failure.message)")
+            XCTAssertTrue(failure.message.contains("Command-line Tools"), name)
+        }
+        let report = EmulatorStartFailure.exited("during startup", logTail: try fixture("mprotect-denied-report.log"))
+        XCTAssertTrue(try XCTUnwrap(report.details).contains("mprotect failed: Permission denied"))
     }
 
     func testUnknownCauseKeepsThePlainSentence() {

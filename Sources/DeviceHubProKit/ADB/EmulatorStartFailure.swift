@@ -33,6 +33,10 @@ public struct EmulatorStartFailure: Sendable, Equatable {
         )
     }
 
+    /// The cause when the emulator's system image is missing or incomplete
+    /// (also `EmulatorPreflight`'s, before a launch).
+    public static let missingSystemImage = "The system image this emulator needs is missing or incomplete. Download it again from the OS Version menu of the New Emulator sheet, or recreate the emulator."
+
     /// The plain-words cause when the log names a known one.
     public static func knownCause(in log: String) -> String? {
         let lowered = log.lowercased()
@@ -53,7 +57,14 @@ public struct EmulatorStartFailure: Sendable, Equatable {
         if has("cannot find avd system path", "broken avd system path", "missing a kernel file", "no system image",
                "cannot find system image", "could not find system image", "system image is missing",
                "image.sysdir.1") {
-            return "The system image this emulator needs is missing. Download it again from the OS Version menu of the New Emulator sheet, or recreate the emulator."
+            return missingSystemImage
+        }
+        // The emulator ran Android in software instead of on the hypervisor
+        // (an AVD that names Android version 0 does that,
+        // `EmulatorPreflight.repairTarget`), and macOS refused the memory
+        // its code generator needs.
+        if has("hvf is not enabled", "qemu_mprotect", "mprotect failed") {
+            return "The emulator couldn\u{2019}t use this Mac\u{2019}s hypervisor and tried to run Android in software, which macOS refused. Recreate the emulator; if it keeps failing, update the Android SDK Command-line Tools and the emulator."
         }
         if has("vulkan", "vkcreateinstance", "gpu emulation", "could not initialize emulated framebuffer",
                "failed to initialize egl", "eglinitialize") {
