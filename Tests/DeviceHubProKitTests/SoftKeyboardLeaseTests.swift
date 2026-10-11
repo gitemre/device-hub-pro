@@ -9,9 +9,11 @@ final class SoftKeyboardLeaseTests: XCTestCase {
     private let put0 = "-s emulator-5600 shell settings put secure show_ime_with_hard_keyboard 0"
     private let delete = "-s emulator-5600 shell settings delete secure show_ime_with_hard_keyboard"
 
-    /// The settings calls: the AVD-name reads that key the lease are not the point here.
+    /// The settings calls: the AVD-name reads that key the lease are not the
+    /// point here (the console read, and the boot property read that follows
+    /// it when this fake's console names nothing).
     private func adbCalls(_ fake: FakeAdb) -> [String] {
-        fake.calls.filter { !$0.contains("emu avd name") }
+        fake.calls.filter { !$0.contains("emu avd name") && !$0.contains("getprop ro.boot.qemu.avd_name") }
     }
 
     private func lease(reading: String) throws -> (SoftKeyboardLease, FakeAdb) {

@@ -106,24 +106,50 @@ public final class AdbClient: Sendable {
     /// do not each kill the server the first one just started.
     private let lastServerRepair = OSAllocatedUnfairLock<ContinuousClock.Instant?>(initialState: nil)
 
+    /// How this client reaches an emulator's console without adb (see
+    /// `AdbClient+EmulatorConsole`); nil asks adb every time. Only the
+    /// production constructors (`locate`, `unresolvedForApp`) set one, so a
+    /// client a test builds with `init(adbURL:)` or `unresolved()` never
+    /// opens a connection to an emulator running on the Mac.
+    let emulatorConsole: (any EmulatorConsoleTransport)?
+
     public init(
         adbURL: URL,
         commandTimeout: Duration = AdbClient.defaultTimeout,
-        serverRestartBackoff: Duration = .milliseconds(500)
+        serverRestartBackoff: Duration = .milliseconds(500),
+        emulatorConsole: (any EmulatorConsoleTransport)? = nil
     ) {
         self.location = OSAllocatedUnfairLock(initialState: adbURL)
         self.commandTimeout = commandTimeout
         self.serverRestartBackoff = serverRestartBackoff
+        self.emulatorConsole = emulatorConsole
     }
 
     /// A client for a Mac where adb is not installed yet: its calls throw
     /// `AdbError.adbNotFound` until `resolve(_:)` hands it the adb the guided
     /// setup (or "Locate SDK…") found, so the app picks the tools up without
     /// being relaunched.
-    public static func unresolved(commandTimeout: Duration = AdbClient.defaultTimeout) -> AdbClient {
-        let client = AdbClient(adbURL: URL(fileURLWithPath: "/nonexistent/adb"), commandTimeout: commandTimeout)
+    ///
+    /// The client has no console transport unless one is passed: tests build
+    /// it, and a client that dials 127.0.0.1 must be asked for by name
+    /// (`unresolvedForApp()`).
+    public static func unresolved(
+        commandTimeout: Duration = AdbClient.defaultTimeout,
+        emulatorConsole: (any EmulatorConsoleTransport)? = nil
+    ) -> AdbClient {
+        let client = AdbClient(
+            adbURL: URL(fileURLWithPath: "/nonexistent/adb"),
+            commandTimeout: commandTimeout,
+            emulatorConsole: emulatorConsole
+        )
         client.location.withLock { $0 = nil }
         return client
+    }
+
+    /// `unresolved()` for the app itself: once adb is found the client talks
+    /// to a running emulator's console the way `locate()`'s does.
+    public static func unresolvedForApp(commandTimeout: Duration = AdbClient.defaultTimeout) -> AdbClient {
+        unresolved(commandTimeout: commandTimeout, emulatorConsole: LiveEmulatorConsole())
     }
 
     /// Points this client at adb; every holder of it sees the change.
@@ -131,9 +157,11 @@ public final class AdbClient: Sendable {
         location.withLock { $0 = url }
     }
 
-    /// Locates adb on this machine.
+    /// Locates adb on this machine. The client talks to a running
+    /// emulator's console itself (`LiveEmulatorConsole`) and asks adb only
+    /// when that cannot connect.
     public static func locate() -> AdbClient? {
-        AdbBinaryLocator.locate().map { AdbClient(adbURL: $0) }
+        AdbBinaryLocator.locate().map { AdbClient(adbURL: $0, emulatorConsole: LiveEmulatorConsole()) }
     }
 
     public func listDevices() async throws -> [AndroidDevice] {
@@ -349,15 +377,17 @@ public final class AdbClient: Sendable {
         }
     }
 
-    /// Runs an emulator console command (`adb -s <serial> emu …`). Throws when the
-    /// emulator answers `KO: …`.
+    /// Runs an emulator console command (what `adb -s <serial> emu …` runs,
+    /// through the console directly when `emulatorConsole` is set: see
+    /// `AdbClient+EmulatorConsole`). Throws when the emulator answers
+    /// `KO: …`.
     @discardableResult
     public func emuCommand(serial: String, _ arguments: [String]) async throws -> String {
         let full = ["-s", serial, "emu"] + arguments
-        let result = try await execute(full)
+        let result = try await executeConsole(serial: serial, arguments)
         let output = result.standardOutputText
 
-        guard result.exitCode == 0, !output.hasPrefix("KO") else {
+        guard result.exitCode == 0, !EmulatorConsole.isErrorAnswer(output) else {
             throw AdbError.commandFailed(
                 arguments: full,
                 exitCode: result.exitCode,
@@ -377,7 +407,7 @@ public final class AdbClient: Sendable {
     /// whether this one can use them.
     public func resizeDisplayPresets(serial: String) async throws -> [ResizePreset] {
         let arguments = ["-s", serial, "emu", "resize-display"]
-        let result = try await execute(arguments)
+        let result = try await executeConsole(serial: serial, ["resize-display"])
         guard result.exitCode == 0 else {
             throw AdbError.commandFailed(
                 arguments: arguments,
@@ -1101,11 +1131,21 @@ public final class AdbClient: Sendable {
         ["pkill", "-INT", "-f", shellQuoted("[s]creenrecord.*\(remotePath)")]
     }
 
-    /// The AVD name of a running emulator, via the console command `avd name`.
+    /// The AVD name of a running emulator, via the console command `avd name`;
+    /// when the console gives none (it answers nothing or a `KO`, or refuses
+    /// the token: see `AdbClient+EmulatorConsole`), the name the emulator
+    /// booted Android with (`ro.boot.qemu.avd_name`).
     public func avdName(serial: String) async throws -> String? {
-        let result = try await execute(["-s", serial, "emu", "avd", "name"])
-        guard result.exitCode == 0 else { return nil }
-        return AdbParsing.avdName(from: result.standardOutputText)
+        do {
+            let result = try await executeConsole(serial: serial, ["avd", "name"])
+            if result.exitCode == 0, let name = Self.avdName(fromConsoleAnswer: result.standardOutputText) {
+                return name
+            }
+        } catch AdbError.commandFailed {
+            // The console could not be used: the property below still names it.
+        }
+        guard EmulatorConsole.port(forSerial: serial) != nil else { return nil }
+        return try await avdNameFromProperty(serial: serial)
     }
 
     /// Runs adb with the given arguments (including any `-s <serial>`) and

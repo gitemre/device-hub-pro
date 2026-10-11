@@ -130,7 +130,7 @@ struct AppEnvironment {
             )
         }
         var environment = AppEnvironment(
-            adbClient: AdbClient.locate() ?? AdbClient.unresolved(),
+            adbClient: AdbClient.locate() ?? AdbClient.unresolvedForApp(),
             emulatorManager: emulatorManagerForPath(
                 defaults.string(forKey: AppPreferences.Keys.emulatorBinaryPath) ?? ""
             ),
