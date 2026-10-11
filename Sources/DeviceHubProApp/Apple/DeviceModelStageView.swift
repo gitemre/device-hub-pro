@@ -460,14 +460,23 @@ final class DeviceModelScene {
     @ObservationIgnored private var panelBounds: (inner: (SIMD3<Float>, SIMD3<Float>), outer: (SIMD3<Float>, SIMD3<Float>))?
     /// The model's hardware keys, nil when it shows none.
     @ObservationIgnored private var keys: AppleDeviceModel.Keys?
-    /// The glow over the key under the pointer (brighter while it is held),
-    /// and what it shows.
-    @ObservationIgnored private var keyGlow: ModelEntity?
-    @ObservationIgnored private var glowing: KeyGlow?
+    /// Each key drawn on its own, taken out of the device's mesh so it can
+    /// move as a key does: out under the pointer, in while pressed.
+    @ObservationIgnored private var keyEntities: [KeyEntity] = []
+    /// The key under the pointer, standing out.
+    @ObservationIgnored private var raisedKey: SimulatorHardwareButton?
 
-    private struct KeyGlow: Equatable {
-        var button: SimulatorHardwareButton
-        var pressed: Bool
+    private final class KeyEntity {
+        let key: AppleDeviceModel.Key
+        let entity: ModelEntity
+        /// How far it stands out of its edge now (in when below zero).
+        var travel: Float = 0
+        var motion: Task<Void, Never>?
+
+        init(key: AppleDeviceModel.Key, entity: ModelEntity) {
+            self.key = key
+            self.entity = entity
+        }
     }
     /// The session the lit panel shows, and its last frame's size and turn.
     @ObservationIgnored private var feedingSession: (any MirrorSessionProtocol)?
@@ -581,6 +590,10 @@ final class DeviceModelScene {
             panelBounds = (inner, outer)
         }
         keys = AppleDeviceModel.keys(in: parts)
+        if let keys, var keyed = found.components[ModelComponent.self] {
+            detachKeys(keys, from: found, component: &keyed)
+            found.components.set(keyed)
+        }
         // The model lies flat, its inner panel facing up (+Y) with the
         // device's top edge away (-Z): stand it up to face the camera.
         let stand = Entity()
@@ -617,6 +630,9 @@ final class DeviceModelScene {
             // file's root, and polished metal lit by the key alone is black.
             found.components.set(ImageBasedLightReceiverComponent(imageBasedLight: root))
             entity.components.set(ImageBasedLightReceiverComponent(imageBasedLight: root))
+            for key in keyEntities {
+                key.entity.components.set(ImageBasedLightReceiverComponent(imageBasedLight: root))
+            }
         }
         feeder.onPresented = { [weak self] in self?.setNeedsRender() }
         self.modelEntity = found
@@ -893,7 +909,7 @@ final class DeviceModelScene {
             } else if let button = button(at: start), let sender = buttonSender {
                 pointer = .key(button)
                 sender.send(button: button, isDown: true)
-                glow(button, pressed: true)
+                move(button, to: -AppleDeviceModel.Keys.pressTravel)
             } else {
                 pointer = .turn
             }
@@ -929,7 +945,11 @@ final class DeviceModelScene {
             }
         case .key(let button):
             buttonSender?.send(button: button, isDown: false)
-            glow(self.button(at: location))
+            // Back out under the pointer, or to rest when it left the key.
+            let over = self.button(at: location)
+            move(button, to: over == button ? AppleDeviceModel.Keys.hoverTravel : 0)
+            if let over, over != button { move(over, to: AppleDeviceModel.Keys.hoverTravel) }
+            raisedKey = over
         case nil:
             break
         }
@@ -954,39 +974,77 @@ final class DeviceModelScene {
     }
 
     /// The pointer moved to `location` (nil: it left the view) with no
-    /// button down: the key under it glows. Returns whether one does.
+    /// button down: the key under it stands out. Returns whether one does.
     func hover(at location: CGPoint?) -> Bool {
-        guard pointer == nil else { return glowing != nil }
+        guard pointer == nil else { return raisedKey != nil }
         let button = location.flatMap(button(at:))
-        glow(button)
+        if button != raisedKey {
+            if let raisedKey { move(raisedKey, to: 0) }
+            if let button { move(button, to: AppleDeviceModel.Keys.hoverTravel) }
+            raisedKey = button
+        }
         return button != nil
     }
 
-    /// Lights the key that presses `button` (none for nil), stronger when
-    /// `pressed`: a rounded box over the area a click presses it in (a key
-    /// stands only 0.04 proud of the edge, a sliver seen face on), in the
-    /// model's space (the keys' half never folds, so it stays on the key).
-    private func glow(_ button: SimulatorHardwareButton?, pressed: Bool = false) {
-        let next = button.map { KeyGlow(button: $0, pressed: pressed) }
-        guard next != glowing else { return }
-        glowing = next
-        keyGlow?.removeFromParent()
-        keyGlow = nil
-        if let next, let model = modelEntity, let key = keys?.keys.first(where: { $0.button == next.button }) {
-            var material = UnlitMaterial(color: .controlAccentColor)
-            material.blending = .transparent(opacity: .init(floatLiteral: pressed ? 0.75 : 0.4))
-            let size = key.upper - key.lower + SIMD3<Float>(repeating: 2 * AppleDeviceModel.Keys.margin)
-            let entity = ModelEntity(
-                mesh: .generateBox(size: size, cornerRadius: min(size.x, size.y, size.z) / 2),
-                materials: [material]
-            )
-            entity.position = (key.lower + key.upper) / 2
-            model.addChild(entity)
-            keyGlow = entity
+    /// Moves the key that presses `button` to stand `travel` out of its edge
+    /// (in, below zero), quickly, as a key moves.
+    private func move(_ button: SimulatorHardwareButton, to travel: Float) {
+        guard let key = keyEntities.first(where: { $0.key.button == button }), key.travel != travel else { return }
+        key.motion?.cancel()
+        let from = key.travel
+        key.motion = animate(over: Self.keyMotion) { [weak self] eased in
+            key.travel = from + (travel - from) * eased
+            key.entity.position = key.key.outward * key.travel
+            self?.setNeedsRender()
         }
-        setNeedsRender()
     }
 
+    /// Takes the parts each key is drawn from out of the device's mesh and
+    /// draws them as an entity of its own in the same place, with the
+    /// device's materials. The keys sit on the half that never folds, so a
+    /// static copy of their parts (no joint influences) stays on the edge.
+    /// Leaves the mesh as it was when a key's parts are not all found.
+    private func detachKeys(_ keys: AppleDeviceModel.Keys, from model: ModelEntity, component: inout ModelComponent) {
+        let contents = component.mesh.contents
+        var kept: [MeshResource.Model] = []
+        var keyParts = [[MeshResource.Part]](repeating: [], count: keys.keys.count)
+        for mesh in contents.models {
+            var parts: [MeshResource.Part] = []
+            for part in mesh.parts {
+                var lower = SIMD3<Float>(repeating: .infinity), upper = SIMD3<Float>(repeating: -.infinity)
+                for point in part.positions.elements {
+                    lower = simd_min(lower, point)
+                    upper = simd_max(upper, point)
+                }
+                if let index = keys.keyIndex(ofPartFrom: lower, to: upper) {
+                    var copy = part
+                    copy.jointInfluences = nil
+                    copy.skeletonID = nil
+                    keyParts[index].append(copy)
+                } else {
+                    parts.append(part)
+                }
+            }
+            kept.append(MeshResource.Model(id: mesh.id, parts: parts))
+        }
+        guard keyParts.allSatisfy({ !$0.isEmpty }) else { return }
+        var entities: [KeyEntity] = []
+        for (index, parts) in keyParts.enumerated() {
+            var keyContents = MeshResource.Contents()
+            keyContents.models = MeshModelCollection([MeshResource.Model(id: "key\(index)", parts: parts)])
+            keyContents.instances = MeshInstanceCollection([MeshResource.Instance(id: "key\(index)", model: "key\(index)")])
+            guard let mesh = try? MeshResource.generate(from: keyContents) else { return }
+            entities.append(KeyEntity(key: keys.keys[index], entity: ModelEntity(mesh: mesh, materials: component.materials)))
+        }
+        var deviceContents = contents
+        deviceContents.models = MeshModelCollection(kept)
+        guard (try? component.mesh.replace(with: deviceContents)) != nil else { return }
+        for key in entities { model.addChild(key.entity) }
+        keyEntities = entities
+    }
+
+    /// How long a key takes to move out or in.
+    static let keyMotion: Double = 0.08
 
     /// The camera's ray through `location` (view points), in the scene's
     /// space.
@@ -1126,7 +1184,8 @@ final class DeviceModelScene {
             feedingSession?.send(TouchCommand(phase: .up, x: point.x, y: point.y))
         }
         if case .key(let button) = pointer { buttonSender?.send(button: button, isDown: false) }
-        glow(nil)
+        for key in keyEntities { move(key.key.button, to: 0) }
+        raisedKey = nil
         pointer = nil
         lastTouch = nil
         observation = nil

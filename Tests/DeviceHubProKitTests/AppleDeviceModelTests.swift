@@ -144,6 +144,19 @@ final class AppleDeviceModelTests: XCTestCase {
         XCTAssertNil(AppleDeviceModel.keys(in: Self.duoParts + Self.duoKeyParts.dropFirst()))
     }
 
+    /// Each key is drawn from its own parts (moved as one when it is
+    /// pressed); the body's parts belong to none. A side key moves out along
+    /// +x, a top key along -z.
+    func testEachPartBelongsToItsKey() throws {
+        let keys = try XCTUnwrap(AppleDeviceModel.keys(in: Self.duoParts + Self.duoKeyParts))
+        let owners = Self.duoKeyParts.map { keys.keyIndex(ofPartFrom: $0.lower, to: $0.upper) }
+        XCTAssertEqual(owners, [2, 1, nil, 0, 0, nil, 0, nil], "volume up, volume down, the lower side key, the side button's three")
+        for part in Self.duoParts {
+            XCTAssertNil(keys.keyIndex(ofPartFrom: part.lower, to: part.upper))
+        }
+        XCTAssertEqual(keys.keys.map(\.outward), [[1, 0, 0], [0, 0, -1], [0, 0, -1]])
+    }
+
     /// A click presses the key it lands on or just beside, from the front or
     /// from its own side; not through the device, nor on the panel.
     func testAKeyIsPressedWhereItShows() throws {

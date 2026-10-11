@@ -13,7 +13,7 @@ All notable changes to Device Hub Pro are recorded here. The format follows
   and Orientation do it from the menu, and the stage follows the lit panel. Where Xcode ships
   Apple's 3D model of the device, the **3D** button shows the live simulator in it: the hinge
   folds on screen, the panel takes clicks, drags and typing, the device turns and zooms, and
-  its volume and side buttons press on a click.
+  its volume and side buttons move out under the pointer and press in on a click.
 - **Keyboard settings,** as Device Hub has them: Capture keyboard shortcuts (⌘ shortcuts go
   to the device while the keyboard is captured), Secure keyboard entry, and Simulate hardware
   keyboard by default, with Device ▸ Keyboard ▸ Simulate Hardware Keyboard per simulator.
