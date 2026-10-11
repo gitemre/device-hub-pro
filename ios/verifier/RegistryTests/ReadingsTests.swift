@@ -136,12 +136,14 @@ final class ReadingsTests: XCTestCase {
         XCTAssertEqual(Readings.hinge(status: nil, degrees: nil), Reading("No hinge", raw: "none"))
     }
 
-    /// The screen in pixels with its scale, and the interface orientation.
+    /// The screen in pixels with its scale, and the interface orientation
+    /// (UIInterfaceOrientation: landscape right 3, left 4).
     func testTheScreenNamesItsPixelsAndTurn() {
         XCTAssertEqual(
-            Readings.screen(width: 2007, height: 2853, scale: 3, interfaceOrientation: 4),
+            Readings.screen(width: 2007, height: 2853, scale: 3, interfaceOrientation: 3),
             Reading("2007 × 2853 px @3x · Landscape right", raw: "2007x2853 landscapeRight")
         )
+        XCTAssertEqual(Readings.screen(width: 2853, height: 2007, scale: 3, interfaceOrientation: 4).raw, "2853x2007 landscapeLeft")
         XCTAssertEqual(Readings.screen(width: 1398, height: 2034, scale: 3, interfaceOrientation: 1).raw, "1398x2034 portrait")
         XCTAssertEqual(Readings.screen(width: 10, height: 20, scale: 2.5, interfaceOrientation: 0).value, "10 × 20 px @2.50x · Unknown")
     }

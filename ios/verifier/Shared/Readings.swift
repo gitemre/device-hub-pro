@@ -276,11 +276,12 @@ enum Readings {
         return Reading("\(name) · \(angle)°", raw: "\(status) \(angle)")
     }
 
-    /// The screen this app's window is on, in pixels, and the interface
-    /// orientation (UIInterfaceOrientation's raw value).
+    /// The size of this app's window in pixels, and the interface
+    /// orientation (UIInterfaceOrientation's raw value: its landscape right
+    /// is 3 and left 4, the other way round from UIDeviceOrientation's).
     static func screen(width: Int, height: Int, scale: Double, interfaceOrientation: Int) -> Reading {
         let names = [1: ("portrait", "Portrait"), 2: ("portraitUpsideDown", "Portrait upside down"),
-                     3: ("landscapeLeft", "Landscape left"), 4: ("landscapeRight", "Landscape right")]
+                     3: ("landscapeRight", "Landscape right"), 4: ("landscapeLeft", "Landscape left")]
         let (token, name) = names[interfaceOrientation] ?? ("unknown", "Unknown")
         let scaleText = scale == scale.rounded() ? String(Int(scale)) : String(format: "%.2f", scale)
         return Reading("\(width) × \(height) px @\(scaleText)x · \(name)", raw: "\(width)x\(height) \(token)")
