@@ -22,6 +22,9 @@ struct DeviceModelStageView: View {
     let session: any MirrorSessionProtocol
     /// The hinge, 0 (closed) to 180 (flat).
     let opening: Double
+    /// How far the fold strip's last preset or held posture got in the
+    /// simulator, which a fold follows (nil when the hinge moved otherwise).
+    let foldProgress: @MainActor () -> SimulatorFoldProgress?
     let litPanel: SimulatorFoldPanel
     /// The view's size, which the camera fits the device in.
     let size: CGSize
@@ -102,6 +105,7 @@ struct DeviceModelStageView: View {
             scene.roll(toTurns: turns)
         }
         .onChange(of: opening, initial: true) { _, degrees in
+            scene.foldProgress = foldProgress
             scene.fold(toOpening: degrees)
         }
         .onChange(of: litPanel, initial: true) { _, panel in
@@ -498,6 +502,9 @@ final class DeviceModelScene {
     static let clickSlop: CGFloat = 3
     static let doubleClickInterval: TimeInterval = 0.4
     @ObservationIgnored private var foldTask: Task<Void, Never>?
+    /// Where the fold strip's last batch got in the simulator
+    /// (`DeviceModelStageView.foldProgress`).
+    @ObservationIgnored var foldProgress: (@MainActor () -> SimulatorFoldProgress?)?
     @ObservationIgnored private var readoutTask: Task<Void, Never>?
     @ObservationIgnored private var darkenTask: Task<Void, Never>?
     @ObservationIgnored private var shownTime: Double?
@@ -517,8 +524,12 @@ final class DeviceModelScene {
     static let spinDuration: Double = 2.2
     /// How long the readout stays once the hinge has stopped.
     static let readoutLinger: Duration = .milliseconds(900)
-    /// How long a panel that went dark keeps its blurred last picture.
+    /// How long a panel that went dark keeps its blurred last picture when
+    /// the fold was not the fold strip's (else as long as the hinge sweeps).
     static let darkenAfter: Duration = .milliseconds(700)
+    /// How long a fold waits for the simulator's sweep to begin (an earlier
+    /// batch still going out) before showing the angle at once.
+    static let sweepWait: Duration = .seconds(2)
     /// The open device's width in the view's units (metres).
     static let framedSize: Float = 0.5
     /// The camera's vertical field of view: wide and close, so a half-open
@@ -833,19 +844,67 @@ final class DeviceModelScene {
         }
         resetTurn(zoom: true)
         readoutTask?.cancel()
-        // A preset (a large change) moves as long as the simulator's hinge
-        // sweeps; the slider's small steps follow at once.
+        // A preset (a large change) moves as the simulator's hinge sweeps:
+        // with the sweep when it is the fold strip's, else as long; the
+        // slider's small steps follow at once.
         let sweep = abs(target - start) / abs(spec.closedTime - spec.openTime) * 180 > Self.sweepThreshold
+        if sweep, !MotionMetrics.reduceMotion, let progress = foldProgress?(), progress != .done {
+            foldTask = followSweep(to: target, spec: spec, controller: controller)
+            return
+        }
         foldTask = animate(over: sweep ? SimulatorFold.sweepDuration : Self.foldDuration, easingOut: true) { [weak self] eased in
             guard let self else { return }
             self.apply(time: start + (target - start) * Double(eased), controller: controller)
             self.readout = Int(self.shownOpening.rounded())
         } done: { [weak self] in
-            self?.readoutTask = Task { @MainActor [weak self] in
-                try? await Task.sleep(for: Self.readoutLinger)
-                guard !Task.isCancelled else { return }
-                self?.readout = nil
+            self?.lingerReadout()
+        }
+    }
+
+    /// Draws the hinge where the simulator's is while the fold strip's
+    /// batch goes out: each frame shows the angle its sweep has reached
+    /// (`SimulatorFoldSweep.angle(at:)`), so the model and what the guest
+    /// shows on its panels keep together however late a frame comes (in a
+    /// busy VM the first came up to 370 ms after the click, and a model on
+    /// its own clock trailed the hinge by as much). Holds while the batch
+    /// waits (an earlier sweep, a pause between two) and settles on `target`
+    /// once it was sent; shows `target` at once if it does not begin within
+    /// `sweepWait`.
+    private func followSweep(to target: Double, spec: AppleDeviceModel.Spec, controller: AnimationPlaybackController) -> Task<Void, Never> {
+        let asked = ContinuousClock.now
+        return Task { @MainActor [weak self] in
+            while !Task.isCancelled, let self {
+                var time = target
+                var settled = true
+                switch self.foldProgress?() {
+                case .sweeping(let sweep)?:
+                    time = spec.animationTime(forOpening: sweep.angle(at: .now))
+                    settled = false
+                case .waiting?:
+                    if ContinuousClock.now - asked < Self.sweepWait {
+                        time = self.shownTime ?? target
+                        settled = false
+                    }
+                case .done?, nil:
+                    break
+                }
+                self.apply(time: time, controller: controller)
+                self.readout = Int(self.shownOpening.rounded())
+                if settled {
+                    self.lingerReadout()
+                    break
+                }
+                try? await Task.sleep(for: .milliseconds(16))
             }
+        }
+    }
+
+    /// Hides the hinge's readout a moment after it stopped.
+    private func lingerReadout() {
+        readoutTask = Task { @MainActor [weak self] in
+            try? await Task.sleep(for: Self.readoutLinger)
+            guard !Task.isCancelled else { return }
+            self?.readout = nil
         }
     }
 
@@ -1131,8 +1190,9 @@ final class DeviceModelScene {
     }
 
     /// Feeds `session`'s frames to `panel`. The panel that was lit
-    /// keeps its last picture, blurred, while the device folds, then goes
-    /// dark; on the first session the other panel is dark at once.
+    /// keeps its last picture, blurred, while the device folds (until the
+    /// hinge's sweep ends, `waitForFold`), then goes dark; on the first
+    /// session the other panel is dark at once.
     func show(session: any MirrorSessionProtocol, on panel: SimulatorFoldPanel, turns: @escaping (Int, Int) -> Int) {
         guard modelEntity != nil else {
             pendingSession = (session, panel, turns)
@@ -1154,7 +1214,7 @@ final class DeviceModelScene {
         } else if previous == other, feeder.blurLast(on: other) {
             darkenTask?.cancel()
             darkenTask = Task { @MainActor [weak self] in
-                try? await Task.sleep(for: Self.darkenAfter)
+                await self?.waitForFold()
                 guard !Task.isCancelled, self?.feedingPanel != other else { return }
                 self?.darken(other)
             }
@@ -1171,7 +1231,37 @@ final class DeviceModelScene {
         frameArrived(frames)
     }
 
+    /// Returns when the hinge has stopped for the fold strip's last batch:
+    /// its sweep ended (the panel going dark keeps its blurred picture as
+    /// long as the device folds), or `darkenAfter` on when the fold was not
+    /// the strip's.
+    private func waitForFold() async {
+        let began = ContinuousClock.now
+        var swept = false
+        while !Task.isCancelled {
+            let elapsed = ContinuousClock.now - began
+            switch foldProgress?() {
+            case .sweeping(let sweep)?:
+                swept = true
+                if ContinuousClock.now >= sweep.end { return }
+            case .waiting?:
+                if elapsed >= Self.sweepWait { return }
+            case .done?, nil:
+                if swept || elapsed >= Self.darkenAfter { return }
+            }
+            try? await Task.sleep(for: .milliseconds(16))
+        }
+    }
+
+    /// Turns `panel` black. One that showed frames keeps its texture and
+    /// material, cleared: putting a black material on and making the
+    /// texture again when it lit cost the main thread up to 50 ms in the
+    /// middle of each fold (iPhone Duo in a VM).
     private func darken(_ panel: SimulatorFoldPanel) {
+        if feeder.clear(panel) {
+            setNeedsRender()
+            return
+        }
         guard let modelEntity, let panels, var component = modelEntity.components[ModelComponent.self] else { return }
         component.materials[panel == .inner ? panels.inner : panels.outer] = UnlitMaterial(color: .black)
         modelEntity.components.set(component)
@@ -1272,6 +1362,15 @@ final class PanelTextureFeeder {
         return copy(picture.buffer, to: panel, turns: picture.turns, blur: Self.blurStep)
     }
 
+    /// Draws `panel` black, keeping its texture for the next time it lights;
+    /// false when it has none.
+    func clear(_ panel: SimulatorFoldPanel) -> Bool {
+        guard let target = textures[panel] else { return false }
+        last[panel] = nil
+        renderer.submit(PanelRenderer.Job(buffer: nil, queue: target.queue, turns: 0, blur: 0), for: panel)
+        return true
+    }
+
     /// Lets go of `panel`'s last picture (the session's buffer) and texture:
     /// the panel is dark.
     func forget(_ panel: SimulatorFoldPanel) {
@@ -1303,7 +1402,8 @@ final class PanelTextureFeeder {
 /// handed over under the lock, and every draw runs on `queue`.
 final class PanelRenderer: @unchecked Sendable {
     struct Job: @unchecked Sendable {
-        let buffer: CVPixelBuffer
+        /// The frame; nil clears the drawable to black.
+        let buffer: CVPixelBuffer?
         let queue: TextureResource.DrawableQueue
         let turns: Int
         let blur: Float
@@ -1433,16 +1533,20 @@ final class PanelRenderer: @unchecked Sendable {
     /// One frame into the job's next drawable. A drawable not handed out in
     /// time (RealityKit took none since) drops the frame.
     private func draw(_ job: Job) {
+        guard let buffer = job.buffer else {
+            clear(job.queue)
+            return
+        }
         guard let commandQueue, let pipeline, let cache,
-              CVPixelBufferGetPixelFormatType(job.buffer) == kCVPixelFormatType_32BGRA,
+              CVPixelBufferGetPixelFormatType(buffer) == kCVPixelFormatType_32BGRA,
               let drawable = try? job.queue.nextDrawable()
         else { return }
         // Lets go of the textures of buffers nobody holds any more, as the
         // 2D renderer does (`MirrorRenderer.wrap`).
         CVMetalTextureCacheFlush(cache, 0)
-        let width = CVPixelBufferGetWidth(job.buffer), height = CVPixelBufferGetHeight(job.buffer)
+        let width = CVPixelBufferGetWidth(buffer), height = CVPixelBufferGetHeight(buffer)
         var wrapped: CVMetalTexture?
-        CVMetalTextureCacheCreateTextureFromImage(nil, cache, job.buffer, nil, .bgra8Unorm_srgb, width, height, 0, &wrapped)
+        CVMetalTextureCacheCreateTextureFromImage(nil, cache, buffer, nil, .bgra8Unorm_srgb, width, height, 0, &wrapped)
         guard let wrapped, let source = CVMetalTextureGetTexture(wrapped),
               let commands = commandQueue.makeCommandBuffer()
         else { return }
@@ -1463,6 +1567,24 @@ final class PanelRenderer: @unchecked Sendable {
             // Keeps the pixel buffer's texture alive until the draw is done.
             _ = wrapped
         }
+        commands.commit()
+        commands.waitUntilScheduled()
+        drawable.present()
+        notifyPresented()
+    }
+
+    /// The queue's next drawable, black.
+    private func clear(_ queue: TextureResource.DrawableQueue) {
+        guard let commandQueue, let drawable = try? queue.nextDrawable(),
+              let commands = commandQueue.makeCommandBuffer()
+        else { return }
+        let pass = MTLRenderPassDescriptor()
+        pass.colorAttachments[0].texture = drawable.texture
+        pass.colorAttachments[0].loadAction = .clear
+        pass.colorAttachments[0].clearColor = MTLClearColor(red: 0, green: 0, blue: 0, alpha: 1)
+        pass.colorAttachments[0].storeAction = .store
+        guard let encoder = commands.makeRenderCommandEncoder(descriptor: pass) else { return }
+        encoder.endEncoding()
         commands.commit()
         commands.waitUntilScheduled()
         drawable.present()

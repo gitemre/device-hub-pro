@@ -15,6 +15,10 @@ final class SimulatorFoldController: FoldControlDriving {
     /// The device the workspace mirrors.
     @ObservationIgnored var mirroredDevice: @MainActor () -> DeviceRef? = { nil }
     @ObservationIgnored var environment: [String: String] = ProcessInfo.processInfo.environment
+    /// The batch of the last preset or held posture sent to a simulator,
+    /// which the 3D model follows (`foldProgress`); nil once the hinge moved
+    /// another way (the slider).
+    @ObservationIgnored private var sweepBatch: (udid: String, batch: Int)?
 
     init(simulators: SimulatorInventory, canvas: SimulatorCanvasController) {
         self.simulators = simulators
@@ -81,7 +85,7 @@ final class SimulatorFoldController: FoldControlDriving {
     func setPostureAnimated(_ posture: PostureKind) {
         guard let entry = foldableEntry, let sender = simulators.foldSender else { return }
         let steps = SimulatorFold.presetSteps(for: posture, from: simulators.folds.record(of: entry.udid).angle)
-        sender.send(steps, to: address(of: entry))
+        sweepBatch = (entry.udid, sender.send(steps, to: address(of: entry)))
         record(steps, for: entry)
     }
 
@@ -95,7 +99,7 @@ final class SimulatorFoldController: FoldControlDriving {
         guard let entry = foldableEntry, let sender = simulators.foldSender else { return }
         let record = simulators.folds.record(of: entry.udid)
         let steps = posture.steps(from: record.panel, angle: record.angle)
-        sender.send(steps, to: address(of: entry))
+        sweepBatch = (entry.udid, sender.send(steps, to: address(of: entry)))
         self.record(steps, for: entry)
     }
 
@@ -149,6 +153,7 @@ final class SimulatorFoldController: FoldControlDriving {
         // which does not light the inner panel).
         let angle = SimulatorFold.sentAngle(degrees)
         sender.send(degrees: angle, to: address(of: entry))
+        sweepBatch = nil
         guard simulators.noteFold(udid: entry.udid, angle: angle) else { return false }
         canvas.followFold(entry.udid)
         return true
@@ -157,6 +162,22 @@ final class SimulatorFoldController: FoldControlDriving {
     func setHingeAngle(_ degrees: Double) {
         guard degrees.isFinite, let entry = foldableEntry else { return }
         moveHinge(entry, to: degrees)
+    }
+
+    /// How far the mirrored foldable's last preset or held posture got in
+    /// the simulator; nil when the hinge last moved another way.
+    func foldProgress() -> SimulatorFoldProgress? {
+        guard let entry = foldableEntry, let batch = sweepBatch, batch.udid == entry.udid,
+              let sender = simulators.foldSender
+        else { return nil }
+        return sender.progress(of: batch.batch, for: address(of: entry))
+    }
+
+    /// Opens the hinge's channel to the mirrored foldable before its first
+    /// fold (`SimulatorFoldSender.prepare`).
+    func prepareFold() {
+        guard let entry = foldableEntry, let sender = simulators.foldSender else { return }
+        sender.prepare(address(of: entry))
     }
 
     /// Device ▸ Fold / Unfold: closed opens flat, anything else closes.

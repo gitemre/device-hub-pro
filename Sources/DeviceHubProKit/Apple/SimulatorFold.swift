@@ -110,18 +110,34 @@ public enum SimulatorFold {
     /// out (cubic): fast first, settling into `end`, which is always last.
     /// No angle repeats the one before it; none when `start` is `end`.
     public static func sweepAngles(from start: Double, to end: Double) -> [Int] {
+        sweepSchedule(from: start, to: end).map(\.angle)
+    }
+
+    /// `sweepAngles` with when each goes out: frame `n` (1 through
+    /// `sweepDuration × sweepRate`) leaves `n / sweepRate` seconds after the
+    /// sweep began, so the last one leaves at `sweepDuration`.
+    public static func sweepSchedule(from start: Double, to end: Double) -> [(frame: Int, angle: Int)] {
         let first = Int(sentAngle(start)), last = Int(sentAngle(end))
         guard first != last else { return [] }
-        let frames = max(Int((sweepDuration * sweepRate).rounded()), 1)
-        var angles: [Int] = []
+        let frames = sweepFrames
+        var schedule: [(frame: Int, angle: Int)] = []
         for frame in 1...frames {
-            let progress = Double(frame) / Double(frames)
-            let eased = 1 - pow(1 - progress, 3)
-            let angle = Int(sentAngle(Double(first) + Double(last - first) * eased))
-            if angle != (angles.last ?? first) { angles.append(angle) }
+            let progress = sweepEasing(Double(frame) / Double(frames))
+            let angle = Int(sentAngle(Double(first) + Double(last - first) * progress))
+            if angle != (schedule.last?.angle ?? first) { schedule.append((frame, angle)) }
         }
-        if angles.last != last { angles.append(last) }
-        return angles
+        if schedule.last?.angle != last { schedule.append((frames, last)) }
+        return schedule
+    }
+
+    /// How many frames a sweep spans.
+    public static var sweepFrames: Int { max(Int((sweepDuration * sweepRate).rounded()), 1) }
+
+    /// A sweep's progress (0...1) at `linear` of its time: easing out
+    /// (cubic), as Device Hub's angles did.
+    public static func sweepEasing(_ linear: Double) -> Double {
+        let clamped = min(max(linear, 0), 1)
+        return 1 - pow(1 - clamped, 3)
     }
 
     /// What a preset sends, as Device Hub does: the device held upright
@@ -242,6 +258,48 @@ public enum SimulatorFoldStep: Sendable, Equatable {
     case pause(TimeInterval)
 }
 
+/// A hinge sweep as `SimulatorFoldSender` sends it: from and to (whole
+/// degrees), its frames `1 / SimulatorFold.sweepRate` s apart from `began`.
+/// The angle it has reached at any instant is known, so whatever shows the
+/// hinge can follow the guest's instead of a clock of its own.
+public struct SimulatorFoldSweep: Sendable, Equatable {
+    public let from: Int
+    public let to: Int
+    public let began: ContinuousClock.Instant
+
+    public init(from: Int, to: Int, began: ContinuousClock.Instant) {
+        self.from = from
+        self.to = to
+        self.began = began
+    }
+
+    /// When its last frame is due. Its last angle may leave a few frames
+    /// sooner: the curve comes within half a degree of `to` before the end
+    /// (from 180 to 0 on frame 31 of 36), and no angle repeats.
+    public var end: ContinuousClock.Instant {
+        began + .seconds(Double(SimulatorFold.sweepFrames) / SimulatorFold.sweepRate)
+    }
+
+    /// The angle it has reached at `instant` (`from` before it began, `to`
+    /// after it ended), on the curve its angles follow.
+    public func angle(at instant: ContinuousClock.Instant) -> Double {
+        let elapsed = instant - began
+        let seconds = Double(elapsed.components.seconds) + Double(elapsed.components.attoseconds) / 1e18
+        let linear = seconds * SimulatorFold.sweepRate / Double(SimulatorFold.sweepFrames)
+        return Double(from) + Double(to - from) * SimulatorFold.sweepEasing(linear)
+    }
+}
+
+/// How far `SimulatorFoldSender` got with a batch of steps it was handed.
+public enum SimulatorFoldProgress: Sendable, Equatable {
+    /// None of its sweeps has begun: an earlier batch is still going out.
+    case waiting
+    /// Its latest sweep began; later steps (a pause, another sweep) may wait.
+    case sweeping(SimulatorFoldSweep)
+    /// All of it was sent (or the simulator was forgotten).
+    case done
+}
+
 /// The fold strip's postures past Apple's presets: the device on its side,
 /// half open. On a laptop the inner panel lies along the hinge, the lower
 /// half flat and the upper one up; a tent stands on both edges, the outer
@@ -349,19 +407,32 @@ public struct SimulatorSessionPanel: Sendable, Hashable {
 /// follows it directly, when both light the same panel (`SimulatorFold.zone`:
 /// an angle that crosses a threshold is always sent, or the guest would keep
 /// the panel the app no longer shows); one input channel per simulator, all
-/// on one serial queue, connected on the first send.
+/// on one serial queue, connected on the first send (or by `prepare`).
+/// Each `send` is a batch whose progress can be asked for, so the stage can
+/// draw the hinge where the guest's is (`SimulatorFoldSweep`).
 public final class SimulatorFoldSender: Sendable {
     private let bridge: any SimulatorBridging
     private let queue = DispatchQueue(label: "com.devicehubpro.simulator-fold", qos: .userInitiated)
     private let state = Mutex(State())
 
+    private struct Queued {
+        let step: SimulatorFoldStep
+        let batch: Int
+    }
+
     private struct State {
-        var pending: [SimulatorAddress: [SimulatorFoldStep]] = [:]
+        var pending: [SimulatorAddress: [Queued]] = [:]
         var drainScheduled = false
         var inputs: [SimulatorAddress: any SimulatorInputBridging] = [:]
         var lastError: [SimulatorAddress: String] = [:]
         /// The hinge angle each simulator was sent last: where a sweep starts.
         var lastAngle: [SimulatorAddress: Int] = [:]
+        var nextBatch = 1
+        /// The batch whose step is going out, the last batch sent whole and
+        /// the latest sweep begun, per simulator.
+        var inFlight: [SimulatorAddress: Int] = [:]
+        var sentBatch: [SimulatorAddress: Int] = [:]
+        var sweep: [SimulatorAddress: (batch: Int, sweep: SimulatorFoldSweep)] = [:]
     }
 
     public init(bridge: any SimulatorBridging) {
@@ -374,21 +445,49 @@ public final class SimulatorFoldSender: Sendable {
     }
 
     /// Queues `steps` for `address` after those waiting; a first hinge step
-    /// replaces a hinge step waiting last in the same zone.
-    public func send(_ steps: [SimulatorFoldStep], to address: SimulatorAddress) {
-        guard !steps.isEmpty else { return }
-        let schedule = state.withLock { state -> Bool in
+    /// replaces a hinge step waiting last in the same zone. Returns the
+    /// batch they make (`progress(of:for:)`).
+    @discardableResult
+    public func send(_ steps: [SimulatorFoldStep], to address: SimulatorAddress) -> Int {
+        guard !steps.isEmpty else { return 0 }
+        let (batch, schedule) = state.withLock { state -> (Int, Bool) in
+            let batch = state.nextBatch
+            state.nextBatch += 1
             var queued = state.pending[address] ?? []
-            if case .hinge(let new)? = steps.first, case .hinge(let old)? = queued.last,
+            if case .hinge(let new)? = steps.first, case .hinge(let old)? = queued.last?.step,
                SimulatorFold.zone(of: new) == SimulatorFold.zone(of: old) {
                 queued.removeLast()
             }
-            state.pending[address] = queued + steps
-            guard !state.drainScheduled else { return false }
+            state.pending[address] = queued + steps.map { Queued(step: $0, batch: batch) }
+            guard !state.drainScheduled else { return (batch, false) }
             state.drainScheduled = true
-            return true
+            return (batch, true)
         }
         if schedule { queue.async { [self] in drain() } }
+        return batch
+    }
+
+    /// How far `batch` (a `send`'s) for `address` got. A batch that was
+    /// never sent, replaced or dropped with the simulator is done.
+    public func progress(of batch: Int, for address: SimulatorAddress) -> SimulatorFoldProgress {
+        state.withLock { state in
+            if batch <= state.sentBatch[address] ?? 0 { return .done }
+            if let current = state.sweep[address], current.batch == batch { return .sweeping(current.sweep) }
+            if state.inFlight[address] == batch || state.pending[address]?.contains(where: { $0.batch == batch }) == true {
+                return .waiting
+            }
+            return .done
+        }
+    }
+
+    /// Connects `address`'s channel now, so the first fold does not wait for
+    /// it: iPhone Duo's first connect took about half a second, which held
+    /// the sweep back while the stage moved.
+    public func prepare(_ address: SimulatorAddress) {
+        queue.async { [self] in
+            let input = input(for: address)
+            if !input.isConnected { _ = try? input.connect() }
+        }
     }
 
     /// The last send's failure for `address`, if it failed.
@@ -402,6 +501,8 @@ public final class SimulatorFoldSender: Sendable {
             state.pending[address] = nil
             state.lastError[address] = nil
             state.lastAngle[address] = nil
+            state.inFlight[address] = nil
+            state.sweep[address] = nil
             return state.inputs.removeValue(forKey: address)
         }
         if let input { queue.async { input.disconnect() } }
@@ -422,36 +523,64 @@ public final class SimulatorFoldSender: Sendable {
         }
     }
 
+    /// On the queue: `address`'s channel, made on first use.
+    private func input(for address: SimulatorAddress) -> any SimulatorInputBridging {
+        if let existing = state.withLock({ $0.inputs[address] }) { return existing }
+        let input = bridge.makeInput(for: address)
+        state.withLock { $0.inputs[address] = input }
+        return input
+    }
+
     /// On the queue: sends each simulator's steps in order until none waits.
     private func drain() {
         while true {
-            let next = state.withLock { state -> (SimulatorAddress, SimulatorFoldStep, (any SimulatorInputBridging)?)? in
+            let next = state.withLock { state -> (SimulatorAddress, Queued)? in
                 guard let (address, steps) = state.pending.first(where: { !$0.value.isEmpty }) else {
                     state.pending = [:]
                     state.drainScheduled = false
                     return nil
                 }
                 state.pending[address] = Array(steps.dropFirst())
-                return (address, steps[0], state.inputs[address])
+                state.inFlight[address] = steps[0].batch
+                return (address, steps[0])
             }
-            guard let (address, step, existing) = next else { return }
-            let input = existing ?? bridge.makeInput(for: address)
-            if existing == nil { state.withLock { $0.inputs[address] = input } }
-            switch step {
+            guard let (address, queued) = next else { return }
+            let input = input(for: address)
+            switch queued.step {
             case .hinge(let degrees):
                 send(SimulatorFold.hingeEvent(degrees: degrees), on: input, to: address, angle: Int(SimulatorFold.sentAngle(degrees)))
             case .sweep(let from, let to):
                 let start = state.withLock { $0.lastAngle[address] }.map(Double.init) ?? from
-                for angle in SimulatorFold.sweepAngles(from: start, to: to) {
+                let schedule = SimulatorFold.sweepSchedule(from: start, to: to)
+                guard let last = schedule.last else { break }
+                // Each angle leaves on its frame's time, however long the
+                // sends before it took, so the sweep lasts its duration and
+                // `SimulatorFoldSweep.angle(at:)` says where the hinge is.
+                let sweep = SimulatorFoldSweep(from: Int(SimulatorFold.sentAngle(start)), to: last.angle, began: .now)
+                state.withLock { $0.sweep[address] = (queued.batch, sweep) }
+                for (frame, angle) in schedule {
+                    Self.sleep(until: sweep.began + .seconds(Double(frame) / SimulatorFold.sweepRate))
                     send(SimulatorFold.hingeEvent(degrees: Double(angle)), on: input, to: address, angle: angle)
-                    Thread.sleep(forTimeInterval: 1 / SimulatorFold.sweepRate)
                 }
             case .pose(let pose):
                 send(SimulatorFold.poseEvent(pose), on: input, to: address, angle: nil)
             case .pause(let seconds):
                 Thread.sleep(forTimeInterval: seconds)
             }
+            state.withLock { state in
+                guard state.inFlight[address] == queued.batch else { return }
+                state.inFlight[address] = nil
+                if state.pending[address]?.contains(where: { $0.batch == queued.batch }) != true {
+                    state.sentBatch[address] = max(state.sentBatch[address] ?? 0, queued.batch)
+                }
+            }
         }
+    }
+
+    private static func sleep(until deadline: ContinuousClock.Instant) {
+        let wait = deadline - .now
+        guard wait > .zero else { return }
+        Thread.sleep(forTimeInterval: Double(wait.components.seconds) + Double(wait.components.attoseconds) / 1e18)
     }
 
     /// On the queue: one event; a hinge event's angle becomes the one sent last.
