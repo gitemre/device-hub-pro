@@ -12,6 +12,7 @@ struct VerifierView: View {
     @Environment(\.accessibilityReduceTransparency) private var reduceTransparency
     @Environment(\.accessibilityVoiceOverEnabled) private var voiceOver
     @Environment(\.accessibilityShowButtonShapes) private var buttonShapes
+    @Environment(\.scenePhase) private var scenePhase
 
     private var snapshot: EnvironmentSnapshot {
         EnvironmentSnapshot(
@@ -46,9 +47,23 @@ struct VerifierView: View {
                 }
             }
             .navigationTitle("Device Hub Pro Verifier")
+            // The hinge, the screen and the keys (Device & hardware).
+            .background(DeviceProbe(model: model))
         }
         .onChange(of: snapshot, initial: true) { _, snapshot in
             model.environmentChanged(snapshot)
+        }
+        .onChange(of: scenePhase, initial: true) { _, phase in
+            model.scenePhaseChanged(Self.name(of: phase))
+        }
+    }
+
+    private static func name(of phase: ScenePhase) -> String {
+        switch phase {
+        case .active: return "active"
+        case .inactive: return "inactive"
+        case .background: return "background"
+        @unknown default: return "unknown"
         }
     }
 

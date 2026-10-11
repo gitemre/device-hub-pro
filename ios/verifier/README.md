@@ -60,7 +60,9 @@ arm64-apple-ios26.0-simulator`, Swift 6 mode; no xcrun, whose wrappers can run
 `xcodebuild -runFirstLaunch`), copies `Info.plist` and checks the linker signature. The linker
 is told the SDK's own version (`-Xlinker -platform_version ios-simulator 26.0 <SDK version>`,
 read from the SDK's `SDKSettings.plist`): left to itself it records the deployment target as the
-SDK, and iOS 27.1 then showed the app on iPhone Duo in a 375 × 667 compatibility window. With `--install` it
+SDK, and iOS 27.1 then showed the app on iPhone Duo in a 375 × 667 compatibility window. Built
+with the iOS 27.1 SDK or later, the app reads the hinge (`UIHingeInteraction`); an earlier SDK
+leaves that row `unavailable`. With `--install` it
 takes only a simulator UDID that `simctl list` shows in that set (never `booted` or
 `all`, never a physical device), runs the real simctl binary (`DHP_SIMCTL`
 overrides it; never the xcrun wrapper), installs, grants the location permission
@@ -126,12 +128,30 @@ command's start to the reading (`IOSVerifierLiveTests`, 2026-09-26).
 | Permissions (`appConditions.permissions`) | nine frameworks' authorization status | `simctl privacy <UDID> grant photos com.devicehubpro.verifier` (ends the app; relaunch it) | 1.23 s with the relaunch |
 | Last link (`links.lastLink`) | `onOpenURL` | `simctl openurl <UDID> 'devicehubpro-verifier://link/check?q=a%20b'`, then tap Open | by hand |
 | Clipboard (`clipboard.pasteboard`) | `UIPasteboard.changeCount` and types, never the contents | `simctl pbcopy <UDID>` | 0.28 s |
+| Hinge (`device.hinge`) | `UIHingeInteraction`: the status (`closed`, `partiallyOpen`, `fullyOpen`) and the angle in degrees | the fold strip, Device ▸ Fold / Unfold (the hinge events `SimulatorFoldSender` sends) | see below |
+| Screen (`device.screen`) | the window scene's size in pixels and its interface orientation | the fold strip (the lit panel), the stage's Rotate | with the hinge |
+| App state (`device.appState`) | SwiftUI `scenePhase`, and the phase it left last | Controls ▸ Home, Lock, App Switcher; the side button | under 1 s |
+| Last key (`device.lastKey`) | `pressesBegan` on a first responder behind the list: the key and ⌃⌥⇧⌘ | Keyboard Capture; ⌘ shortcuts with Settings ▸ Capture keyboard shortcuts | under 1 s |
+
+The Device & hardware rows were measured on an iPhone Duo, iOS 27.1, Xcode 27.1 RC
+(`SimulatorFoldVerifierLiveTests`, 2026-10-11): booted closed, the hinge reads `closed 0.0` and
+the window is the outer panel (1398 × 2034, portrait); Device Hub Pro's Half (a 130° sweep) settles
+at `partiallyOpen 127.8`, Opened at `fullyOpen 180.0`, the slider's 100° at `partiallyOpen 99.4`
+(apps read a sent angle as 5 + angle × 170 / 180 between the ends), each on the inner panel
+(2853 × 2007, landscape right). The status turns before the sweep ends: closing reads `closed`
+from about 45°.
 
 Where a row has two times, the first is simctl's and the second devicectl's. The devicectl
 rows were measured on a default-set simulator (CoreDevice does not see private sets),
 CoreDevice 642.16, CoreSimulator 1171.7.
 
 ## Kept in step with the Controls rows
+
+The Device & hardware section (`Registry.deviceSectionID`) is the exception: its rows check what
+lies outside the Controls panel (the fold strip, the keyboard, the hardware buttons), so
+`controls-rows.json` maps none of them and `RegistryTests` holds them to that. Simulate Hardware
+Keyboard has no row: `GCKeyboard` read connected whichever way the switch was set (iOS 27.1), and
+the software keyboard's height would need a focused text field over the list.
 
 `controls-rows.json` at the repository root lists every `ControlsRow`, and under `menuRows` what
 only the menus and the stage carry (Orientation is the stage's Rotate, Clipboard, Slow Animations,

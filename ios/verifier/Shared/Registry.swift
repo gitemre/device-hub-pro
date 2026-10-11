@@ -244,6 +244,40 @@ enum Registry {
                     + "\"Open in AQA Verifier?\" before a link from outside reaches the app: tap Open."
             ),
         ]),
+        VerifierSection(id: Registry.deviceSectionID, title: "Device & hardware", rows: [
+            VerifierRow(
+                id: "device.hinge",
+                title: "Hinge",
+                observes: .effect,
+                source: "Fold strip, Device ▸ Fold / Unfold · UIHingeInteraction (iOS 27.1)",
+                detail: "The hinge's status and angle as apps read them (an iPhone Duo). Device Hub Pro's Half reads "
+                    + "near 128°, as Device Hub's does; a device without a hinge says so."
+            ),
+            VerifierRow(
+                id: "device.screen",
+                title: "Screen",
+                observes: .effect,
+                source: "Fold strip (the lit panel), Orientation · the window scene's size and interface orientation",
+                detail: "The size of this app's window in pixels, as its interface is turned: an app filling an "
+                    + "iPhone Duo's outer panel is 1398 × 2034, its inner one 2007 × 2853."
+            ),
+            VerifierRow(
+                id: "device.appState",
+                title: "App state",
+                observes: .effect,
+                source: "Controls ▸ Home, Lock, App Switcher; the side button · SwiftUI scenePhase",
+                detail: "Active, inactive or in the background, and the state it left last: App Switcher leaves it "
+                    + "inactive, Home and Lock send it to the background."
+            ),
+            VerifierRow(
+                id: "device.lastKey",
+                title: "Last key",
+                observes: .effect,
+                source: "Keyboard Capture, Settings ▸ Capture keyboard shortcuts · UIPress",
+                detail: "The last key that reached this app, with its modifiers: with Capture keyboard shortcuts "
+                    + "on, ⌘ shortcuts arrive here instead of staying on the Mac."
+            ),
+        ]),
         VerifierSection(id: "clipboard", title: "Clipboard", rows: [
             VerifierRow(
                 id: "clipboard.pasteboard",
@@ -260,6 +294,15 @@ enum Registry {
 
     static func row(_ id: String) -> VerifierRow? {
         rows.first { $0.id == id }
+    }
+
+    /// The section whose rows check device features outside the Controls
+    /// panel (the fold strip, the keyboard, the hardware buttons):
+    /// controls-rows.json maps none of them, and they wait for no Controls row.
+    static let deviceSectionID = "device"
+
+    static var deviceRows: [VerifierRow] {
+        sections.first { $0.id == deviceSectionID }?.rows ?? []
     }
 
     /// Rows whose Controls row has no `ios` mapping in controls-rows.json

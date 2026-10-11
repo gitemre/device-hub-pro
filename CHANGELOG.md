@@ -20,6 +20,9 @@ All notable changes to Device Hub Pro are recorded here. The format follows
 - **App Switcher** (⌃⇧⌘H) and **Action Button** in a simulator's Controls menu (the Action
   Button where the device has one).
 - **Device ▸ Battery** for simulators: 100, 75, 50 or 25 % in the status bar.
+- The iOS verifier gains Device & hardware rows: the hinge's status and angle, the size of the
+  window (which panel of an iPhone Duo it is on), the app's state and the last key with its
+  modifiers. A live test reads them back after each fold preset.
 
 ### Fixed
 

@@ -263,6 +263,53 @@ enum Readings {
 
     /// A time of day in 24-hour form, whatever the locale, so readings
     /// compare across the 24-hour row's changes.
+    // MARK: Device & hardware
+
+    /// The hinge as UIHingeInteraction reports it: its status (UIHinge.Status's
+    /// case name) and angle in degrees; nil when the device has none.
+    static func hinge(status: String?, degrees: Double?) -> Reading {
+        guard let status else { return Reading("No hinge", raw: "none") }
+        let names = ["closed": "Closed", "partiallyOpen": "Partially open", "fullyOpen": "Fully open", "unknown": "Unknown"]
+        let name = names[status] ?? status
+        guard let degrees else { return Reading(name, raw: status) }
+        let angle = String(format: "%.1f", degrees)
+        return Reading("\(name) · \(angle)°", raw: "\(status) \(angle)")
+    }
+
+    /// The screen this app's window is on, in pixels, and the interface
+    /// orientation (UIInterfaceOrientation's raw value).
+    static func screen(width: Int, height: Int, scale: Double, interfaceOrientation: Int) -> Reading {
+        let names = [1: ("portrait", "Portrait"), 2: ("portraitUpsideDown", "Portrait upside down"),
+                     3: ("landscapeLeft", "Landscape left"), 4: ("landscapeRight", "Landscape right")]
+        let (token, name) = names[interfaceOrientation] ?? ("unknown", "Unknown")
+        let scaleText = scale == scale.rounded() ? String(Int(scale)) : String(format: "%.2f", scale)
+        return Reading("\(width) × \(height) px @\(scaleText)x · \(name)", raw: "\(width)x\(height) \(token)")
+    }
+
+    /// The app's scene phase ("active", "inactive", "background") and the
+    /// last one it left, with when.
+    static func appState(_ phase: String, previous: (phase: String, at: Date)?) -> Reading {
+        let names = ["active": "Active", "inactive": "Inactive", "background": "Background"]
+        let name = names[phase] ?? phase
+        guard let previous else { return Reading(name, raw: phase) }
+        return Reading("\(name) · was \(names[previous.phase] ?? previous.phase) until \(clock(previous.at))", raw: phase)
+    }
+
+    /// The last key that reached this app, with its modifiers ("command",
+    /// "shift", "option", "control", in that order), and when.
+    static func lastKey(_ key: String, modifiers: [String], at date: Date) -> Reading {
+        let symbols = ["control": "⌃", "option": "⌥", "shift": "⇧", "command": "⌘"]
+        let order = ["control", "option", "shift", "command"]
+        let held = order.filter(modifiers.contains)
+        let shown = held.compactMap { symbols[$0] }.joined() + key.uppercased()
+        return Reading("\(shown) · \(clock(date))", raw: (held + [key.lowercased()]).joined(separator: "+"))
+    }
+
+    static let noKey = Reading("None since launch", raw: "none")
+
+    /// A verifier built with an SDK before iOS 27.1, which has no hinge API.
+    static let hingeUnreadable = Reading("Not readable: built without the iOS 27.1 SDK", raw: "unavailable")
+
     static func clock(_ date: Date) -> String {
         var calendar = Calendar(identifier: .gregorian)
         calendar.timeZone = .current
