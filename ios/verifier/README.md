@@ -138,7 +138,7 @@ The Device & hardware rows were measured on an iPhone Duo, iOS 27.1, Xcode 27.1 
 the window is the outer panel (1398 × 2034, portrait); Device Hub Pro's Half (a 130° sweep) settles
 at `partiallyOpen 127.8`, Opened at `fullyOpen 180.0`, the slider's 100° at `partiallyOpen 99.4`
 (apps read a sent angle as 5 + angle × 170 / 180 between the ends), each on the inner panel
-(2853 × 2007, landscape right). The status turns before the sweep ends: closing reads `closed`
+(2853 × 2007, its interface landscape left). The status turns before the sweep ends: closing reads `closed`
 from about 45°.
 
 Where a row has two times, the first is simctl's and the second devicectl's. The devicectl
