@@ -440,6 +440,29 @@ final class DeviceControlsControllerTests: XCTestCase {
         XCTAssertFalse(panel.controlsLoaded)
     }
 
+    /// The recovery card is no alert: the moment it appears the state is kept
+    /// for a problem report, once per streak of silent polls.
+    func testTheStuckEmulatorIsKeptForAProblemReportOnce() async throws {
+        let adb = try makeStubAdb(arms: answeringArms(Self.serial))
+        let port = Self.silentPort
+        let (panel, _) = makePanel(adb: adb.client, port: port)
+        addTeardownBlock { await EmulatorControls.closeConnections(port: port) }
+        panel.hasSession = { true }
+        let log = RecentProblemStore(fileURL: nil)
+        panel.status.problemLog = log
+
+        for poll in 1...DeviceControlsController.unresponsivePollsForRecovery {
+            await panel.refreshControls()
+            XCTAssertEqual(log.entries().count, poll < DeviceControlsController.unresponsivePollsForRecovery ? 0 : 1, "after poll \(poll)")
+        }
+        await panel.refreshControls()
+        await panel.refreshControls()
+
+        let entries = log.entries()
+        XCTAssertEqual(entries.map(\.message), ["Emulator not responding (\(Self.serial)): it stopped answering its controls."])
+        XCTAssertEqual(entries.first?.count, 1, "the polls after the card appeared add nothing")
+    }
+
     /// A physical device's polls never count as silent.
     func testPollsWithoutAPortNeverCountAsSilent() async throws {
         let adb = try makeStubAdb(arms: answeringArms(Self.serial))

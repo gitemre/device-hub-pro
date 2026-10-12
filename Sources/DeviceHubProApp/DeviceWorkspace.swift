@@ -306,6 +306,8 @@ final class DeviceWorkspace {
         // every per-device controller below is built on
         // it, never on `services.status` (the app-global one).
         let status = StatusCenter()
+        status.problemLog = environment.recentProblems
+        status.problemIdentifiers = { [weak services] in services?.recentProblemIdentifiers() ?? RecentProblemIdentifiers() }
         let preferences = services.preferences
         let simulators = services.simulators
         let mirror = MirrorController(

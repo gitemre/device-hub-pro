@@ -4,8 +4,9 @@ Thanks for helping. Bug reports, fixes, device captures and documentation are al
 
 ## Before you start
 
-- **Bugs:** open an issue with the bug report form. Include the macOS version, the device
-  (emulator, phone model, simulator or iPhone) and what the log pane or Console showed.
+- **Bugs:** open an issue with the bug report form and paste the report from Help ▸ Report a
+  Problem… (it holds the macOS version, the tools, the devices and what they answered, with
+  private details left out). Add what you did and what you expected.
 - **Features:** open an issue first so we can agree on the shape before you write code.
 - **Security problems:** do not open an issue; see [SECURITY.md](SECURITY.md).
 
@@ -29,6 +30,22 @@ test while using the Mac.
 To build the packaged app and a disk image: `Scripts/package-app.sh --dmg` (ad hoc signed,
 for your own Mac). Signing, notarization and releases are in
 [docs/distribution.md](docs/distribution.md).
+
+## Reading a problem report
+
+A report in an issue says what the user's Mac looks like and which known causes match it
+(`ProblemReportAnalyzer`). The `dhp-report` tool (`Sources/DeviceHubProReport`, never packaged)
+reads one with the same code the app uses:
+
+```sh
+swift run dhp-report issue <n>          # needs gh, signed in
+pbpaste | swift run dhp-report analyze -
+```
+
+`dhp-report collect` makes a report of your own Mac with the same reads and the same adb guard.
+When an issue shows a new cause, add a rule in
+`Sources/DeviceHubProKit/Diagnostics/ProblemReport/ProblemReportAnalyzer.swift` with a test from a
+real fixture.
 
 ## Pull requests
 

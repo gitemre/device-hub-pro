@@ -494,6 +494,10 @@ final class MirrorController {
         }
         guard !sawFrame, let started = streamStartedAt, let serial else { return }
         if now - started >= firstFrameTimeout, isDeviceOnline(serial) {
+            // The stalled card is no alert: keep the state for a problem report.
+            if !emulatorScreenStalled {
+                status.noteProblem("The emulator isn\u{2019}t sending its screen (\(serial)).")
+            }
             emulatorScreenStalled = true
         }
     }

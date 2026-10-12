@@ -36,6 +36,9 @@ struct DHSheet<Content: View>: View {
     var actions: [DHSheetAction] = []
     /// A note at the footer's leading edge (a spinner line, a caption).
     var footerNote: String?
+    /// How many lines the note may take before it is cut: one, unless the note
+    /// carries an instruction the user must read whole.
+    var footerNoteLines = 1
     /// Replaces closing the sheet when Cancel is pressed or Esc is typed
     /// (a sheet with an inline edit cancels just the edit); nil dismisses.
     var onCancel: (() -> Void)?
@@ -58,7 +61,7 @@ struct DHSheet<Content: View>: View {
                     Text(footerNote)
                         .font(.callout)
                         .foregroundStyle(.secondary)
-                        .lineLimit(1)
+                        .lineLimit(footerNoteLines)
                 }
                 Spacer()
                 Button(cancelTitle) { if let onCancel { onCancel() } else { dismiss() } }

@@ -220,6 +220,8 @@ final class AppModel {
         self.launchOptions = environment.launch
         self.expandAllControlsGroups = environment.launch.expandAllControlsGroups
         let status = self.status
+        // The errors this window's alerts show are kept for a problem report.
+        status.problemLog = environment.recentProblems
         let displayShapes = DisplayShapeLibrary(store: environment.displayShapeStore)
         self.displayShapes = displayShapes
         // The first workspace's context: the hot-plug lifecycle reads the
@@ -299,6 +301,8 @@ final class AppModel {
             recordingFinalizer: recordingFinalizer
         )
         self.services = services
+        // The devices connected when an error is shown are kept beside it.
+        status.problemIdentifiers = { [weak services] in services?.recentProblemIdentifiers() ?? RecentProblemIdentifiers() }
         let workspace = DeviceWorkspace(services: services, context: context)
         self.workspace = workspace
         let registry = WorkspaceRegistry()

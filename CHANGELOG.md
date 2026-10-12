@@ -6,6 +6,14 @@ All notable changes to Device Hub Pro are recorded here. The format follows
 
 ## [Unreleased]
 
+### Added
+
+- **Help ▸ Report a Problem…** and a **Report…** button on error alerts with details: the sheet
+  checks this Mac for causes we know (an emulator made by old Android tools, no hardware
+  virtualization, a missing system image, a second adb, …) and shows each with its fix, and
+  makes a report with the private details left out (user name, Mac name, serial numbers,
+  addresses, tokens), ready to copy, save or open as a GitHub issue. Nothing is sent.
+
 ### Fixed
 
 - An emulator now starts and mirrors on a Mac whose `~/.emulator_console_auth_token` is empty

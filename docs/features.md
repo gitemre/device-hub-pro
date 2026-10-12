@@ -316,6 +316,13 @@ When the tools are installed, the app offers to create your first emulator.
   minutes of logcat byte for byte (the last 10 000 lines on Android 6), battery and
   memory dumps, `getprop` and `device.json`; a section that fails is written as
   `<name>.error.txt`.
+- **Report a Problem.** Help ▸ Report a Problem… (and the Report… button of an error alert that
+  has Show Details, such as an emulator that did not start) checks this Mac for causes we
+  know, such as an empty `~/.emulator_console_auth_token`, an emulator made by old Command-line
+  Tools, a missing hypervisor or a second adb, and shows each with its fix. It also makes a report
+  for a GitHub issue: the Mac, the tools, the emulators and what they answered, the app's recent
+  errors and the end of the emulator logs, with your user name, Mac name, serial numbers,
+  addresses and tokens left out. Copy, Save… and Open GitHub Issue; nothing is sent by the app.
 - **Log focus (⌥⌘L).** View ▸ Log Focus, the toolbar button or Reports ▸ Logs ▸ Focus
   turns the window into the phone (still interactive) on the left and a wide log pane
   on the right; the sidebar and inspector hide and Esc or the same button brings the

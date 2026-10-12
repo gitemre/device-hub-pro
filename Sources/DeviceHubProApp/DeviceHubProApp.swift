@@ -441,11 +441,19 @@ private struct AppCommands: Commands {
         // A plain "<App> Help" (no lightbulb, no ⌘?) that opens the project's
         // README: there is no Help Book. Listed only when the packaged app
         // names the page (DeviceHubProHelpURL, filled by Scripts/package-app.sh),
-        // never as an item that only says help is not available.
+        // never as an item that only says help is not available. Report a
+        // Problem… is always listed, development builds too: it makes the
+        // report an issue asks for (the known causes with their fix, and the
+        // details of this Mac with the private ones left out).
         CommandGroup(replacing: .help) {
             if let url = HelpLink.url() {
                 Button("\(ProcessInfo.processInfo.processName) Help") { NSWorkspace.shared.open(url) }
+                Divider()
             }
+            Button("Report a Problem\u{2026}") {
+                workspace?.window.problemReportRequest = ProblemReportRequest(subject: nil)
+            }
+            .disabled(workspace == nil)
         }
     }
 }

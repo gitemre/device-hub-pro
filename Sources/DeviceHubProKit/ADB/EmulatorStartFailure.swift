@@ -37,53 +37,98 @@ public struct EmulatorStartFailure: Sendable, Equatable {
     /// (also `EmulatorPreflight`'s, before a launch).
     public static let missingSystemImage = "The system image this emulator needs is missing or incomplete. Download it again from the OS Version menu of the New Emulator sheet, or recreate the emulator."
 
+    /// The causes the log can name, each with its sentence. The problem
+    /// report's analyzer reports them as findings of their own.
+    public enum Cause: String, Sendable, CaseIterable {
+        case noHypervisor
+        case diskFull
+        case lockOrRunning
+        case systemImageMissing
+        /// macOS refused the memory the software code generator needs.
+        case mprotectDenied
+        /// The emulator gave up the hypervisor (an AVD that names Android
+        /// version 0, `EmulatorPreflight.repairTarget`) and ran in software.
+        case hvfNotEnabled
+        case graphics
+
+        /// The plain-words sentence for the cause.
+        public var sentence: String {
+            switch self {
+            case .noHypervisor:
+                return "This Mac can\u{2019}t run Android emulators here: hardware virtualization isn\u{2019}t available (for example inside a virtual machine)."
+            case .diskFull:
+                return "There isn\u{2019}t enough free disk space to start this emulator. Free some space and try again."
+            case .lockOrRunning:
+                return "This emulator is already running, or its lock file is left over from one that was not shut down cleanly. Stop it, or delete the .lock files in its AVD folder, and try again."
+            case .systemImageMissing:
+                return EmulatorStartFailure.missingSystemImage
+            case .mprotectDenied, .hvfNotEnabled:
+                return "The emulator couldn\u{2019}t use this Mac\u{2019}s hypervisor and tried to run Android in software, which macOS refused. Recreate the emulator; if it keeps failing, update the Android SDK Command-line Tools and the emulator."
+            case .graphics:
+                return "The emulator could not start its graphics. Try again; if it keeps failing, update the emulator package and macOS."
+            }
+        }
+    }
+
     /// The plain-words cause when the log names a known one.
     public static func knownCause(in log: String) -> String? {
+        cause(in: log)?.sentence
+    }
+
+    /// The cause the log names, matched on the emulator's own wording; the
+    /// first of the causes below that matches wins.
+    public static func cause(in log: String) -> Cause? {
         let lowered = log.lowercased()
         func has(_ needles: String...) -> Bool { needles.contains { lowered.contains($0) } }
 
         if has("hv_unsupported", "failed to initialize hvf", "hvf error", "whpx", "/dev/kvm", "kvm is required",
                "requires hardware acceleration", "hardware acceleration is not available") {
-            return "This Mac can\u{2019}t run Android emulators here: hardware virtualization isn\u{2019}t available (for example inside a virtual machine)."
+            return .noHypervisor
         }
         if has("not enough space to create userdata", "no space left on device", "not enough disk space",
                "enospc") {
-            return "There isn\u{2019}t enough free disk space to start this emulator. Free some space and try again."
+            return .diskFull
         }
         if has("running multiple emulators with the same avd", "is already running", "multiinstance.lock",
                "hardware-qemu.ini.lock", "avd is already in use") {
-            return "This emulator is already running, or its lock file is left over from one that was not shut down cleanly. Stop it, or delete the .lock files in its AVD folder, and try again."
+            return .lockOrRunning
         }
         if has("cannot find avd system path", "broken avd system path", "missing a kernel file", "no system image",
                "cannot find system image", "could not find system image", "system image is missing",
                "image.sysdir.1") {
-            return missingSystemImage
+            return .systemImageMissing
         }
         // The emulator ran Android in software instead of on the hypervisor
         // (an AVD that names Android version 0 does that,
         // `EmulatorPreflight.repairTarget`), and macOS refused the memory
         // its code generator needs.
-        if has("hvf is not enabled", "qemu_mprotect", "mprotect failed") {
-            return "The emulator couldn\u{2019}t use this Mac\u{2019}s hypervisor and tried to run Android in software, which macOS refused. Recreate the emulator; if it keeps failing, update the Android SDK Command-line Tools and the emulator."
-        }
+        if has("qemu_mprotect", "mprotect failed") { return .mprotectDenied }
+        if has("hvf is not enabled") { return .hvfNotEnabled }
         if has("vulkan", "vkcreateinstance", "gpu emulation", "could not initialize emulated framebuffer",
                "failed to initialize egl", "eglinitialize") {
-            return "The emulator could not start its graphics. Try again; if it keeps failing, update the emulator package and macOS."
+            return .graphics
         }
         return nil
+    }
+
+    /// The log's lines worth reading: INFO lines are dropped unless they
+    /// carry an error word (a healthy log's `emuglConfig_init:
+    /// vulkan_mode_selected:host` would otherwise read as a graphics
+    /// problem). Not cut to a length or a count.
+    public static func significantLines(from log: String) -> [String] {
+        let keepWords = ["error", "fail", "fatal", "panic", "warning", "cannot", "can't", "unsupported"]
+        return log.split(separator: "\n", omittingEmptySubsequences: true).filter { line in
+            let trimmed = line.trimmingCharacters(in: .whitespaces)
+            guard trimmed.hasPrefix("INFO") else { return true }
+            let lowered = trimmed.lowercased()
+            return keepWords.contains { lowered.contains($0) }
+        }.map(String.init)
     }
 
     /// The last `detailLines` lines worth reading: INFO lines are dropped
     /// unless they carry an error word, and long lines keep their end.
     public static func detail(from log: String) -> String? {
-        let keepWords = ["error", "fail", "fatal", "panic", "warning", "cannot", "can't", "unsupported"]
-        let kept = log.split(separator: "\n", omittingEmptySubsequences: true).filter { line in
-            let trimmed = line.trimmingCharacters(in: .whitespaces)
-            guard trimmed.hasPrefix("INFO") else { return true }
-            let lowered = trimmed.lowercased()
-            return keepWords.contains { lowered.contains($0) }
-        }
-        let lines = kept.suffix(detailLines).map { line -> String in
+        let lines = significantLines(from: log).suffix(detailLines).map { line -> String in
             let text = line.trimmingCharacters(in: .whitespaces)
             guard text.count > maxLineLength else { return text }
             return "\u{2026}" + text.suffix(maxLineLength)

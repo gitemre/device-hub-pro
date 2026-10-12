@@ -113,7 +113,9 @@ struct ContentView: View {
         } message: {
             Text(UserFacingText.plain(activeErrorCenter.errorMessage ?? ""))
         }
-        .modifier(ErrorDetailsAlertHost(center: activeErrorCenter))
+        .modifier(ErrorDetailsAlertHost(center: activeErrorCenter, onReport: { subject in
+            window.problemReportRequest = ProblemReportRequest(subject: subject)
+        }))
         .modifier(AvdActionDialogsHost(dialogs: avdDialogs))
         .dhAlert(
             item: appDialogs.confirmation,
@@ -169,6 +171,11 @@ struct ContentView: View {
         }
         .sheet(isPresented: $window.isAndroidSetupPresented) {
             AndroidSetupSheet()
+                .environment(model)
+                .environment(workspace)
+        }
+        .sheet(item: $window.problemReportRequest) { request in
+            ProblemReportSheet(request: request)
                 .environment(model)
                 .environment(workspace)
         }
