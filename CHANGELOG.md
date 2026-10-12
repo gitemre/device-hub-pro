@@ -6,6 +6,8 @@ All notable changes to Device Hub Pro are recorded here. The format follows
 
 ## [Unreleased]
 
+## [1.1.2] - 2026-10-12
+
 ### Added
 
 - **Help ▸ Report a Problem…** and a **Report…** button on error alerts with details: the sheet
