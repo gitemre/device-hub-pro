@@ -88,6 +88,19 @@ final class StuckEmulatorTests: XCTestCase {
         await waitUntil("a frame did not clear it") { !model.workspace.mirror.emulatorScreenStalled }
     }
 
+    /// The stuck-screen panel is no alert: the moment it appears the state is
+    /// kept for a problem report, once, though the stats poll goes on.
+    func testTheStuckScreenIsKeptForAProblemReportOnce() async throws {
+        let (model, _) = startedModel()
+
+        await waitUntil("the watchdog never fired") { model.workspace.mirror.emulatorScreenStalled }
+        try await Task.sleep(for: .milliseconds(200))
+
+        let entries = model.services.environment.recentProblems.entries()
+        XCTAssertEqual(entries.map(\.message), ["The emulator isn\u{2019}t sending its screen (\(Self.serial))."])
+        XCTAssertEqual(entries.first?.count, 1)
+    }
+
     /// A frame inside the window never raises it.
     func testAFrameInTimeKeepsTheStageClear() async throws {
         let (model, session) = startedModel()

@@ -21,13 +21,31 @@ public enum AvdmanagerLocator {
     }
 
     private static func locate(tool: String, environment: [String: String]) -> URL? {
+        let candidates = candidates(
+            tool: tool,
+            environment: environment,
+            sdkRoots: sdkRoots(environment: environment)
+        )
+        let fileManager = FileManager.default
+        for candidate in candidates where fileManager.isExecutableFile(atPath: candidate) {
+            return URL(fileURLWithPath: candidate)
+        }
+        return nil
+    }
+
+    /// Where `tool` is looked for, best first: an explicit `DHP_<TOOL>`, each
+    /// SDK root's `cmdline-tools/latest` and then its installed revisions
+    /// (sorted by name, so an SDK without `latest` yields its oldest
+    /// revision first), then the PATH. `locate` takes the first executable
+    /// one; the problem report names it without running anything.
+    static func candidates(tool: String, environment: [String: String], sdkRoots: [String]) -> [String] {
         var candidates: [String] = []
 
         if let explicit = environment["DHP_\(tool.uppercased())"], !explicit.isEmpty {
             candidates.append(explicit)
         }
 
-        for root in sdkRoots(environment: environment) {
+        for root in sdkRoots {
             candidates.append(root + "/cmdline-tools/latest/bin/" + tool)
             candidates.append(contentsOf: revisionedCandidates(sdkRoot: root, tool: tool))
         }
@@ -37,12 +55,7 @@ public enum AvdmanagerLocator {
                 candidates.append(String(component) + "/" + tool)
             }
         }
-
-        let fileManager = FileManager.default
-        for candidate in candidates where fileManager.isExecutableFile(atPath: candidate) {
-            return URL(fileURLWithPath: candidate)
-        }
-        return nil
+        return candidates
     }
 
     /// Candidate `java` executables, best first. Existence alone does not mean

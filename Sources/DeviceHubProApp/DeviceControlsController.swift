@@ -204,6 +204,10 @@ final class DeviceControlsController {
                 && emulatorState.displays.isEmpty
                 && emulatorState.battery == nil
             emulatorUnresponsivePolls = silent ? emulatorUnresponsivePolls + 1 : 0
+            // The recovery card is no alert: keep the state for a problem report.
+            if silent, emulatorUnresponsivePolls == Self.unresponsivePollsForRecovery {
+                status.noteProblem("Emulator not responding (\(serial)): it stopped answering its controls.")
+            }
         }
         if let settingsRead, writeFence.admits(pollStartedAt: writesAtStart) {
             applySettingsPoll(settingsRead, serial: serial, to: &state)

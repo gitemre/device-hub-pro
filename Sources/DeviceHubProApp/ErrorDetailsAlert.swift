@@ -1,5 +1,6 @@
 import AppKit
 import SwiftUI
+import DeviceHubProKit
 
 /// The error alert for a failure that has a plain sentence and raw tool
 /// output behind it (the emulator's log when it exits during startup): the
@@ -8,15 +9,20 @@ enum ErrorDetailsAlert {
     static let accessoryWidth: CGFloat = 340
     static let detailsHeight: CGFloat = 120
     private static let headerHeight: CGFloat = 20
+    /// The second button, which opens the Report a Problem sheet about this
+    /// error.
+    static let reportButtonTitle = "Report\u{2026}"
 
     /// The alert, the disclosure closed. The accessory resizes the alert when
-    /// the triangle is toggled.
+    /// the triangle is toggled. `offersReport` adds the Report… button
+    /// after OK.
     @MainActor
-    static func make(message: String, details: String) -> NSAlert {
+    static func make(message: String, details: String, offersReport: Bool = false) -> NSAlert {
         let alert = NSAlert()
         alert.messageText = "Device Hub Pro"
         alert.informativeText = message
         alert.addButton(withTitle: "OK")
+        if offersReport { alert.addButton(withTitle: reportButtonTitle) }
         let accessory = DisclosureAccessory(details: details)
         accessory.onToggle = { [weak alert] in alert?.layout() }
         alert.accessoryView = accessory
@@ -93,9 +99,12 @@ enum ErrorDetailsAlert {
 }
 
 /// Presents `ErrorDetailsAlert` as a sheet of the host window while the
-/// center holds details for its error; answering clears the error.
+/// center holds details for its error; answering clears the error. With
+/// `onReport` the alert also offers Report…, which hands the error to the
+/// Report a Problem sheet.
 struct ErrorDetailsAlertHost: ViewModifier {
     let center: StatusCenter
+    var onReport: (@MainActor (ProblemReport.Subject) -> Void)?
     @State private var box = WindowCapture.Box()
     @State private var presenting = false
 
@@ -112,15 +121,44 @@ struct ErrorDetailsAlertHost: ViewModifier {
     private func present(message: String, details: String) {
         if let window = box.window, !window.isVisible { return }
         presenting = true
-        let alert = ErrorDetailsAlert.make(message: UserFacingText.plain(message), details: details)
-        let answered: (NSApplication.ModalResponse) -> Void = { _ in
+        let alert = ErrorDetailsAlert.make(
+            message: UserFacingText.plain(message),
+            details: details,
+            offersReport: onReport != nil
+        )
+        let center = center
+        let onReport = onReport
+        let answered: (NSApplication.ModalResponse) -> Void = { response in
             presenting = false
-            center.errorMessage = nil
+            Self.handle(response: response, center: center, message: message, details: details, onReport: onReport)
         }
         if let window = box.window {
             alert.beginSheetModal(for: window, completionHandler: answered)
         } else {
             answered(alert.runModal())
         }
+    }
+
+    /// The alert was answered: the error is cleared whichever button was
+    /// pressed, and Report… hands it on. The subject holds the raw
+    /// message (the alert shows `UserFacingText.plain`) and the details by
+    /// line. The hand-over waits one turn of the main actor so the alert's
+    /// sheet has ended before the Report a Problem sheet appears.
+    @MainActor
+    static func handle(
+        response: NSApplication.ModalResponse,
+        center: StatusCenter,
+        message: String,
+        details: String,
+        onReport: (@MainActor (ProblemReport.Subject) -> Void)?
+    ) {
+        center.errorMessage = nil
+        guard response == .alertSecondButtonReturn, let onReport else { return }
+        let subject = ProblemReport.Subject(
+            message: message,
+            details: details.split(omittingEmptySubsequences: false, whereSeparator: \.isNewline).map(String.init),
+            occurredAt: Date()
+        )
+        Task { @MainActor in onReport(subject) }
     }
 }

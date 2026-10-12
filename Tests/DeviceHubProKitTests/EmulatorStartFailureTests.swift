@@ -91,4 +91,75 @@ final class EmulatorStartFailureTests: XCTestCase {
         XCTAssertEqual(failure.message, "The emulator exited while booting.")
         XCTAssertEqual(failure.details, "something odd happened")
     }
+
+    // MARK: The causes, as the problem report's analyzer reads them
+
+    func testEveryFixtureNamesItsCause() throws {
+        XCTAssertEqual(EmulatorStartFailure.cause(in: try fixture("hvf-unsupported-vm.log")), .noHypervisor)
+        XCTAssertEqual(EmulatorStartFailure.cause(in: try fixture("hvf-not-enabled-target-zero-vm.log")), .hvfNotEnabled)
+        XCTAssertEqual(EmulatorStartFailure.cause(in: try fixture("mprotect-denied-report.log")), .mprotectDenied)
+        XCTAssertNil(EmulatorStartFailure.cause(in: "something odd happened"))
+    }
+
+    /// A log that names both says the software mode was refused: that is the
+    /// more specific one.
+    func testTheRefusedSoftwareModeWinsOverTheHypervisorGivenUp() {
+        let both = "WARNING | hvf is not enabled on this aarch64 host.\nqemu-system-aarch64: qemu_mprotect__osdep: mprotect failed: Permission denied"
+        XCTAssertEqual(EmulatorStartFailure.cause(in: both), .mprotectDenied)
+        XCTAssertEqual(EmulatorStartFailure.Cause.mprotectDenied.sentence, EmulatorStartFailure.Cause.hvfNotEnabled.sentence)
+    }
+
+    func testTheOtherCausesAreMatchedOnTheEmulatorsWording() {
+        let cases: [(String, EmulatorStartFailure.Cause)] = [
+            ("emulator: ERROR: Running multiple emulators with the same AVD is an experimental feature.", .lockOrRunning),
+            ("emulator: ERROR: Not enough space to create userdata partition.", .diskFull),
+            ("PANIC: Broken AVD system path. Check your ANDROID_SDK_ROOT value", .systemImageMissing),
+            ("emulator: ERROR: vkCreateInstance failed", .graphics),
+        ]
+        for (log, cause) in cases {
+            XCTAssertEqual(EmulatorStartFailure.cause(in: log), cause, log)
+            XCTAssertEqual(EmulatorStartFailure.knownCause(in: log), cause.sentence, log)
+        }
+    }
+
+    /// `knownCause` and the alert's message are what they were before the
+    /// causes got a type of their own.
+    func testTheKnownCauseSentencesAreUnchanged() throws {
+        XCTAssertEqual(
+            EmulatorStartFailure.knownCause(in: try fixture("hvf-unsupported-vm.log")),
+            "This Mac can\u{2019}t run Android emulators here: hardware virtualization isn\u{2019}t available (for example inside a virtual machine)."
+        )
+        XCTAssertEqual(
+            EmulatorStartFailure.knownCause(in: "ENOSPC"),
+            "There isn\u{2019}t enough free disk space to start this emulator. Free some space and try again."
+        )
+        XCTAssertEqual(
+            EmulatorStartFailure.knownCause(in: "multiinstance.lock"),
+            "This emulator is already running, or its lock file is left over from one that was not shut down cleanly. Stop it, or delete the .lock files in its AVD folder, and try again."
+        )
+        XCTAssertEqual(EmulatorStartFailure.knownCause(in: "cannot find avd system path"), EmulatorStartFailure.missingSystemImage)
+        XCTAssertEqual(
+            EmulatorStartFailure.knownCause(in: "hvf is not enabled"),
+            "The emulator couldn\u{2019}t use this Mac\u{2019}s hypervisor and tried to run Android in software, which macOS refused. Recreate the emulator; if it keeps failing, update the Android SDK Command-line Tools and the emulator."
+        )
+        XCTAssertEqual(
+            EmulatorStartFailure.knownCause(in: "eglInitialize failed"),
+            "The emulator could not start its graphics. Try again; if it keeps failing, update the emulator package and macOS."
+        )
+        XCTAssertNil(EmulatorStartFailure.knownCause(in: "something odd happened"))
+    }
+
+    func testSignificantLinesDropTheInfoChatterButNotTheCount() throws {
+        let log = try fixture("hvf-not-enabled-target-zero-vm.log")
+        let lines = EmulatorStartFailure.significantLines(from: log)
+        XCTAssertEqual(lines, ["WARNING      | hvf is not enabled on this aarch64 host."], "the INFO lines carry no error word")
+        let many = (1...25).map { "ERROR   | problem \($0)" }.joined(separator: "\n")
+        XCTAssertEqual(EmulatorStartFailure.significantLines(from: many).count, 25, "not cut to the ten of the alert")
+        XCTAssertEqual(EmulatorStartFailure.detail(from: many)?.split(separator: "\n").count, 10)
+        // The chatter's `vulkan_mode_selected` reads as a graphics error unless the INFO lines are filtered first.
+        let chatter = "INFO         | emuglConfig_init: vulkan_mode_selected:host gles_mode_selected:host"
+        XCTAssertEqual(EmulatorStartFailure.cause(in: chatter), .graphics)
+        XCTAssertNil(EmulatorStartFailure.cause(in: EmulatorStartFailure.significantLines(from: chatter).joined(separator: "\n")))
+        XCTAssertEqual(EmulatorStartFailure.cause(in: log), .hvfNotEnabled)
+    }
 }

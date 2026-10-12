@@ -190,6 +190,10 @@ final class WindowState {
     /// Nearby Device and the catalog.
     var isAndroidSetupPresented = false
 
+    /// The Report a Problem sheet (Help ▸ Report a Problem…, or the Report…
+    /// button of an error alert, which carries the error as its subject).
+    var problemReportRequest: ProblemReportRequest?
+
     /// The sheet the Device menu's extras present (Push Notification…,
     /// Permissions…, Time Zone…, Sensors…, Simulate ▸ …; `DeviceExtrasSheets`).
     var deviceExtrasSheet: DeviceExtrasSheet?

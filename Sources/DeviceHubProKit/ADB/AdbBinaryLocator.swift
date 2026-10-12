@@ -2,9 +2,33 @@ import Foundation
 
 /// Finds the `adb` executable the same way most Android tooling does.
 public enum AdbBinaryLocator {
+    /// Where Homebrew puts adb (Apple silicon, then Intel).
+    static let fixedCandidates = ["/opt/homebrew/bin/adb", "/usr/local/bin/adb"]
+
     public static func locate(
         environment: [String: String] = ProcessInfo.processInfo.environment
     ) -> URL? {
+        let candidates = candidates(
+            environment: environment,
+            homeDirectory: FileManager.default.homeDirectoryForCurrentUser,
+            fixed: fixedCandidates
+        )
+        let fileManager = FileManager.default
+        for candidate in candidates where fileManager.isExecutableFile(atPath: candidate) {
+            return URL(fileURLWithPath: candidate)
+        }
+        return nil
+    }
+
+    /// Where adb is looked for, best first: `DHP_ADB`, the SDK roots the
+    /// environment names, the default SDK of `homeDirectory`, the PATH, then
+    /// `fixed`. `locate` takes the first executable one; the problem report
+    /// lists the others as the copies that could also run the adb server.
+    static func candidates(
+        environment: [String: String],
+        homeDirectory: URL,
+        fixed: [String]
+    ) -> [String] {
         var candidates: [String] = []
 
         if let explicit = environment["DHP_ADB"], !explicit.isEmpty {
@@ -17,8 +41,7 @@ public enum AdbBinaryLocator {
             }
         }
 
-        let home = FileManager.default.homeDirectoryForCurrentUser.path
-        candidates.append(home + "/Library/Android/sdk/platform-tools/adb")
+        candidates.append(homeDirectory.path + "/Library/Android/sdk/platform-tools/adb")
 
         if let path = environment["PATH"] {
             for component in path.split(separator: ":") {
@@ -26,13 +49,7 @@ public enum AdbBinaryLocator {
             }
         }
 
-        candidates.append("/opt/homebrew/bin/adb")
-        candidates.append("/usr/local/bin/adb")
-
-        let fileManager = FileManager.default
-        for candidate in candidates where fileManager.isExecutableFile(atPath: candidate) {
-            return URL(fileURLWithPath: candidate)
-        }
-        return nil
+        candidates.append(contentsOf: fixed)
+        return candidates
     }
 }

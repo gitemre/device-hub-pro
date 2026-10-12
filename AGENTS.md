@@ -13,6 +13,7 @@ people and coding agents alike.
 | Test (all) | `swift test` (live tests run against an online emulator; switches in `docs/testing.md`) |
 | Test (app suite only) | `swift test --filter DeviceHubProAppTests` |
 | Run | `.build/debug/DeviceHubPro` (self-activates; with `DHP_LAUNCH_INACTIVE=1` it does not, and its windows open behind the active app's, for live checks while someone uses the Mac) |
+| Read a problem report | `swift run dhp-report issue <n>` (or `analyze <file\|->`) |
 | Pixel-parity harness | `bash Scripts/parity-check.sh` (app must be running; see `Scripts/README.md`) |
 | Performance harness | `bash Scripts/perf-check.sh` (app must be running; see `docs/performance.md`) |
 | Rebuild the Xcode product | `xcodebuild -quiet -scheme DeviceHubPro -configuration Debug -destination 'platform=macOS' build` |
@@ -83,6 +84,17 @@ people and coding agents alike.
 - Send Files to Android goes through `adb -s <serial> push` into a folder of the shared
   storage (`AndroidSendDestination`, Downloads by default) and a MediaStore scan
   (`content call --uri content://media/external/file --method scan_file`, measured on API 35).
+- A problem report (Help ▸ Report a Problem…, and `dhp-report collect`) is the one feature that
+  reaches every running emulator whatever row is selected, because it describes the whole setup
+  (an exception to the selected-row rule above). It runs adb through `ProcessRunner` in
+  `ProblemReportCollector`, never through `AdbClient` (which repairs a broken server by
+  restarting it), only while an adb server of the same adb is already running on the port adb
+  will use and `ADB_SERVER_SOCKET` is not set, and only these argv shapes, read-only: `devices -l`
+  (the CLI only; the app reads its inventory), `-s emulator-N emu avd name` and `-s emulator-N
+  shell getprop ro.boot.qemu.avd_name|sys.boot_completed`, on at most four emulators
+  (`EmulatorSerial` refuses any serial that is not `emulator-<port>`). A phone is listed from the
+  inventory, aliased `phone-N`, and never addressed. `ProblemReportCollectorTests` and
+  `ProblemReportSourceGuardTests` pin the shapes and the guard.
 
 ## iOS simulators
 

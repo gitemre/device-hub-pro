@@ -1,5 +1,6 @@
 import Foundation
 import Observation
+import DeviceHubProKit
 
 /// Whether a status line reports work under way or a finished action. The
 /// writer states it with the line (`StatusCenter.showProgress`,
@@ -23,16 +24,39 @@ final class StatusCenter {
     /// `active(status:_:)`) shows, exactly like the old shared object did.
     private static var revisionClock = 0
 
+    /// Where the errors this center shows are kept for a problem report
+    /// (Help ▸ Report a Problem…): set by the app's model and the workspaces
+    /// from the environment's store, nil where nothing keeps them (a center
+    /// built on its own in a test).
+    @ObservationIgnored var problemLog: RecentProblemStore?
+    /// The identifiers of the devices connected when an error is recorded
+    /// (`AppServices.recentProblemIdentifiers`): the error may name a phone
+    /// that is unplugged by the time it is reported. nil records none.
+    @ObservationIgnored var problemIdentifiers: (@MainActor () -> RecentProblemIdentifiers)?
+
     var errorMessage: String? {
         didSet {
             errorDetails = nil
             bumpErrorRevision()
+            if let errorMessage {
+                problemLog?.record(
+                    message: errorMessage,
+                    revision: errorRevision,
+                    identifiers: problemIdentifiers?() ?? RecentProblemIdentifiers()
+                )
+            }
         }
     }
     /// The raw tool output behind `errorMessage`, shown in the alert's
     /// "Show Details" disclosure. Cleared whenever `errorMessage` is written,
     /// so set it after the message.
-    var errorDetails: String?
+    var errorDetails: String? {
+        didSet {
+            if let errorDetails, errorMessage != nil {
+                problemLog?.attachDetails(errorDetails, revision: errorRevision)
+            }
+        }
+    }
     /// The status line; nil hides the banner. Written only together with its
     /// kind (`showProgress`, `showOutcome`, `flash`, `withElapsedStatus`).
     private(set) var statusMessage: String? {
@@ -64,6 +88,13 @@ final class StatusCenter {
     private func bumpStatusRevision() {
         Self.revisionClock += 1
         statusRevision = Self.revisionClock
+    }
+
+    /// Keeps `message` for a problem report without an alert: a state the app
+    /// shows some other way (a stalled screen, an emulator that stopped
+    /// answering).
+    func noteProblem(_ message: String) {
+        problemLog?.record(message: message, identifiers: problemIdentifiers?() ?? RecentProblemIdentifiers())
     }
 
     /// Which of two centers currently owns the error alert: whichever wrote

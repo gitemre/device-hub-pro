@@ -6,6 +6,7 @@ body:
     attributes:
       value: |
         Thanks for reporting. Please check the [troubleshooting page](https://github.com/gitemre/device-hub-pro/blob/main/docs/troubleshooting.md) first.
+        Help ▸ Report a Problem… makes a report with what we need; paste it below.
         Do not paste serial numbers, UDIDs or anything else you would not want public.
   - type: textarea
     id: what
@@ -59,8 +60,14 @@ body:
     validations:
       required: true
   - type: textarea
+    id: report
+    attributes:
+      label: Problem report
+      description: "In Device Hub Pro choose Help ▸ Report a Problem…, then Open GitHub Issue (or Copy) and paste it here. It leaves out your user name, Mac name, serial numbers, addresses and tokens; read it before you submit."
+      placeholder: Paste the report from Help ▸ Report a Problem…
+  - type: textarea
     id: logs
     attributes:
       label: Logs or screenshots
-      description: Device ▸ Diagnostics, the log pane, or a screenshot. Remove anything private.
+      description: "The log pane or a screenshot. The Diagnostics inspector’s bundle is not scrubbed, so remove anything private."
       render: text

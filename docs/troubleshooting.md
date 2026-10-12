@@ -41,6 +41,24 @@ Turn the option on (MIUI asks to sign in to a Mi account and may turn it off aga
 restart); no restart of the mirror is needed. Clicks are still sent while blocked, and a
 click re-checks the property at most once every 3 s, so the line clears by itself.
 
+## Reporting a problem
+
+Help ▸ Report a Problem… (and the Report… button of an error alert that has Show Details, such as
+an emulator that did not start) checks this Mac for causes we know, with the fix, and makes a
+report to paste into a GitHub issue. It lists the Mac, the Android and Xcode tools, the emulators
+and what they answered, the app's recent errors (kept in
+`~/Library/Logs/DeviceHubPro/recent-problems.json`, with the serials of the phones that were
+connected when each error was shown, so the report can leave them out after you unplug a phone)
+and the end of the emulator logs; it leaves out your user name, Mac name, serial numbers,
+addresses and tokens, and you can read all of it first.
+To look at the emulators it reads the device list the app already has and runs only
+`adb -s emulator-N emu avd name` and two `getprop` reads, on emulators only, never on a phone, and
+only while an adb server of the same adb is already running on the port adb will use (and
+`ADB_SERVER_SOCKET` is not set): it never starts or restarts one.
+(`dhp-report collect`, the maintainers' command-line version, also runs `adb devices -l` under the
+same rule.) Nothing is sent: Open GitHub Issue copies the report and opens the form in your
+browser. Maintainers read a report with `dhp-report` ([CONTRIBUTING.md](../CONTRIBUTING.md)).
+
 ## Stop Xcode opening Device Hub on Run
 
 Xcode 27.1 adds a Developer Tools ▸ Device Hub setting that controls whether Device Hub

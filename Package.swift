@@ -7,7 +7,9 @@ let package = Package(
     platforms: [.macOS("26.0")],
     products: [
         .executable(name: "DeviceHubPro", targets: ["DeviceHubProApp"]),
-        .library(name: "DeviceHubProKit", targets: ["DeviceHubProKit"])
+        .library(name: "DeviceHubProKit", targets: ["DeviceHubProKit"]),
+        // Maintainer tool: reads problem reports (never packaged).
+        .executable(name: "dhp-report", targets: ["DeviceHubProReport"]),
     ],
     dependencies: [
         .package(url: "https://github.com/grpc/grpc-swift-2.git", from: "2.0.0"),
@@ -122,6 +124,15 @@ let package = Package(
             name: "DeviceHubProSimBridgeSmoke",
             dependencies: ["DeviceHubProKit"],
             path: "Sources/DeviceHubProSimBridgeSmoke"
+        ),
+        // `dhp-report`: reads a problem report from an issue and says what the
+        // user's problem is (see CONTRIBUTING.md). Maintainer tool; never
+        // packaged. No `resources:` here: a resource bundle would be swept into
+        // the app by package-app.sh's `$bin_dir/*.bundle` copy.
+        .executableTarget(
+            name: "DeviceHubProReport",
+            dependencies: ["DeviceHubProKit"],
+            path: "Sources/DeviceHubProReport"
         ),
     ]
 )

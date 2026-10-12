@@ -48,12 +48,38 @@ final class WindowStateTests: XCTestCase {
         XCTAssertEqual(window.columnVisibility, .all)
         XCTAssertFalse(window.isCatalogPresented)
         XCTAssertFalse(window.isPairSheetPresented)
+        XCTAssertNil(window.problemReportRequest)
         XCTAssertNil(window.createFormFactor)
         XCTAssertNil(window.stageZoom)
         XCTAssertTrue(window.isWindowVisible, "visible until a real occlusion signal says otherwise")
         XCTAssertTrue(window.zoomIsFit)
         XCTAssertEqual(window.zoomPresentation, 1)
         XCTAssertEqual(window.stageViewportSize, .zero)
+    }
+
+    // MARK: - Report a Problem
+
+    /// The Report a Problem sheet is presented by setting a request (the Help
+    /// menu's item sets one without a subject, an error alert's Report… one
+    /// with it) and dismissed by clearing it; each request is its own sheet.
+    func testAProblemReportRequestPresentsTheSheet() {
+        let window = WindowState()
+        XCTAssertNil(window.problemReportRequest)
+
+        let menu = ProblemReportRequest(subject: nil)
+        window.problemReportRequest = menu
+        XCTAssertEqual(window.problemReportRequest, menu)
+        XCTAssertNil(window.problemReportRequest?.subject)
+
+        let subject = ProblemReport.Subject(message: "Pixel_8_Pro did not come online in time.", occurredAt: Date())
+        let alert = ProblemReportRequest(subject: subject)
+        window.problemReportRequest = alert
+        XCTAssertEqual(window.problemReportRequest?.subject, subject)
+        XCTAssertNotEqual(alert, menu)
+        XCTAssertNotEqual(ProblemReportRequest(subject: nil), menu, "a new request is a new sheet")
+
+        window.problemReportRequest = nil
+        XCTAssertNil(window.problemReportRequest)
     }
 
     // MARK: - Inspector tabs

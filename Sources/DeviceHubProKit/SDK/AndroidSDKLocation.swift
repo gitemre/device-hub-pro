@@ -66,6 +66,15 @@ public enum AndroidSDKLocation {
     private static let lock = NSLock()
     nonisolated(unsafe) private static var appliedValue: String?
 
+    /// Whether this process put the "Locate SDK\u{2026}" folder into
+    /// `ANDROID_HOME` (`applyPreferredRoot`), as opposed to the launch
+    /// environment naming an SDK or none being applied.
+    public static var isAppliedByApp: Bool {
+        lock.lock()
+        defer { lock.unlock() }
+        return appliedValue != nil
+    }
+
     /// Makes `preferredRoot` (the saved "Locate SDK…" folder) the SDK of this
     /// process, unless the process was started with its own `ANDROID_HOME` /
     /// `ANDROID_SDK_ROOT`. Passing nil or a path that is no longer an SDK
