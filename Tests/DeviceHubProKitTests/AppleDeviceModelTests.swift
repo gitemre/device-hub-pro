@@ -198,40 +198,83 @@ final class AppleDeviceModelTests: XCTestCase {
     }
 
     /// Closed, the device is the half that stays (a quarter of the open
-    /// width right of the hinge) facing the camera; flat, it is centred on
-    /// the hinge; half open (110° here), it is turned 35°
-    /// so both halves face the camera alike, its box reaching forward.
+    /// width right of the hinge); flat, it is centred on the hinge; half
+    /// open (110° here), its box reaches forward.
     func testTheFramingFollowsTheFold() {
         let width: Float = 0.5, height: Float = 0.36, thickness: Float = 0.02
         let closed = AppleDeviceModel.framing(opening: 0, width: width, height: height, thickness: thickness)
-        XCTAssertEqual(closed.bookTurn, 0)
         XCTAssertEqual(closed.center.x, 0.125, accuracy: 1e-6)
         XCTAssertEqual(closed.center.y, 0, accuracy: 1e-6)
         XCTAssertEqual(closed.radius, (0.125 * 0.125 + 0.18 * 0.18).squareRoot() + 0.01, accuracy: 1e-5)
 
         let flat = AppleDeviceModel.framing(opening: 180, width: width, height: height, thickness: thickness)
-        XCTAssertEqual(flat.bookTurn, 0, accuracy: 1e-6)
         XCTAssertEqual(flat.center, [0, 0])
         XCTAssertEqual(flat.radius, (0.25 * 0.25 + 0.18 * 0.18).squareRoot() + 0.01, accuracy: 1e-5)
 
         let half = AppleDeviceModel.framing(opening: 110, width: width, height: height, thickness: thickness)
-        XCTAssertEqual(half.bookTurn * 180 / .pi, -35, accuracy: 1e-3)
         let folded = SIMD2<Float>(-0.25 * cos(70 * .pi / 180), 0.25 * sin(70 * .pi / 180))
         XCTAssertEqual(half.center.x, (folded.x + 0.25) / 2, accuracy: 1e-6)
         XCTAssertEqual(half.center.y, folded.y / 2, accuracy: 1e-6)
     }
 
-    /// Nearly closed, the book turn eases in rather than snapping the device
-    /// edge-on; past `bookTurnFullAt` it is half the fold.
-    func testTheBookTurnEasesInFromClosed() {
-        func turn(_ opening: Double) -> Float {
-            AppleDeviceModel.framing(opening: opening, width: 0.5, height: 0.36, thickness: 0.02).bookTurn * 180 / .pi
-        }
-        XCTAssertEqual(turn(5), -87.5 * Float(pow(5.0 / 45, 2) * (3 - 2 * 5.0 / 45)), accuracy: 1e-3)
-        XCTAssertEqual(turn(45), -67.5, accuracy: 1e-3)
-        XCTAssertEqual(turn(90), -45, accuracy: 1e-3)
-        XCTAssertEqual(turn(-20), 0)
-        XCTAssertEqual(turn(.nan), 0)
+    /// Device Hub's faces: following the slider, the outer one up to 55°
+    /// opening and the inner one from there until the hinge closes below
+    /// 43°; a preset heading past 55° shows the inner face at once.
+    func testTheFacedPanelFollowsTheHingeWithHysteresis() {
+        var facing = AppleDeviceModel.FoldFacing(opening: 0)
+        XCTAssertTrue(facing.showsOuter)
+        XCTAssertFalse(facing.update(opening: 53, target: 53))
+        XCTAssertTrue(facing.showsOuter)
+        XCTAssertTrue(facing.update(opening: 56, target: 56))
+        XCTAssertFalse(facing.showsOuter)
+        XCTAssertFalse(facing.update(opening: 45, target: 45))
+        XCTAssertFalse(facing.showsOuter)
+        XCTAssertTrue(facing.update(opening: 40, target: 40))
+        XCTAssertTrue(facing.showsOuter)
+        XCTAssertFalse(facing.update(opening: .nan, target: 0))
+        XCTAssertTrue(facing.showsOuter)
+
+        // Closed to half open: inner at once, held all the way.
+        XCTAssertTrue(facing.update(opening: 0, target: 130))
+        XCTAssertFalse(facing.update(opening: 20, target: 130))
+        XCTAssertFalse(facing.showsOuter)
+        // Half open to closed: inner until 43°.
+        XCTAssertFalse(facing.update(opening: 50, target: 0))
+        XCTAssertTrue(facing.update(opening: 42, target: 0))
+        XCTAssertTrue(facing.showsOuter)
+
+        XCTAssertFalse(AppleDeviceModel.FoldFacing(opening: 130).showsOuter)
+        XCTAssertTrue(AppleDeviceModel.FoldFacing(opening: .nan).showsOuter)
+    }
+
+    /// A preset still goes by the hinge (Device Hub's rule above), whichever
+    /// face the stage held to the lit panel off a preset before it.
+    func testAPresetKeepsTheHingeRuleAfterTheFaceWasHeldToTheLitPanel() {
+        var facing = AppleDeviceModel.FoldFacing(opening: 0)
+        facing.hold(outer: false)
+        XCTAssertFalse(facing.showsOuter)
+        // Closing: inner held until the hinge passes 43°.
+        XCTAssertFalse(facing.update(opening: 130, target: 0))
+        XCTAssertFalse(facing.update(opening: 60, target: 0))
+        XCTAssertTrue(facing.update(opening: 42, target: 0))
+        XCTAssertTrue(facing.showsOuter)
+        // Opening past 55°: inner at once.
+        XCTAssertTrue(facing.update(opening: 0, target: 130))
+        XCTAssertFalse(facing.showsOuter)
+    }
+
+    /// Facing out, the turn is the opening (the outer half stays square to
+    /// the camera); facing in, half the fold the hinge heads for, none when
+    /// it heads closed or flat.
+    func testTheTurnsKeepTheFacedPanelSquare() {
+        XCTAssertEqual(AppleDeviceModel.FoldFacing.outerTurn(opening: 0), 0)
+        XCTAssertEqual(AppleDeviceModel.FoldFacing.outerTurn(opening: 40) * 180 / .pi, 40, accuracy: 1e-4)
+        XCTAssertEqual(AppleDeviceModel.FoldFacing.outerTurn(opening: .nan), 0)
+        XCTAssertEqual(AppleDeviceModel.FoldFacing.bookTurn(target: 130) * 180 / .pi, -25, accuracy: 1e-4)
+        XCTAssertEqual(AppleDeviceModel.FoldFacing.bookTurn(target: 60) * 180 / .pi, -60, accuracy: 1e-4)
+        XCTAssertEqual(AppleDeviceModel.FoldFacing.bookTurn(target: 180), 0)
+        XCTAssertEqual(AppleDeviceModel.FoldFacing.bookTurn(target: 0), 0)
+        XCTAssertEqual(AppleDeviceModel.FoldFacing.bookTurn(target: .infinity), 0)
     }
 
     /// Another load of the same file (material numbers differ each time,

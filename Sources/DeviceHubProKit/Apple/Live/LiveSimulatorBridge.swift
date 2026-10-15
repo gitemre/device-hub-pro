@@ -14,6 +14,8 @@ public struct LiveSimulatorBridge: SimulatorBridging {
     /// The Xcode developer directory whose CoreSimulator service context the
     /// bridge uses.
     public let developerDir: String
+    /// Shared by every copy of the bridge.
+    public let inputPool: SimulatorInputPool? = SimulatorInputPool()
 
     public init(developerDir: String = LiveSimulatorBridge.defaultDeveloperDir()) {
         self.developerDir = developerDir

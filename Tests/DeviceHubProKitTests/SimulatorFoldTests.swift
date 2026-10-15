@@ -92,6 +92,38 @@ final class SimulatorFoldTests: XCTestCase {
         XCTAssertEqual(SimulatorFold.panel(afterAngle: 180, from: .outer), .inner)
     }
 
+    /// The arrow keys move the hinge a few degrees at a time: the guest kept
+    /// the outer panel lit up to 120° that way (2026-10-14), so a step across
+    /// 90° does not light the inner one; a jump still goes by the thresholds.
+    func testAStepwiseMoveKeepsTheLitPanelUpTo120Degrees() {
+        for angle in stride(from: 5.0, through: 120.0, by: 5.0) {
+            XCTAssertEqual(SimulatorFold.panel(afterStepTo: angle, from: angle - 5, lit: .outer), .outer, "\(angle)°")
+        }
+        XCTAssertEqual(SimulatorFold.panel(afterStepTo: 125, from: 120, lit: .outer), .inner)
+        XCTAssertEqual(SimulatorFold.panel(afterStepTo: 91, from: 86, lit: .inner), .inner, "the inner panel stays")
+        XCTAssertEqual(SimulatorFold.panel(afterStepTo: 15, from: 20, lit: .inner), .outer)
+        XCTAssertEqual(SimulatorFold.panel(afterStepTo: 60, from: 65, lit: .inner), .inner)
+        // A jump: the measured thresholds (one-go opening lit the inner panel
+        // past 90°).
+        XCTAssertEqual(SimulatorFold.panel(afterStepTo: 107, from: 79, lit: .outer), .inner)
+        XCTAssertEqual(SimulatorFold.panel(afterStepTo: 78, from: 150, lit: .inner), .inner)
+        XCTAssertEqual(SimulatorFold.panel(afterStepTo: 10, from: 80, lit: .inner), .outer)
+        XCTAssertEqual(SimulatorFold.panel(afterStepTo: 99, from: 79, lit: .outer), .inner, "20° is a jump")
+        XCTAssertEqual(SimulatorFold.panel(afterStepTo: 98, from: 80, lit: .outer), .outer, "18° is a step")
+    }
+
+    /// Only a move noted as a step uses that rule; a preset's sweep, noted
+    /// without it, lights the inner panel at the thresholds as before.
+    func testOnlyANotedStepKeepsThePanel() {
+        let udid = "00000000-0000-0000-0000-00000000000A"
+        var book = SimulatorFoldBook()
+        book.note(udid: udid, angle: 85, panel: .outer)
+        XCTAssertFalse(book.note(udid: udid, angle: 91, stepwise: true))
+        XCTAssertEqual(book.record(of: udid), SimulatorFoldRecord(angle: 91, panel: .outer))
+        XCTAssertTrue(book.note(udid: udid, angle: 92), "not a step")
+        XCTAssertEqual(book.record(of: udid).panel, .inner)
+    }
+
     /// A fold made elsewhere (Device Hub, a test) is read off the two
     /// panels' screenshots: the dark one is the unlit one. Two dark panels
     /// (a boot), two lit ones or a missing screenshot say nothing.
@@ -103,6 +135,23 @@ final class SimulatorFoldTests: XCTestCase {
         XCTAssertNil(SimulatorFold.litPanel(outer: .homeScreen, inner: .homeScreen))
         XCTAssertNil(SimulatorFold.litPanel(outer: nil, inner: .homeScreen))
         XCTAssertNil(SimulatorFold.litPanel(outer: .dark, inner: nil))
+    }
+
+    /// Two panels that both show something tell the lit one by brightness:
+    /// a locked iPhone Duo dims its lock screen on the panel that is not lit
+    /// (iOS 27.1 open and locked: 65/255 outside, 137 inside; asleep, both
+    /// 65). As bright, or one dark and one not, as before.
+    func testTwoPanelsShowingSomethingAreToldByBrightness() {
+        func reading(_ content: SimulatorReadiness.ScreenContent, _ grey: Double) -> SimulatorReadiness.ScreenReading {
+            SimulatorReadiness.ScreenReading(content: content, luminance: grey / 255)
+        }
+        XCTAssertEqual(SimulatorFold.litPanel(outer: reading(.homeScreen, 65), inner: reading(.homeScreen, 137)), .inner)
+        XCTAssertEqual(SimulatorFold.litPanel(outer: reading(.homeScreen, 140), inner: reading(.homeScreen, 70)), .outer)
+        XCTAssertNil(SimulatorFold.litPanel(outer: reading(.homeScreen, 65), inner: reading(.homeScreen, 65)))
+        XCTAssertNil(SimulatorFold.litPanel(outer: reading(.homeScreen, 100), inner: reading(.homeScreen, 137)))
+        XCTAssertEqual(SimulatorFold.litPanel(outer: reading(.dark, 0), inner: reading(.homeScreen, 30)), .inner)
+        XCTAssertNil(SimulatorFold.litPanel(outer: reading(.dark, 0), inner: reading(.dark, 2)))
+        XCTAssertNil(SimulatorFold.litPanel(outer: nil, inner: reading(.homeScreen, 137)))
     }
 
     /// Half is 110°, past the opening threshold, so the preset shows the
@@ -342,9 +391,9 @@ final class SimulatorFoldTests: XCTestCase {
         XCTAssertEqual(choice(130, .inner, .portrait), .preset(.halfOpened))
         XCTAssertEqual(choice(179, .inner, .portrait), .preset(.halfOpened), "179° reads partially open")
         XCTAssertEqual(choice(180, .inner, .portrait), .preset(.opened))
-        XCTAssertEqual(choice(105, .inner, SimulatorFold.pose(for: .landscapeRight)), .held(.laptop))
+        XCTAssertEqual(choice(105, .inner, SimulatorFold.pose(for: .landscapeLeft)), .held(.laptop))
         XCTAssertEqual(choice(70, .outer, SimulatorFold.pose(for: .landscapeLeft)), .held(.tent))
-        XCTAssertEqual(choice(100, .inner, SimulatorFold.pose(for: .landscapeRight)), .preset(.halfOpened), "moved off the laptop's hinge")
+        XCTAssertEqual(choice(100, .inner, SimulatorFold.pose(for: .landscapeLeft)), .preset(.halfOpened), "moved off the laptop's hinge")
         XCTAssertEqual(choice(105, .inner, .portrait), .preset(.halfOpened), "upright again")
     }
 
@@ -353,6 +402,11 @@ final class SimulatorFoldTests: XCTestCase {
     func testAPresetHoldsTheDeviceUprightThenSweeps() {
         XCTAssertEqual(SimulatorFold.presetSteps(for: .halfOpened, from: 0), [.pose(.portrait), .sweep(from: 0, to: 130)])
         XCTAssertEqual(SimulatorFold.presetSteps(for: .closed, from: 130), [.pose(.portrait), .sweep(from: 130, to: 0)])
+        // A device turned stays turned, as in Device Hub.
+        XCTAssertEqual(
+            SimulatorFold.presetSteps(for: .halfOpened, from: 0, held: .landscapeRight),
+            [.pose(.landscapeRight), .sweep(from: 0, to: 130)]
+        )
     }
 
     /// While a step is under way, a newer angle replaces one still waiting
@@ -414,15 +468,27 @@ final class SimulatorFoldTests: XCTestCase {
     }
 
     /// A laptop lights the inner panel and a tent keeps the outer one: from
-    /// the other panel the hinge first passes its threshold and waits.
+    /// the other panel the hinge first passes its threshold and waits,
+    /// unless a laptop's own sweep passes it.
     func testHeldPosturesSwitchThePanelFirst() {
         XCTAssertEqual(
             SimulatorHeldPosture.laptop.steps(from: .inner, angle: 128),
-            [.pose(.landscapeRight), .sweep(from: 128, to: 105)]
+            [.pose(.landscapeLeft), .sweep(from: 128, to: 105)]
         )
+        // Opening past the inner panel's threshold lights it on the way.
         XCTAssertEqual(
             SimulatorHeldPosture.laptop.steps(from: .outer, angle: 0),
-            [.sweep(from: 0, to: 180), .pause(0.4), .pose(.landscapeRight), .sweep(from: 180, to: 105)]
+            [.pose(.landscapeLeft), .sweep(from: 0, to: 105)]
+        )
+        // From a tent the guest keeps the outer panel lit unless the hinge
+        // folds further first.
+        XCTAssertEqual(
+            SimulatorHeldPosture.laptop.steps(from: .outer, angle: 70),
+            [.sweep(from: 70, to: 30), .pose(.landscapeLeft), .sweep(from: 30, to: 105)]
+        )
+        XCTAssertEqual(
+            SimulatorHeldPosture.laptop.steps(from: .outer, angle: 120),
+            [.sweep(from: 120, to: 180), .pause(0.4), .pose(.landscapeLeft), .sweep(from: 180, to: 105)]
         )
         XCTAssertEqual(SimulatorHeldPosture.tent.steps(from: .outer, angle: 0), [.pose(.landscapeLeft), .sweep(from: 0, to: 70)])
         XCTAssertEqual(
@@ -521,5 +587,15 @@ final class SimulatorFoldTests: XCTestCase {
         XCTAssertTrue(SimulatorFold.isDisabled(environment: [SimulatorFold.disableVariable: "1"]))
         XCTAssertFalse(SimulatorFold.isDisabled(environment: [:]))
         XCTAssertFalse(SimulatorFold.isDisabled(environment: [SimulatorFold.disableVariable: "0"]))
+    }
+
+    /// A lit panel read off the simulator wins over the hinge's thresholds.
+    func testTheBookTakesTheLitPanelTheSimulatorShows() {
+        var book = SimulatorFoldBook()
+        XCTAssertFalse(book.note(udid: "duo", angle: 120, panel: .outer))
+        XCTAssertEqual(book.record(of: "duo").angle, 120)
+        XCTAssertEqual(book.record(of: "duo").panel, .outer)
+        XCTAssertTrue(book.note(udid: "duo", angle: 120, panel: .inner))
+        XCTAssertEqual(book.record(of: "duo").panel, .inner)
     }
 }

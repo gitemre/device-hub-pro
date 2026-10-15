@@ -479,6 +479,77 @@ final class SimulatorMirrorSessionTests: XCTestCase {
         }
     }
 
+    /// A foldable's session for the other panel takes the connected channel
+    /// the stopped one parked, aimed at its own panel: its first touch does
+    /// not wait for a connect.
+    func testTheNextPanelTakesTheParkedChannel() throws {
+        let panels = try XCTUnwrap(SimulatorFoldPanels(panels: SimulatorDisplayProfile.panels(capabilities: SimulatorFoldTests.iPhoneDuo)))
+        let bridge = FakeSimulatorBridge(makeBridge(surface: try makeSurface()).configuration, inputPool: SimulatorInputPool())
+        func session(_ panel: SimulatorFoldPanel) -> SimulatorMirrorSession {
+            let session = SimulatorMirrorSession(
+                udid: udid, deviceSet: nil, bridge: bridge, minimumPublishInterval: .milliseconds(1),
+                keyboardLayout: .usQWERTY, panel: .foldable(panel, of: panels)
+            )
+            addTeardownBlock { session.stopAndWait() }
+            return session
+        }
+        let outer = session(.outer)
+        outer.start()
+        XCTAssertTrue(eventually { outer.frames.current != nil })
+        outer.send(TouchCommand(phase: .down, x: 1, y: 1))
+        XCTAssertTrue(eventually { bridge.inputs.first?.sent.isEmpty == false })
+        outer.stopAndWait()
+        let first = try XCTUnwrap(bridge.inputs.first)
+        XCTAssertTrue(first.isConnected, "parked, not disconnected")
+
+        let inner = session(.inner)
+        inner.start()
+        XCTAssertTrue(eventually { inner.frames.current != nil })
+        let sentBefore = first.sent.count
+        inner.send(TouchCommand(phase: .down, x: 1, y: 1))
+        XCTAssertTrue(eventually { first.sent.count > sentBefore })
+        XCTAssertEqual(bridge.inputs.count, 1, "no channel of its own")
+        XCTAssertEqual(first.connectAttempts, 1)
+        XCTAssertEqual(first.digitizerTarget, 3)
+    }
+
+    /// A parked channel nobody takes disconnects after `lingering`; one that
+    /// went down meanwhile is not handed out.
+    func testAParkedChannelLingersThenDisconnects() throws {
+        let bridge = FakeSimulatorBridge()
+        let address = SimulatorAddress(udid: udid)
+        let pool = SimulatorInputPool(lingering: .milliseconds(50))
+        let input = bridge.makeInput(for: address)
+        try input.connect()
+        pool.park(input, for: address)
+        XCTAssertTrue(eventually { !input.isConnected })
+        XCTAssertNil(pool.take(for: address))
+
+        let other = bridge.makeInput(for: address)
+        pool.park(other, for: address)
+        XCTAssertNil(pool.take(for: address), "never connected")
+    }
+
+    /// A channel parked for a simulator that shut down or booted again is
+    /// discarded: disconnected, off the main queue (a live channel traps on
+    /// it), and never handed out.
+    func testADiscardedChannelDisconnectsOffTheMainQueue() throws {
+        XCTAssertTrue(Thread.isMainThread)
+        let bridge = FakeSimulatorBridge()
+        let address = SimulatorAddress(udid: udid)
+        let pool = SimulatorInputPool()
+        let input = try XCTUnwrap(bridge.makeInput(for: address) as? FakeSimulatorInput)
+        try input.connect()
+        pool.park(input, for: address)
+        let callsBefore = input.mainThreadCalls
+
+        pool.discard(for: address)
+        XCTAssertNil(pool.take(for: address))
+        XCTAssertTrue(eventually { !input.isConnected })
+        XCTAssertEqual(input.mainThreadCalls, callsBefore, "disconnected off the main queue")
+        pool.discard(for: address)
+    }
+
     /// Before the first frame there is nothing to position a touch against.
     func testTouchesBeforeTheFirstFrameAreDropped() {
         let session = makeSession(makeBridge(surface: nil))

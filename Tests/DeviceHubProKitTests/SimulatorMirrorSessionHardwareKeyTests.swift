@@ -22,8 +22,9 @@ final class SimulatorMirrorSessionHardwareKeyTests: XCTestCase {
         return session
     }
 
-    private func makeBridge() throws -> FakeSimulatorBridge {
+    private func makeBridge(sendDelay: TimeInterval = 0) throws -> FakeSimulatorBridge {
         var configuration = FakeSimulatorBridge.Configuration()
+        configuration.sendDelay = sendDelay
         configuration.surface = SimulatorSurface(try SimulatorFrameCopierTests.makeSurface(width: 4, height: 8))
         configuration.properties = SimulatorScreenProperties(
             screenType: 0, screenID: 1, uiOrientation: 1, pixelWidth: 4, pixelHeight: 8
@@ -139,7 +140,11 @@ final class SimulatorMirrorSessionHardwareKeyTests: XCTestCase {
     /// and waits for it to leave the process (a flush) before it
     /// disconnects.
     func testAButtonHeldAtStopGoesUpBeforeTheChannelCloses() throws {
-        let bridge = try makeBridge()
+        // Each send takes a while (a busy guest), so an up is still waiting
+        // when the stop comes and the stop sends it: with instant sends both
+        // ups went out first under the full suite's load, the stop had
+        // nothing held and nothing to flush.
+        let bridge = try makeBridge(sendDelay: 0.3)
         let session = makeSession(bridge)
         session.start()
         XCTAssertTrue(eventually { session.frames.current != nil })
@@ -155,7 +160,6 @@ final class SimulatorMirrorSessionHardwareKeyTests: XCTestCase {
         session.stop()
 
         XCTAssertTrue(eventually { !input.isConnected && input.sent.count == 4 })
-        Thread.sleep(forTimeInterval: 0.05)
         XCTAssertEqual(input.sent, [
             .button(action, isDown: true),
             .button(.side, isDown: true),

@@ -198,7 +198,7 @@ final class SimulatorWatcherTests: XCTestCase {
         XCTAssertEqual(Self.snapshots(in: events).last?.first?.state, .booted)
     }
 
-    /// Only identity and state changes produce snapshots: the booted listing
+    /// Only identity, state and boot changes produce snapshots: the booted listing
     /// read again and again (full refreshes) emits nothing new.
     func testUnchangedListsAreNotReEmitted() async throws {
         let stub = try makeStub(answer: "simctl-list-j-devices.booted.json")
@@ -213,6 +213,39 @@ final class SimulatorWatcherTests: XCTestCase {
         try await Task.sleep(for: .milliseconds(1200))
         XCTAssertGreaterThan(stub.listCalls, 3, "full refreshes ran")
         XCTAssertEqual(Self.snapshots(in: recorder.events).count, 1)
+    }
+
+    /// A device shut down and booted again between two reads is Booted in
+    /// both, and its new boot (`lastUsedAt`) is a change to publish: Device
+    /// Hub shut iPhone Duo down when it quit and it booted again 4 s later,
+    /// and the list was never published (2026-10-14). The second answer is
+    /// the booted capture with its `lastUsedAt` a minute on, as such a boot
+    /// leaves it.
+    func testABootBetweenTwoReadsIsPublished() async throws {
+        let stub = try makeStub(answer: "simctl-list-j-devices.booted.json")
+        let watcher = SimulatorWatcher(simctl: stub.simctl, pollInterval: .seconds(60), fullRefreshInterval: .seconds(60))
+        let recorder = record(watcher)
+        _ = try await recorder.wait { Self.snapshots(in: $0).count >= 1 }
+
+        let booted = try String(
+            contentsOf: SimctlFixtureTests.url("simctl-core", "simctl-list-j-devices.booted.json"),
+            encoding: .utf8
+        )
+        let rebooted = booted.replacingOccurrences(
+            of: "\"lastUsedAt\" : \"2026-09-25T12:04:47Z\"",
+            with: "\"lastUsedAt\" : \"2026-09-25T12:05:47Z\""
+        )
+        XCTAssertNotEqual(rebooted, booted)
+        try Data(rebooted.utf8).write(to: stub.answer)
+        watcher.refresh()
+
+        let events = try await recorder.wait { Self.snapshots(in: $0).count >= 2 }
+        let snapshots = Self.snapshots(in: events)
+        XCTAssertEqual(snapshots.last?.first?.state, .booted)
+        XCTAssertEqual(
+            snapshots.last?.first?.lastUsedAt?.timeIntervalSince(try XCTUnwrap(snapshots.first?.first?.lastUsedAt)),
+            60
+        )
     }
 
     /// A failing read reports health and keeps the last snapshot; the first

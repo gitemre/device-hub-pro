@@ -320,6 +320,31 @@ final class SimulatorLifecycleFixtureTests: XCTestCase {
         XCTAssertEqual(SimulatorReadiness.screenContent(try XCTUnwrap(context.makeImage())), .dark)
     }
 
+    /// A screenshot's brightness is the mean grey of its thumbnail: a black
+    /// screen 0, a grey one its grey, the home screen capture above black.
+    func testAReadingCarriesTheScreensBrightness() throws {
+        func filled(_ grey: CGFloat) throws -> CGImage {
+            let context = try XCTUnwrap(CGContext(
+                data: nil, width: 600, height: 1300, bitsPerComponent: 8, bytesPerRow: 0,
+                space: CGColorSpaceCreateDeviceGray(), bitmapInfo: CGImageAlphaInfo.none.rawValue
+            ))
+            context.setFillColor(gray: grey, alpha: 1)
+            context.fill(CGRect(x: 0, y: 0, width: 600, height: 1300))
+            return try XCTUnwrap(context.makeImage())
+        }
+        let black = try XCTUnwrap(SimulatorReadiness.screenReading(try filled(0)))
+        XCTAssertEqual(black, SimulatorReadiness.ScreenReading(content: .dark, luminance: 0))
+        let grey = try XCTUnwrap(SimulatorReadiness.screenReading(try filled(0.5)))
+        XCTAssertEqual(grey.content, .homeScreen)
+        XCTAssertEqual(grey.luminance, 0.5, accuracy: 0.01)
+        let home = try XCTUnwrap(SimulatorReadiness.screenReading(
+            imageAt: SimctlFixtureTests.url("simctl-core", "simctl-io-screenshot.home-screen-loading.png")
+        ))
+        XCTAssertEqual(home.content, .homeScreen)
+        // A home screen still loading: mostly dark, its icons lit.
+        XCTAssertGreaterThan(home.luminance, black.luminance)
+    }
+
     // MARK: - The default set
 
     /// The the default set: 28 devices over iOS 26.5 and 27.0 and tvOS

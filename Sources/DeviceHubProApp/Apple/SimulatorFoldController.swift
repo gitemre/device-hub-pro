@@ -19,10 +19,19 @@ final class SimulatorFoldController: FoldControlDriving {
     /// which the 3D model follows (`foldProgress`); nil once the hinge moved
     /// another way (the slider).
     @ObservationIgnored private var sweepBatch: (udid: String, batch: Int)?
+    /// The loaded 3D scenes, which outlive the views that show them
+    /// (`DeviceModelScenes`).
+    @ObservationIgnored let modelScenes = DeviceModelScenes()
 
     init(simulators: SimulatorInventory, canvas: SimulatorCanvasController) {
         self.simulators = simulators
         self.canvas = canvas
+        // The model faces the lit panel again once a check after the slider
+        // has read it (`DeviceModelScene.litPanelSettled`).
+        canvas.onLitPanelSettled = { [weak self] udid in
+            guard let self, self.foldableEntry?.udid == udid else { return }
+            self.modelScenes.litPanelSettled()
+        }
     }
 
     /// The mirrored simulator, when it is a booted foldable on the live
@@ -100,12 +109,18 @@ final class SimulatorFoldController: FoldControlDriving {
     /// the device is held now, by UDID.
     @ObservationIgnored var onPoseChanged: (@MainActor (_ udid: String, _ pose: SimulatorDevicePose) -> Void)?
 
-    /// Closed, Half and Opened as Device Hub sets them: the device held
-    /// upright, then the hinge swept to the preset's angle
+    /// Closed, Half and Opened as Device Hub sets them: the device held as
+    /// it is, then the hinge swept to the preset's angle
     /// (`SimulatorFold.presetSteps`).
     func setPostureAnimated(_ posture: PostureKind) {
         guard let entry = foldableEntry, let sender = simulators.foldSender else { return }
-        let steps = SimulatorFold.presetSteps(for: posture, from: simulators.folds.record(of: entry.udid).angle)
+        dragFilter.reset()
+        let fold = simulators.folds.record(of: entry.udid)
+        let steps = SimulatorFold.presetSteps(
+            for: posture,
+            from: fold.angle,
+            held: fold.pose ?? SimulatorFold.pose(for: fold.orientation)
+        )
         sweepBatch = (entry.udid, sender.send(steps, to: address(of: entry)))
         record(steps, for: entry)
     }
@@ -118,6 +133,7 @@ final class SimulatorFoldController: FoldControlDriving {
     /// device turned on its side, the hinge set (`SimulatorHeldPosture.steps`).
     func setHeldPosture(_ posture: SimulatorHeldPosture) {
         guard let entry = foldableEntry, let sender = simulators.foldSender else { return }
+        dragFilter.reset()
         let record = simulators.folds.record(of: entry.udid)
         let steps = posture.steps(from: record.panel, angle: record.angle)
         sweepBatch = (entry.udid, sender.send(steps, to: address(of: entry)))
@@ -159,6 +175,9 @@ final class SimulatorFoldController: FoldControlDriving {
         } else {
             canvas.settleFoldPose(entry.udid)
         }
+        // The panel the thresholds say is lit is a guess (the guest lights one
+        // by how the hinge moved): read it once the sweep is over.
+        if steps.contains(where: \.movesHinge) { checkLitPanelSoon(entry.udid) }
     }
 
     private func address(of entry: SimulatorEntry) -> SimulatorAddress {
@@ -175,15 +194,189 @@ final class SimulatorFoldController: FoldControlDriving {
         let angle = SimulatorFold.sentAngle(degrees)
         sender.send(degrees: angle, to: address(of: entry))
         sweepBatch = nil
-        guard simulators.noteFold(udid: entry.udid, angle: angle) else { return false }
-        canvas.followFold(entry.udid)
-        return true
+        // One step of a slow move (the arrow keys, VoiceOver, the 2D stage's
+        // drag): a few degrees at a time the guest kept the outer panel lit up
+        // to 120°, so the 90° of a one-go move is not the threshold here.
+        let changed = simulators.noteFold(udid: entry.udid, angle: angle, stepwise: true)
+        if changed { canvas.followFold(entry.udid) }
+        // Booked by a guess: the screenshots say which panel the guest lit
+        // once the hinge is still.
+        checkLitPanelSoon(entry.udid)
+        return changed
     }
 
     func setHingeAngle(_ degrees: Double) {
         guard degrees.isFinite, let entry = foldableEntry else { return }
+        dragFilter.reset()
         moveHinge(entry, to: degrees)
     }
+
+    /// Draws the hinge slider's angle as it is dragged: the 3D stage sets it
+    /// and folds the model straight away, outside SwiftUI.
+    @ObservationIgnored var onLiveHinge: (@MainActor (Double) -> Void)?
+    /// The dragged angle the fold book has not taken yet (`endHingeDrag`).
+    @ObservationIgnored private var draggedAngle: (udid: String, angle: Double)?
+    /// What the drag has sent, so that an event within the degree last sent
+    /// reaches the model but not the simulator.
+    @ObservationIgnored private var dragFilter = HingeDragFilter()
+
+    /// The hinge slider while it is dragged, at the angle the knob is at
+    /// (not rounded; events come at the mouse's rate): the angle goes to the
+    /// 3D model as it is, so the model follows the knob smoothly, and to the
+    /// simulator as a whole degree, and only when the degree changes
+    /// (`HingeDragFilter`). It goes into the fold book only when it lights
+    /// the other panel (the session follows) or the drag ends. Booking every
+    /// degree made SwiftUI lay out the whole window and rebuild the menus each
+    /// time, which held the model to 8–10 frames a second.
+    func dragHinge(_ degrees: Double) {
+        guard degrees.isFinite, let entry = foldableEntry, let sender = simulators.foldSender,
+              let move = dragFilter.next(udid: entry.udid, degrees: degrees)
+        else { return }
+        guard onLiveHinge != nil else {
+            if let angle = move.send {
+                draggedAngle = nil
+                moveHinge(entry, to: angle)
+            }
+            return
+        }
+        if let angle = move.send {
+            sender.send(degrees: angle, to: address(of: entry))
+            sweepBatch = nil
+            draggedAngle = (entry.udid, angle)
+            checkLitPanelSoon(entry.udid)
+        }
+        onLiveHinge?(move.live)
+    }
+
+    /// The slider was let go: the fold book takes the last dragged angle with
+    /// the panel lit until now; the simulator's screenshots say whether that
+    /// changed (`checkLitPanelSoon`). The guest lights a panel by how the
+    /// hinge moved: dragged a few degrees at a time to 120° it kept the outer
+    /// one lit, dragged in one go it lit the inner one before 90°, so the
+    /// thresholds a preset's sweep follows would light the wrong panel here.
+    /// The model settles on the whole degree the simulator got.
+    func endHingeDrag() {
+        dragFilter.reset()
+        guard let dragged = draggedAngle else { return }
+        draggedAngle = nil
+        guard let entry = foldableEntry, entry.udid == dragged.udid else { return }
+        onLiveHinge?(dragged.angle)
+        modelScenes.hingeDragEnded()
+        let panel = simulators.folds.record(of: entry.udid).panel
+        _ = simulators.noteFold(udid: entry.udid, angle: dragged.angle, panel: panel)
+        checkLitPanelSoon(entry.udid)
+    }
+
+    /// The one task that waits for the hinge to be still, and when it does
+    /// (`litCheckDue`, pushed back by each hinge event instead of a task for
+    /// each) and for which simulator.
+    @ObservationIgnored private var litCheck: Task<Void, Never>?
+    @ObservationIgnored private var litCheckDue: ContinuousClock.Instant?
+    @ObservationIgnored private var litCheckUdid: String?
+    @ObservationIgnored private var litCheckRetries = true
+
+    /// Reads the lit panel off the simulator once the hinge has been still
+    /// for `delay` (the guest takes a moment to light a panel), and never
+    /// while a preset's hinge is sweeping: the panel it lights is dark until
+    /// the guest gets there, so the read comes `litCheckDelay` after the
+    /// sweep ends. One task waits for it (`litCheckDue`), pushed back by each
+    /// later request instead of a task for each (the slider asks at the
+    /// mouse's rate); a request due sooner (the stage saw its panel stay
+    /// black) starts the wait again. The canvas queues a second read behind
+    /// one in flight.
+    private func checkLitPanelSoon(
+        _ udid: String,
+        after delay: Duration = SimulatorFoldController.litCheckDelay,
+        retriesWhenInconclusive: Bool = true
+    ) {
+        let now = ContinuousClock.now
+        let due = now + delay
+        let sooner = litCheckDue.map { due < $0 } ?? true
+        // A wait whose deadline passed is already reading or waiting out a
+        // sweep: a new request starts it over rather than being lost.
+        let pastDue = litCheckDue.map { $0 <= now } ?? false
+        // A request that does not retry (the stage saw its panel stay black)
+        // does not take that from one waiting that does.
+        litCheckRetries = (litCheck != nil && litCheckRetries) || retriesWhenInconclusive
+        litCheckDue = due
+        litCheckUdid = udid
+        if litCheck != nil {
+            guard sooner || pastDue else { return }
+            litCheck?.cancel()
+        }
+        litCheck = Task { @MainActor [weak self] in
+            // Waits for the deadline (pushed back by later requests), then for
+            // a sweep to end and `litCheckDelay` more, again as long as a new
+            // sweep began meanwhile.
+            while true {
+                while let self, let due = self.litCheckDue, !Task.isCancelled {
+                    let remaining = due - ContinuousClock.now
+                    guard remaining > .zero else { break }
+                    try? await Task.sleep(for: remaining)
+                }
+                guard !Task.isCancelled, let self else { return }
+                guard self.isSweeping else { break }
+                let waited = ContinuousClock.now
+                while !Task.isCancelled, self.isSweeping, ContinuousClock.now - waited < Self.sweepWaitLimit {
+                    try? await Task.sleep(for: .milliseconds(50))
+                }
+                guard !Task.isCancelled else { return }
+                // A sweep that outlasts `sweepWaitLimit` is read anyway.
+                if self.isSweeping { break }
+                self.litCheckDue = max(self.litCheckDue ?? .now, .now + Self.litCheckDelay)
+            }
+            guard let self else { return }
+            guard !Task.isCancelled else { return }
+            let udid = self.litCheckUdid
+            let retriesWhenInconclusive = self.litCheckRetries
+            self.litCheck = nil
+            self.litCheckDue = nil
+            guard let udid, self.draggedAngle == nil || self.draggedAngle?.udid == udid else { return }
+            // Mid-drag the angle is not booked yet: book it with the panel
+            // lit now, so the check compares like with like.
+            if let dragged = self.draggedAngle {
+                let panel = self.simulators.folds.record(of: udid).panel
+                _ = self.simulators.noteFold(udid: udid, angle: dragged.angle, panel: panel)
+            }
+            self.canvas.checkLitPanel(udid, retriesWhenInconclusive: retriesWhenInconclusive)
+        }
+    }
+
+    /// The stage saw the panel it shows stay black (`DarkPanelWatchdog`): the
+    /// guest may have lit the other one since, so the lit panel is read now,
+    /// without the wait a hinge that stopped gets.
+    ///
+    /// With `likely` (the hinge is being dragged and the fed panel went
+    /// black, so the guest most likely lit the other one) the stage moves to
+    /// that panel at once and the read confirms it after `litCheckDelay`:
+    /// reading first kept the face black about 1.2 s after a one-go drag lit
+    /// the inner panel, and up to 6 s after a drag closed the device past the
+    /// point where the guest lit the outer one (0.3 s of black frames, two
+    /// screenshots taking 1.5 s, a new session; iOS 27.1, 2026-10-14).
+    func recheckLitPanel(likely: SimulatorFoldPanel? = nil) {
+        guard let entry = foldableEntry else { return }
+        let record = simulators.folds.record(of: entry.udid)
+        if let likely, likely != record.panel {
+            let angle = draggedAngle.map { Double($0.angle) } ?? record.angle
+            if simulators.noteFold(udid: entry.udid, angle: angle, panel: likely) { canvas.followFold(entry.udid) }
+            checkLitPanelSoon(entry.udid)
+            return
+        }
+        checkLitPanelSoon(entry.udid, after: .zero, retriesWhenInconclusive: false)
+    }
+
+    /// Whether the fold strip's last batch is still moving the hinge.
+    private var isSweeping: Bool {
+        switch foldProgress() {
+        case .sweeping?, .waiting?: return true
+        case .done?, nil: return false
+        }
+    }
+
+    static let litCheckDelay: Duration = .milliseconds(500)
+    /// The longest a lit-panel check waits for a sweep to end (a sweep takes
+    /// 0.6 s; an earlier batch still going out can hold it back for seconds).
+    static let sweepWaitLimit: Duration = .seconds(5)
 
     /// How far the mirrored foldable's last preset or held posture got in
     /// the simulator; nil when the hinge last moved another way.

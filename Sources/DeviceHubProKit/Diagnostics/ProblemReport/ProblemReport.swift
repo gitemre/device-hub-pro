@@ -858,6 +858,9 @@ public struct ProblemReport: Codable, Sendable, Equatable {
         public var streamWarning: String?
         public var unresponsivePolls: Int
         public var recoveryCard: String?
+        /// The foldable simulator the window shows (iPhone Duo); absent for
+        /// any other selection, and in reports made before 2026-10-15.
+        public var foldable: FoldableInfo?
 
         public init(
             selection: String,
@@ -865,7 +868,8 @@ public struct ProblemReport: Codable, Sendable, Equatable {
             screenStalled: Bool = false,
             streamWarning: String? = nil,
             unresponsivePolls: Int = 0,
-            recoveryCard: String? = nil
+            recoveryCard: String? = nil,
+            foldable: FoldableInfo? = nil
         ) {
             self.selection = selection
             self.avd = avd
@@ -873,7 +877,120 @@ public struct ProblemReport: Codable, Sendable, Equatable {
             self.streamWarning = streamWarning
             self.unresponsivePolls = unresponsivePolls
             self.recoveryCard = recoveryCard
+            self.foldable = foldable
         }
+    }
+
+    /// A foldable simulator as the app holds it: the fold it last sent, the
+    /// panel it takes as lit and the one the live view shows, its last read
+    /// of the two panels' screenshots and the stage around it. The app's own
+    /// state, never asked of the simulator for the report.
+    public struct FoldableInfo: Codable, Sendable, Equatable {
+        /// The device type's model name ("iPhone Duo").
+        public var model: String
+        /// The hinge angle the app last sent, in degrees (0 closed, 180 flat).
+        public var hingeAngle: Double
+        public var posture: FoldPosture
+        public var held: FoldHold
+        /// The panel the app takes as lit.
+        public var litPanel: FoldPanel
+        /// The panel the live view shows; nil without a live view.
+        public var shownPanel: FoldPanel?
+        public var lastRead: PanelRead?
+        /// The stage offers to lock and wake the simulator: a fold left both
+        /// panels dark.
+        public var screensStuck: Bool
+        public var view: FoldView
+
+        public init(
+            model: String,
+            hingeAngle: Double,
+            posture: FoldPosture,
+            held: FoldHold,
+            litPanel: FoldPanel,
+            shownPanel: FoldPanel?,
+            lastRead: PanelRead?,
+            screensStuck: Bool,
+            view: FoldView
+        ) {
+            self.model = model
+            self.hingeAngle = hingeAngle
+            self.posture = posture
+            self.held = held
+            self.litPanel = litPanel
+            self.shownPanel = shownPanel
+            self.lastRead = lastRead
+            self.screensStuck = screensStuck
+            self.view = view
+        }
+    }
+
+    public enum FoldPanel: String, Codable, Sendable, Equatable, CaseIterable {
+        case outer
+        case inner
+    }
+
+    /// The posture button the pill shows as current.
+    public enum FoldPosture: String, Codable, Sendable, Equatable, CaseIterable {
+        case closed
+        case partiallyOpen = "partially open"
+        case open
+        case laptop
+        case tent
+        /// An angle no button stands for (the hinge slider's).
+        case other
+    }
+
+    /// How the device is held.
+    public enum FoldHold: String, Codable, Sendable, Equatable, CaseIterable {
+        case portrait
+        case upsideDown = "upside down"
+        case landscapeLeft = "landscape left"
+        case landscapeRight = "landscape right"
+        case faceUp = "face up"
+        case faceDown = "face down"
+    }
+
+    /// How the stage draws the device.
+    public enum FoldView: String, Codable, Sendable, Equatable, CaseIterable {
+        case turnable3D = "3D turnable"
+        case front3D = "3D front"
+        case flat2D = "2D"
+    }
+
+    /// The last read of a foldable's two panels' screenshots, which tells the
+    /// lit panel.
+    public struct PanelRead: Codable, Sendable, Equatable {
+        /// Seconds between the read and the report.
+        public var secondsAgo: Int
+        public var outer: PanelReading?
+        public var inner: PanelReading?
+        /// The panel the read took as lit; nil when it could not tell.
+        public var lit: FoldPanel?
+
+        public init(secondsAgo: Int, outer: PanelReading?, inner: PanelReading?, lit: FoldPanel?) {
+            self.secondsAgo = secondsAgo
+            self.outer = outer
+            self.inner = inner
+            self.lit = lit
+        }
+    }
+
+    /// One panel's screenshot: what it shows and its mean grey (0–255).
+    public struct PanelReading: Codable, Sendable, Equatable {
+        public var content: PanelContent
+        public var grey: Int
+
+        public init(content: PanelContent, grey: Int) {
+            self.content = content
+            self.grey = grey
+        }
+    }
+
+    public enum PanelContent: String, Codable, Sendable, Equatable, CaseIterable {
+        case dark
+        case screen
+        case bootLogo = "boot logo"
     }
 
     /// An error the app showed (`RecentProblemStore`).
@@ -960,6 +1077,11 @@ extension ProblemReport {
             + ContentFolder.allCases.map(\.rawValue)
             + ConsoleOutcome.allCases.map(\.rawValue)
             + PropertyOutcome.allCases.map(\.rawValue)
+            + FoldPanel.allCases.map(\.rawValue)
+            + FoldPosture.allCases.map(\.rawValue)
+            + FoldHold.allCases.map(\.rawValue)
+            + FoldView.allCases.map(\.rawValue)
+            + PanelContent.allCases.map(\.rawValue)
     )
 
     /// The report's JSON: pretty, with sorted keys and unescaped slashes, and

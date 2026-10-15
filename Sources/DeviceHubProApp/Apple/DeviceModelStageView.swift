@@ -28,6 +28,12 @@ struct DeviceModelStageView: View {
     /// simulator, which a fold follows (nil when the hinge moved otherwise).
     let foldProgress: @MainActor () -> SimulatorFoldProgress?
     let litPanel: SimulatorFoldPanel
+    /// The fold's controller, for the hinge slider's live angle.
+    let fold: SimulatorFoldController
+    /// The pill's Laptop or Tent when it is the current posture: the device
+    /// is posed as one only then (a device turned on its side and half open
+    /// otherwise is a book seen from the front, as Device Hub draws it).
+    var held: SimulatorHeldPosture? = nil
     let presentation: DeviceModelPresentation
     /// The model's finish (`AppleDeviceModel.colors`); the stage makes the
     /// view anew when it changes.
@@ -42,13 +48,31 @@ struct DeviceModelStageView: View {
     let roll: Int
     /// Counts Turn Around requests: each turns the device once round.
     let spinRequests: Int
-    /// Holds the scene, made on first use: a `@State` initial value is
-    /// evaluated on every init of this struct (each slider tick, resize
-    /// frame), and the scene's renderer compiles a shader.
-    @State private var holder = DeviceModelSceneHolder()
+    /// The stage zoom the front-on device is drawn at, a multiplier of its
+    /// fitted height (1 at Zoom to Fit). It scales the model inside the
+    /// view, which keeps its size: making the view `zoom` times larger made
+    /// the stage swap layouts (the view rebuilt, the model loaded again,
+    /// nothing drawn for half a second) and the drawable many times larger.
+    var zoom: CGFloat = 1
+    /// Whether this change of `zoom` is a zoom step, which the scene
+    /// animates (`MotionMetrics.zoom`); else (an opening zoom, a correction
+    /// to a scale mode, a new device) the device is drawn at the new size at
+    /// once.
+    var animatesZoom = false
+    /// The window this view is in (each has a scene of its own).
+    var surface: DeviceModelSurface = .main
+    /// Marks this instance as the one showing the scene
+    /// (`DeviceModelScenes.release`).
+    @State private var lease = DeviceModelLease()
     @Environment(AppModel.self) private var appModel
 
-    private var scene: DeviceModelScene { holder.scene }
+    private var sceneKey: DeviceModelScenes.Key {
+        DeviceModelScenes.Key(surface: surface, model: model, color: color)
+    }
+
+    /// The scene, held by the fold's controller rather than by this view: a
+    /// view made anew shows the scene that is loaded already.
+    private var scene: DeviceModelScene { fold.modelScenes.lend(sceneKey, to: lease) }
 
     /// Whether the stage shows the mirrored foldable in its turnable 3D
     /// model (`DeviceModelPresentation.free`): asked for (View ▸ Show 3D
@@ -58,6 +82,15 @@ struct DeviceModelStageView: View {
     static func isShown(chrome: DeviceChrome, workspace: DeviceWorkspace, preferences: AppPreferences) -> Bool {
         guard case .appleChrome = chrome else { return false }
         return workspace.window.showDeviceFrame && preferences.showDeviceModel
+            && workspace.simulatorFold.deviceModel != nil
+    }
+
+    /// Whether the stage draws the mirrored foldable's 3D model at all:
+    /// turnable (`isShown`) or seen from the front as Device Hub draws it
+    /// (the model in the user's Xcode, the device in its Apple chrome).
+    static func isDrawn(chrome: DeviceChrome, workspace: DeviceWorkspace) -> Bool {
+        guard case .appleChrome = chrome else { return false }
+        return workspace.window.showDeviceFrame && workspace.simulatorFold.showsFoldControls
             && workspace.simulatorFold.deviceModel != nil
     }
 
@@ -96,21 +129,16 @@ struct DeviceModelStageView: View {
             unusable: { [simulators = appModel.simulators, model] in simulators.setDeviceModelUnusable(model) }
         )
         .overlay(alignment: .leading) {
-            if presentation == .free, let readout = scene.readout {
-                Text(verbatim: "\(readout)°")
-                    .font(.system(size: 13, weight: .medium).monospacedDigit())
-                    .foregroundStyle(.secondary)
-                    .padding(.leading, 16)
-                    .transition(.opacity)
-                    .accessibilityLabel("Hinge \(readout) degrees")
-            }
+            HingeReadout(scene: scene, isShown: presentation == .free)
         }
-        .animation(.easeOut(duration: 0.2), value: scene.readout == nil)
         .onChange(of: presentation, initial: true) { _, presentation in
             scene.present(presentation)
         }
         .onChange(of: size, initial: true) { _, size in
             scene.fit(in: size)
+        }
+        .onChange(of: zoom, initial: true) { _, zoom in
+            scene.setFrontZoom(zoom, animated: animatesZoom)
         }
         .onChange(of: roll, initial: true) { _, turns in
             scene.roll(toTurns: turns)
@@ -118,6 +146,9 @@ struct DeviceModelStageView: View {
         .onChange(of: opening, initial: true) { _, degrees in
             scene.foldProgress = foldProgress
             scene.fold(toOpening: degrees)
+        }
+        .onChange(of: held, initial: true) { _, held in
+            scene.hold(held)
         }
         .onChange(of: litPanel, initial: true) { _, panel in
             scene.show(session: session, on: panel, turns: panelTurns)
@@ -128,8 +159,56 @@ struct DeviceModelStageView: View {
         .onChange(of: spinRequests, initial: false) { _, _ in
             scene.spin()
         }
-        .onDisappear { scene.stopFeeding() }
+        .onAppear {
+            _ = scene
+            fold.modelScenes.claim(lease)
+            // The hinge slider folds the model directly while it is dragged
+            // (every window showing one: the main window's stays alive behind
+            // the compact window).
+            fold.onLiveHinge = { [weak scenes = fold.modelScenes] degrees in scenes?.foldLive(toOpening: degrees) }
+            // A panel that stays black asks the simulator which one is lit.
+            scene.onPanelDark = { [weak fold] likely in fold?.recheckLitPanel(likely: likely) }
+            // A view made anew while the old one is still going away (or
+            // just after it), or a stage back after it was left, starts the
+            // feed again: the old one's disappearing does not stop a scene it
+            // no longer owns.
+            scene.show(session: session, on: litPanel, turns: panelTurns)
+        }
+        .onDisappear {
+            let scenes = fold.modelScenes
+            if scenes.release(lease) {
+                scene.onPanelDark = nil
+                scene.stopFeeding()
+            }
+            if !scenes.isShowing { fold.onLiveHinge = nil }
+        }
         .accessibilityLabel("3D device")
+    }
+}
+
+/// The hinge's angle beside a turnable model while it folds. A view of its
+/// own so that only it watches the scene's readout, which changes with every
+/// degree the hinge passes: the stage's `body` (the canvas, the modifiers and
+/// their closures) was evaluated again for each of them.
+private struct HingeReadout: View {
+    let scene: DeviceModelScene
+    /// Whether the presentation has a readout (`DeviceModelPresentation.free`);
+    /// the scene's readout is not read otherwise.
+    let isShown: Bool
+
+    var body: some View {
+        let readout = isShown ? scene.readout : nil
+        Group {
+            if let readout {
+                Text(verbatim: "\(readout)°")
+                    .font(.system(size: 13, weight: .medium).monospacedDigit())
+                    .foregroundStyle(.secondary)
+                    .padding(.leading, 16)
+                    .transition(.opacity)
+                    .accessibilityLabel("Hinge \(readout) degrees")
+            }
+        }
+        .animation(.easeOut(duration: 0.2), value: readout == nil)
     }
 }
 
@@ -172,21 +251,47 @@ struct DeviceModelCanvas: NSViewRepresentable {
     }
 }
 
-/// A layer-hosting view whose display link draws a frame when the scene
-/// asked for one and the last has finished. It hands the mouse to the
-/// scene, in its own top-left points (the scene's view size).
+/// A layer-hosting view whose display link steps the scene's motions once a
+/// frame (`DeviceModelScene.step`) and draws a frame when the scene asked
+/// for one and the renderer has room (`RenderCadence`); the link rests while
+/// nothing moves or waits to be drawn. It hands the mouse to the scene, in
+/// its own top-left points (the scene's view size).
 @MainActor
 final class DeviceModelCanvasView: NSView {
     private let metalLayer = CAMetalLayer()
     private var renderer: RealityRenderer?
     private weak var scene: DeviceModelScene?
     private var mouseStart: CGPoint?
+    private var isPanning = false
     private var hoverArea: NSTrackingArea?
     private var showsKeyCursor = false
     private var link: CADisplayLink?
-    private var needsRender = true
-    private var rendering = false
+    /// The scene changed since the last frame was asked for. Setting it wakes
+    /// the display link, which rests while nothing needs drawing
+    /// (`RenderCadence.shouldPause`); a new request after `maxRenderRetries`
+    /// failures (the scene changed) starts their count over.
+    private var needsRender = true {
+        didSet {
+            guard needsRender else { return }
+            link?.isPaused = false
+            if !oldValue, renderFailures > Self.maxRenderRetries { renderFailures = 0 }
+        }
+    }
+    /// The frames the renderer holds (`RenderCadence.maxFramesInFlight`).
+    /// A new count with each renderer (`show`, `releaseRenderer`): a frame
+    /// of a renderer that was let go may never report back, and a count stuck
+    /// at its most would leave the view drawing nothing for good. A late
+    /// completion ends the count it began on (`render` captures it).
+    private var framesInFlight = FramesInFlight()
+    /// When the last frame asked for is due on screen: the renderer's update
+    /// advances by the time since.
+    private var lastDue: CFTimeInterval?
+    /// Frames in a row whose render threw.
+    private var renderFailures = 0
     private var loadTask: Task<Void, Never>?
+    /// No renderer could be made for this view (the stage went back to the
+    /// 2D chrome): `tick` does not ask again.
+    private var cannotRender = false
 
     override init(frame: NSRect) {
         super.init(frame: frame)
@@ -194,6 +299,7 @@ final class DeviceModelCanvasView: NSView {
         metalLayer.pixelFormat = .bgra8Unorm_srgb
         metalLayer.framebufferOnly = false
         metalLayer.isOpaque = false
+        metalLayer.maximumDrawableCount = 3
         wantsLayer = true
     }
 
@@ -261,8 +367,16 @@ final class DeviceModelCanvasView: NSView {
         scene?.zoom(by: 1 + event.magnification)
     }
 
-    /// A scroll off the panel zooms (on it the simulator scrolls with a drag).
+    /// A zoomed front-on device moves with the scroll (as the 2D stage's
+    /// scroll view does); a scroll off the panel zooms the turnable one (on
+    /// it the simulator scrolls with a drag).
     override func scrollWheel(with event: NSEvent) {
+        if let scene, scene.canPan {
+            let scale: CGFloat = event.hasPreciseScrollingDeltas ? 1 : 10
+            if scene.pan(scrolledBy: CGSize(width: event.scrollingDeltaX * scale, height: event.scrollingDeltaY * scale)) {
+                return
+            }
+        }
         let point = convert(event.locationInWindow, from: nil)
         guard let scene, scene.framePoint(at: point) == nil, event.scrollingDeltaY != 0 else {
             return super.scrollWheel(with: event)
@@ -300,45 +414,124 @@ final class DeviceModelCanvasView: NSView {
         window?.makeFirstResponder(self)
         let point = convert(event.locationInWindow, from: nil)
         mouseStart = point
+        // ⌥⌘ and a drag move a zoomed device round the view, as they pan
+        // the 2D stage; the drag never reaches the device.
+        if StageScrollSupport.isPanGesture(event.modifierFlags), scene?.canPan == true {
+            isPanning = true
+            NSCursor.closedHand.push()
+            return
+        }
         scene?.pointerMoved(from: point, to: point, translation: .zero)
     }
 
     override func mouseDragged(with event: NSEvent) {
         guard let start = mouseStart else { return }
         let point = convert(event.locationInWindow, from: nil)
-        scene?.pointerMoved(from: start, to: point, translation: CGSize(width: point.x - start.x, height: point.y - start.y))
+        let translation = CGSize(width: point.x - start.x, height: point.y - start.y)
+        if isPanning {
+            scene?.pan(by: translation)
+            return
+        }
+        scene?.pointerMoved(from: start, to: point, translation: translation)
     }
 
     override func mouseUp(with event: NSEvent) {
         guard let start = mouseStart else { return }
         mouseStart = nil
+        if isPanning {
+            isPanning = false
+            NSCursor.pop()
+            scene?.endPan()
+            return
+        }
         let point = convert(event.locationInWindow, from: nil)
         scene?.pointerEnded(at: point, translation: CGSize(width: point.x - start.x, height: point.y - start.y))
     }
 
     func attach(scene: DeviceModelScene, model: AppleDeviceModel, color: String, unusable: @escaping @MainActor () -> Void) {
         self.scene = scene
+        scene.waitingViews.removeAll { $0.view == nil || $0.view === self }
+        scene.waitingViews.append(WeakCanvasView(view: self))
         scene.onNeedsRender = { [weak self] in self?.needsRender = true }
+        // The scene outlives a stage that went away and came back: its first
+        // frame on the new link has no time behind it.
+        scene.framesPaused()
+        // A scene that is loaded already (the view was made anew) only needs
+        // a renderer: at once, not after the next turn of the main actor.
+        if let root = scene.loadedRoot {
+            // Not inside this update (`makeNSView`): the stage's model is
+            // marked unusable, which the stage observes.
+            if !show(root, of: scene) { Task { @MainActor in unusable() } }
+            return
+        }
         loadTask = Task { [weak self] in
             let root = await scene.load(model, color: color)
             guard !Task.isCancelled else { return }
-            guard let root, let self, let renderer = try? RealityRenderer() else {
+            guard let root, let self, self.show(root, of: scene) else {
                 unusable()
                 return
             }
-            renderer.entities.append(root)
-            renderer.activeCamera = scene.camera
-            renderer.cameraSettings.colorBackground = .color(CGColor(gray: 0, alpha: 0))
-            self.renderer = renderer
-            self.needsRender = true
         }
+    }
+
+    /// Draws `root` in a renderer of this view's; false when there is none.
+    /// The view that drew the scene before lets go of it first: an entity
+    /// tree sits in one renderer only, and a view made anew may be made
+    /// before the old one is taken apart.
+    private func show(_ root: Entity, of scene: DeviceModelScene) -> Bool {
+        if renderer != nil, scene.host === self { return true }
+        guard let renderer = try? RealityRenderer() else {
+            cannotRender = true
+            return false
+        }
+        if let previous = scene.host, previous !== self { previous.releaseRenderer() }
+        scene.host = self
+        scene.rendererChanged()
+        renderer.entities.append(root)
+        renderer.activeCamera = scene.camera
+        renderer.cameraSettings.colorBackground = .color(CGColor(gray: 0, alpha: 0))
+        renderer.cameraSettings.antialiasing = .multisample4X
+        self.renderer = renderer
+        framesInFlight = FramesInFlight()
+        // The scene's frames are asked of the view that draws it.
+        scene.onNeedsRender = { [weak self] in self?.needsRender = true }
+        needsRender = true
+        return true
     }
 
     func detach() {
         loadTask?.cancel()
         link?.invalidate()
         link = nil
+        releaseRenderer()
+        if let scene {
+            scene.waitingViews.removeAll { $0.view == nil || $0.view === self }
+            if scene.host === self {
+                scene.host = nil
+                for waiting in scene.waitingViews { waiting.view?.needsRender = true }
+            }
+        }
+        if isPanning {
+            isPanning = false
+            NSCursor.pop()
+        }
+    }
+
+    /// Takes the scene out of this view's renderer, which the scene outlives:
+    /// it goes into the next view's.
+    fileprivate func releaseRenderer() {
+        renderer?.entities.removeAll()
         renderer = nil
+        framesInFlight = FramesInFlight()
+    }
+
+    /// A view without a renderer takes a loaded scene no other view draws:
+    /// the view that had it was taken apart (two views waiting for the same
+    /// load hand the scene to each other, and the one that came last may be
+    /// the one that goes), and this one would stay blank.
+    private func adoptLoadedScene() {
+        guard renderer == nil, !cannotRender, let scene, scene.host == nil, let root = scene.loadedRoot else { return }
+        _ = show(root, of: scene)
     }
 
     override func viewDidMoveToWindow() {
@@ -354,9 +547,27 @@ final class DeviceModelCanvasView: NSView {
                 MainActor.assumeIsolated { self?.updateSecureInput() }
             })
         }
+        // A window that is not on screen draws nothing (`tick`), and the
+        // pictures that came meanwhile may have been dropped from the panels'
+        // texture queues: when it shows again, the panel gets the session's
+        // latest.
+        keyObservers.append(NotificationCenter.default.addObserver(
+            forName: NSWindow.didChangeOcclusionStateNotification, object: window, queue: .main
+        ) { [weak self] _ in
+            MainActor.assumeIsolated {
+                guard let self, self.window?.occlusionState.contains(.visible) == true else { return }
+                self.needsRender = true
+                self.scene?.refeed()
+            }
+        })
         let link = displayLink(target: self, selector: #selector(tick))
         link.add(to: .main, forMode: .common)
         self.link = link
+        lastDue = nil
+        // A new link (the view moved to another window mid-motion) has no
+        // time behind its first frame.
+        scene?.framesPaused()
+        needsRender = true
         resizeDrawable()
     }
 
@@ -370,15 +581,19 @@ final class DeviceModelCanvasView: NSView {
         resizeDrawable()
     }
 
-    /// The drawable at twice the screen's pixels, for the layer to scale
-    /// down (2 × 2 samples a pixel): the renderer has no multisampling, and
-    /// at the screen's own pixels the metal edge of a device seen from the
+    /// The drawable at one and a half times the screen's pixels, for the
+    /// layer to scale down, with the renderer's 4× multisampling on top: at
+    /// the screen's own pixels the metal edge of a device seen from the
     /// front broke into specks along its top and bottom (iPhone Duo on a 2×
-    /// screen, 2026-10-11). Its longer side stays within `maxDrawableSide`.
+    /// screen, 2026-10-11), and multisampling alone left steps on the curved
+    /// bezel. Twice the pixels without multisampling looked the same and took
+    /// 2.7 GB against 1.8 GB (full-screen stage on a 2× screen, 2026-10-13).
+    /// Its longer side stays within `maxDrawableSide`.
     private func resizeDrawable() {
         let scale = window?.backingScaleFactor ?? 2
         metalLayer.contentsScale = scale
-        var size = CGSize(width: max(bounds.width * scale * 2, 1), height: max(bounds.height * scale * 2, 1))
+        let over = Self.supersampling
+        var size = CGSize(width: max(bounds.width * scale * over, 1), height: max(bounds.height * scale * over, 1))
         let longest = max(size.width, size.height)
         if longest > Self.maxDrawableSide {
             size = CGSize(width: size.width * Self.maxDrawableSide / longest, height: size.height * Self.maxDrawableSide / longest)
@@ -392,25 +607,79 @@ final class DeviceModelCanvasView: NSView {
     /// would ask for more than the GPU's textures allow).
     static let maxDrawableSide: CGFloat = 8192
 
+    /// The drawable's pixels per screen pixel (see `resizeDrawable`).
+    static let supersampling: CGFloat = 1.5
+
+    /// How many times in a row a frame whose render threw is asked for
+    /// again.
+    static let maxRenderRetries = 3
+
+    /// One frame of the link: every motion of the scene takes its step for
+    /// the moment the frame is due on screen, the scene poses the device once,
+    /// and the frame is drawn when one is wanted. The link rests when nothing
+    /// is.
     @objc private func tick(_ link: CADisplayLink) {
-        guard needsRender, !rendering, let renderer, bounds.width > 1, bounds.height > 1,
-              let drawable = metalLayer.nextDrawable()
-        else { return }
+        let visible = window?.isVisible == true
+        if visible {
+            // Pictures that came while the window was not on screen were not
+            // copied to the panels (`DeviceModelScene.frameArrived`).
+            scene?.refeedIfSkipped()
+            adoptLoadedScene()
+        }
+        let due = link.targetTimestamp
+        scene?.step(at: due)
+        // A window that is not on screen (the main window ordered out behind
+        // the compact one, a minimized one) draws nothing; the frame it asked
+        // for is drawn when it shows (the occlusion observer wakes the link).
+        // One that is only covered by other windows keeps drawing.
+        let canRender = renderer != nil && visible && bounds.width > 1 && bounds.height > 1
+        if RenderCadence.shouldRender(needsRender: needsRender, canRender: canRender, inFlight: framesInFlight.count),
+           let renderer, let drawable = metalLayer.nextDrawable() {
+            render(drawable, with: renderer, due: due)
+        }
+        // A view waiting to take a loaded scene nobody draws keeps ticking
+        // until it does (`adoptLoadedScene`).
+        let adopting = visible && renderer == nil && !cannotRender && scene?.loadedRoot != nil && scene?.host == nil
+        if !adopting, RenderCadence.shouldPause(needsRender: needsRender, canRender: canRender, animating: scene?.isAnimating ?? false) {
+            scene?.framesPaused()
+            link.isPaused = true
+        }
+    }
+
+    /// Asks the renderer for a frame into `drawable`, presented as the GPU
+    /// finishes it (on a thread of the renderer's: the count of frames in
+    /// flight is locked, and there is no hop to the main queue to wait for).
+    private func render(_ drawable: CAMetalDrawable, with renderer: RealityRenderer, due: CFTimeInterval) {
         needsRender = false
-        rendering = true
+        let delta = RenderCadence.frameDelta(previous: lastDue, current: due)
+        lastDue = due
+        framesInFlight.begin()
+        let frames = framesInFlight
         let handoff = DrawableHandoff(drawable: drawable)
         do {
             let output = try RealityRenderer.CameraOutput(.singleProjection(colorTexture: drawable.texture))
-            try renderer.updateAndRender(deltaTime: 1.0 / 60, cameraOutput: output, onComplete: { _ in
+            try renderer.updateAndRender(deltaTime: delta, cameraOutput: output, onComplete: { _ in
                 handoff.drawable.present()
-                DispatchQueue.main.async { [weak self] in
-                    MainActor.assumeIsolated { self?.rendering = false }
-                }
+                frames.end()
             })
+            renderFailures = 0
+            scene?.noteDrawn()
         } catch {
-            rendering = false
+            // The frame asked for was not drawn: ask again, or the stage
+            // stays on the last one until something else changes. A render
+            // that fails every time stops after `maxRenderRetries` and waits
+            // for the scene to change.
+            frames.end()
+            renderFailures += 1
+            needsRender = renderFailures <= Self.maxRenderRetries
         }
     }
+}
+
+/// A view attached to a scene, held weakly (`DeviceModelScene.waitingViews`).
+@MainActor
+struct WeakCanvasView {
+    weak var view: DeviceModelCanvasView?
 }
 
 /// A drawable handed to the renderer's completion, which presents it.
@@ -423,16 +692,12 @@ enum DeviceModelPresentation: Equatable {
     /// As Device Hub 27.1 draws iPhone Duo: from the front through a long
     /// lens (the camera `DeviceModelScene.frontDistance` device heights
     /// away), the device `height` view points tall whatever its fold, never
-    /// turned by the mouse.
+    /// turned by the mouse. That is its fitted height: the stage zoom
+    /// multiplies it (`DeviceModelScene.setFrontZoom`).
     case front(height: CGFloat)
     /// Turned and zoomed by the mouse, filling the view
     /// (View ▸ Show 3D Model).
     case free
-}
-
-@MainActor
-final class DeviceModelSceneHolder {
-    private(set) lazy var scene = DeviceModelScene()
 }
 
 /// The loaded model, its hinge animation, its pose and its panels' live
@@ -472,25 +737,62 @@ final class DeviceModelScene {
     @ObservationIgnored private var yaw: Float = 0
     @ObservationIgnored private var pitch: Float = 0
     @ObservationIgnored private var turnStart: (yaw: Float, pitch: Float)?
-    @ObservationIgnored private var resetTask: Task<Void, Never>?
+    @ObservationIgnored private var resetTask: FrameAnimation?
     /// The viewer's zoom (pinch, scroll): the camera's distance divided by it.
     @ObservationIgnored private var zoomFactor: Float = 1
+    /// The stage zoom the front-on device is drawn at, the zoom it heads for
+    /// (`setFrontZoom`) and the move that takes it there.
+    @ObservationIgnored private var shownFrontZoom: CGFloat = 1
+    @ObservationIgnored private var frontZoomTarget: CGFloat = 1
+    @ObservationIgnored private var frontZoomTask: FrameAnimation?
+    /// How far the zoomed front-on device has been moved off the middle of
+    /// the view (points, right and down positive: ⌥⌘-drag, scroll), and where
+    /// it was when the drag under way began.
+    @ObservationIgnored private var panOffset = CGSize.zero
+    @ObservationIgnored private var panStart: CGSize?
     @ObservationIgnored private var presentation: DeviceModelPresentation = .free
     /// Turn Around's progress (radians about the vertical axis).
     @ObservationIgnored private var spinAngle: Float = 0
-    @ObservationIgnored private var spinTask: Task<Void, Never>?
+    @ObservationIgnored private var spinTask: FrameAnimation?
     /// The device pose's turn about the view axis (radians, counter-clockwise),
     /// and the quarter turns it heads for.
     @ObservationIgnored private var rollAngle: Float = 0
     @ObservationIgnored private var rollTurns = 0
-    @ObservationIgnored private var rollTask: Task<Void, Never>?
+    @ObservationIgnored private var rollTarget: Float?
+    @ObservationIgnored private var rollTask: FrameAnimation?
     /// How far the device is posed as a laptop or a tent (0...1, blended so
     /// the camera moves between poses), the hinge it heads for, and the
     /// blend under way.
     @ObservationIgnored private var laptopWeight: Float = 0
     @ObservationIgnored private var tentWeight: Float = 0
     @ObservationIgnored private var targetOpening: Double = 180
-    @ObservationIgnored private var holdTask: Task<Void, Never>?
+    /// The face the camera sees, and where the book turn of a device showing
+    /// its inner face started: the turn eases from there to the target's as
+    /// the hinge gets there (`innerTurn`).
+    @ObservationIgnored private var facing = AppleDeviceModel.FoldFacing(opening: 180)
+    @ObservationIgnored private var bookStart: (turn: Float, opening: Double) = (0, 180)
+    /// The face a tent or a laptop holds to the camera; nil otherwise.
+    @ObservationIgnored private var heldFace: SimulatorFoldPanel?
+    /// The pill's Laptop or Tent when current (`hold`).
+    @ObservationIgnored private var heldPosture: SimulatorHeldPosture?
+    /// The device's centre as drawn and where it heads (`easedCenter`), and
+    /// the book turn as drawn and where it heads (`easedBook`): both catch up
+    /// with their targets on the frames `step` runs until `isSettled`.
+    @ObservationIgnored private var shownCenter: SIMD2<Float>?
+    @ObservationIgnored private var centerTarget: SIMD2<Float>?
+    /// The book turn as drawn, and its swing to the other face (`easedBook`),
+    /// on the clock of the frames posed (`frameNow`).
+    @ObservationIgnored private var bookEase = BookTurnEase()
+    /// The time of the frames the device was posed for: it moves on by each
+    /// frame's delta (`applyLayout`), so the book turn eases by the frames
+    /// drawn and a swing that begins after the link rested starts from the
+    /// turn on screen.
+    @ObservationIgnored private var frameNow = ContinuousClock.now
+    /// The slider's angle the drawn hinge heads for, and the move that takes
+    /// it there (`chase`).
+    @ObservationIgnored private var chaseTarget: Double?
+    @ObservationIgnored private var chaseTask: FrameAnimation?
+    @ObservationIgnored private var holdTask: FrameAnimation?
     @ObservationIgnored private var pendingSession: (session: any MirrorSessionProtocol, panel: SimulatorFoldPanel, turns: (Int, Int) -> Int)?
     @ObservationIgnored private var pendingOpening: Double?
     @ObservationIgnored private var panelTurns: (Int, Int) -> Int = { _, _ in 0 }
@@ -524,7 +826,7 @@ final class DeviceModelScene {
         let entity: ModelEntity
         /// How far it stands out of its edge now (in when below zero).
         var travel: Float = 0
-        var motion: Task<Void, Never>?
+        var motion: FrameAnimation?
 
         init(key: AppleDeviceModel.Key, entity: ModelEntity) {
             self.key = key
@@ -546,11 +848,20 @@ final class DeviceModelScene {
         case key(SimulatorHardwareButton)
     }
 
+    /// How long after a sweep's last hinge event the guest goes on ignoring
+    /// touches (about 100 ms measured), with a margin.
+    static let touchSuppressionTail: Duration = .milliseconds(150)
+    /// Touches made while the guest ignores them (`sendTouch`), the move that
+    /// sends them on, and where the last fold strip sweep ended.
+    @ObservationIgnored private var heldTouches: [(command: TouchCommand, at: ContinuousClock.Instant, session: any MirrorSessionProtocol)] = []
+    @ObservationIgnored private var touchRelease: Task<Void, Never>?
+    @ObservationIgnored private var lastSweepEnd: ContinuousClock.Instant?
+
     /// The longest a click's pointer may move, and the longest between the
     /// clicks of a double click.
     static let clickSlop: CGFloat = 3
     static let doubleClickInterval: TimeInterval = 0.4
-    @ObservationIgnored private var foldTask: Task<Void, Never>?
+    @ObservationIgnored private var foldTask: FrameAnimation?
     /// Where the fold strip's last batch got in the simulator
     /// (`DeviceModelStageView.foldProgress`).
     @ObservationIgnored var foldProgress: (@MainActor () -> SimulatorFoldProgress?)?
@@ -560,15 +871,99 @@ final class DeviceModelScene {
     @ObservationIgnored private let feeder = PanelTextureFeeder()
     @ObservationIgnored private var observation: FrameObservation?
     @ObservationIgnored private var feedingPanel: SimulatorFoldPanel?
+    /// A panel's new texture and its material's index, waiting for the
+    /// texture's first picture.
+    @ObservationIgnored private var pendingMaterials: [SimulatorFoldPanel: (texture: TextureResource, index: Int)] = [:]
+    /// Each panel's frames that found no drawable since its last picture,
+    /// and when it last took a new texture for that (`panelStalled`).
+    @ObservationIgnored private var stalls: [SimulatorFoldPanel: Int] = [:]
+    @ObservationIgnored private var lastNewTexture: [SimulatorFoldPanel: ContinuousClock.Instant] = [:]
+    /// Frames drawn since the last stall that counted (`panelStalled`).
+    @ObservationIgnored private var drawsSinceStall = 0
+    /// Whether a renderer has drawn the scene (`rendererChanged`).
+    @ObservationIgnored private var hadRenderer = false
+    /// Asks the simulator which panel is lit: the panel being fed stayed
+    /// black (`DarkPanelWatchdog`).
+    /// Called with the other panel while the slider drags the hinge
+    /// (`dragFacing`): the guest most likely lit it.
+    @ObservationIgnored var onPanelDark: (@MainActor (_ likely: SimulatorFoldPanel?) -> Void)?
+    @ObservationIgnored private var darkWatch = DarkPanelWatchdog()
+    @ObservationIgnored private var darkWatchTask: Task<Void, Never>?
+    @ObservationIgnored private var lastDarkSample: ContinuousClock.Instant?
+    @ObservationIgnored private var sampleGap = DeviceModelScene.darkSampleInterval
+    /// The panel waiting to go dark once the fold ends (`show`).
+    @ObservationIgnored private var darkening: SimulatorFoldPanel?
+    /// A panel waiting for its first picture, asked again with the session's
+    /// current frame until it comes (`armMaterialRetry`).
+    @ObservationIgnored private var materialRetries: [SimulatorFoldPanel: Task<Void, Never>] = [:]
 
-    /// How long the hinge takes to reach a slider's new angle on screen.
-    static let foldDuration: Double = 0.15
+    /// How long a quarter turn of the device takes, easing out: Device Hub
+    /// 27.1 turned iPhone Duo (closed, Rotate Right) in 557 ms, fastest in
+    /// its first 50 ms (a 60 fps window recording, 2026-10-13).
+    static let rollDuration: Double = 0.55
+    /// How far the drawn hinge trails the simulator's during a preset
+    /// (seconds, a first-order lag on its eased sweep): Device Hub 27.1's
+    /// iPhone Duo took 210 ms from its first movement to closed-looking
+    /// (90°) going from open to closed, where ours, on the sweep itself,
+    /// took 60–100 ms (60 fps window recordings, 2026-10-13); this lag gives
+    /// 205 ms. The sweep's last angle is drawn about 0.65 s after it set off.
+    static let sweepLag: Double = 0.15
+    /// How far the drawn hinge trails the slider (seconds, a first-order
+    /// lag): the hinge glides after the knob instead of stepping a degree at
+    /// a time.
+    static let chaseLag: Double = 0.06
+    /// Degrees from the end under which the drawn hinge counts as there.
+    static let sweepSettled: Double = 0.5
+    /// How far behind the fold's centre the device's drawn centre follows
+    /// (seconds, a first-order lag): closing iPhone Duo from open, Device
+    /// Hub 27.1's device, folded by 115 ms, slid the last 91 pt to its
+    /// closed place over 0.7 s, 57 % left after 115 ms more, 30 % after
+    /// 227 ms, 17 % after 342 ms (a 60 fps window recording, 2026-10-13); ours
+    /// was there with the hinge.
+    static let centerLag: Double = 0.19
+    /// The share of the device's width under which the drawn centre counts
+    /// as there.
+    static let centerSettled: Float = 0.0005
+    /// How far the drawn book turn trails the face's turn (seconds), and the
+    /// radians under which it counts as there.
+    static let bookLag: Double = 0.08
+    static let bookSettled: Float = 0.001
+    /// How far the drawn book turn trails the face's turn while the device
+    /// turns to the other face off a preset (the lit panel changed): a lag
+    /// that gets 99 % of the way in `rollDuration`, fastest at first, as
+    /// Device Hub's 0.55 s quarter turn eases out. The `bookLag` swing
+    /// crossed a half turn in 0.2 s.
+    static let faceTurnLag: Double = 0.12
+    /// The longest a frame counts for in that turn, in seconds: the stage is
+    /// still when a lit-panel change turns the device, so the time since the
+    /// frame before says nothing of how far the turn has got (`BookTurnEase`).
+    static let faceTurnStep: Double = 1.0 / 30
+    /// How often the panel being fed is looked at for the watchdog, at most
+    /// (frames come 60 times a second while the guest animates).
+    static let darkSampleInterval: Duration = .milliseconds(100)
+    /// What a look (the lock on the frame's surface and 1,536 reads) may cost
+    /// on the main thread before the watchdog looks less often. Not measured
+    /// on a live Duo: the reads are cheap, a lock on a surface the simulator's
+    /// GPU wrote may wait.
+    static let darkSampleBudget: Duration = .milliseconds(1)
+    static let slowSampleInterval: Duration = .milliseconds(300)
+
+    /// The wait before the panel being fed is looked at again, given what the
+    /// last look cost.
+    static func darkSampleGap(afterCost cost: Duration) -> Duration {
+        cost > darkSampleBudget ? slowSampleInterval : darkSampleInterval
+    }
+    /// How often a preset's sweep is waited out by the watchdog.
+    static let darkPoll: Duration = .milliseconds(200)
+    /// How long a panel waiting for its first picture goes before it is fed
+    /// the session's current frame again, three times: a static screen sends
+    /// no frame to replace one that was lost.
+    static let materialRetryDelays: [Duration] = [.milliseconds(250), .milliseconds(500), .seconds(1)]
+    /// The share of the hinge's way by which the book turn arrives.
+    static let bookLead: Double = 0.5
     /// How long the device takes to face the camera again, or to turn to
     /// the way it is held.
     static let turnDuration: Double = 0.35
-    /// Degrees past which a hinge change is a preset's, shown as long as the
-    /// simulator's sweep.
-    static let sweepThreshold: Double = 10
     /// How long Turn Around takes.
     static let spinDuration: Double = 2.2
     /// How long the readout stays once the hinge has stopped.
@@ -616,8 +1011,87 @@ final class DeviceModelScene {
     /// How long the camera takes to move to a laptop or a tent.
     static let holdDuration: Double = 0.6
 
+    // MARK: - Frames
+
+    /// Whether Reduce Motion is on: the system's setting (tests set their own).
+    @ObservationIgnored var reduceMotion: () -> Bool = { MotionMetrics.reduceMotion }
+    /// The motions that move with the display link's frames, in the order they
+    /// began (`step`).
+    @ObservationIgnored private var animations: [FrameAnimation] = []
+    /// The device has to be posed again before the next frame (`layout`).
+    @ObservationIgnored private var layoutRequested = false
+    /// When the scene was last stepped; nil once the display link rested.
+    @ObservationIgnored private var steppedAt: CFTimeInterval?
+    /// How many times the device was posed, for tests: once a frame however
+    /// many motions moved it.
+    @ObservationIgnored private(set) var layoutPasses = 0
+
+    /// Whether anything still moves: a motion under way, the device waiting
+    /// to be posed, or the drawn centre and book turn still catching up with
+    /// the fold. The display link rests when nothing does.
+    var isAnimating: Bool { !animations.isEmpty || layoutRequested || !isSettled }
+
+    /// Takes the frame due on screen at `time` (the display link's
+    /// `targetTimestamp`): every motion under way takes its step, then the
+    /// device is posed once if anything asked for it or the drawn centre and
+    /// book turn are still catching up. Every motion goes by the time it is
+    /// given, not by how many frames there were, so the lags and durations
+    /// measured against Device Hub hold at any display rate. Before the first
+    /// frame after the link rested the time since the last is taken as none.
+    /// Returns the frame it took.
+    @discardableResult
+    func step(at time: CFTimeInterval) -> FrameClock {
+        let frame = FrameClock(time: time, delta: steppedAt.map { max(time - $0, 0) } ?? 0)
+        steppedAt = time
+        if !animations.isEmpty {
+            // A motion that begins in a step is first stepped on the next
+            // frame (the loop goes over the motions there were).
+            for animation in animations { animation.run(frame) }
+            animations.removeAll { $0.isFinished }
+        }
+        if layoutRequested || !isSettled { applyLayout(delta: frame.delta) }
+        return frame
+    }
+
+    /// The display link is resting: the next frame begins with no time
+    /// behind it (`step`).
+    func framesPaused() {
+        steppedAt = nil
+    }
+
+    /// Puts `animation` on the display link's frames and asks for one (the
+    /// link may be resting).
+    private func begin(_ animation: FrameAnimation) -> FrameAnimation {
+        animations.append(animation)
+        setNeedsRender()
+        return animation
+    }
+
+    /// The loaded model's root, nil until `load` has finished.
+    var loadedRoot: Entity? { root }
+
+    /// The view whose renderer holds the model now.
+    @ObservationIgnored fileprivate(set) weak var host: DeviceModelCanvasView?
+    /// The views attached to the scene that draw nothing yet: when the host
+    /// goes, they are woken to take the scene (`adoptLoadedScene`), or one
+    /// whose display link rested would stay blank.
+    @ObservationIgnored fileprivate var waitingViews: [WeakCanvasView] = []
+
+    /// The load under way, which a view made anew while it runs waits for
+    /// (the scene outlives its views: two loads would build the model twice).
+    @ObservationIgnored private var loading: Task<Entity?, Never>?
+
     func load(_ model: AppleDeviceModel, color: String) async -> Entity? {
         if let root { return root }
+        if let loading { return await loading.value }
+        let task = Task { @MainActor in await self.build(model, color: color) }
+        loading = task
+        let built = await task.value
+        loading = nil
+        return built
+    }
+
+    private func build(_ model: AppleDeviceModel, color: String) async -> Entity? {
         // The colour asked for (a layer over the file, unless it is the
         // file's own), else the file as it is.
         var loaded: (entity: Entity, found: ModelEntity, animation: AnimationResource)?
@@ -730,7 +1204,8 @@ final class DeviceModelScene {
                 key.entity.components.set(ImageBasedLightReceiverComponent(imageBasedLight: root))
             }
         }
-        feeder.onPresented = { [weak self] in self?.setNeedsRender() }
+        feeder.onPresented = { [weak self] panel, queue in self?.panelPresented(panel, queue: queue) }
+        feeder.onStalled = { [weak self] panel in self?.panelStalled(panel) }
         self.modelEntity = found
         self.deviceEntity = entity
         self.controller = controller
@@ -791,19 +1266,138 @@ final class DeviceModelScene {
             pitch = 0
             spinAngle = 0
             zoomFactor = 1
+            readoutTask?.cancel()
+            readout = nil
+        } else {
+            panOffset = .zero
+            panStart = nil
         }
         layout()
+    }
+
+    /// The camera's vertical field of view (degrees) that draws the
+    /// front-on device `height` × `zoom` points tall in a view `viewHeight`
+    /// points tall, a camera `frontDistance` device heights away.
+    static func frontFieldOfView(viewHeight: CGFloat, height: CGFloat, zoom: CGFloat) -> Float {
+        let tanHalf = Float(viewHeight / max(height * zoom, 1)) / 2 / frontDistance
+        return 2 * atan(tanHalf) * 180 / .pi
+    }
+
+    /// Draws the front-on device at `zoom` times its fitted height: the
+    /// stage zoom's steps, animated like the 2D stage's (`MotionMetrics.zoom`,
+    /// the size growing by the same factor each frame) when `animated`, else
+    /// at once. The view stays the size it is, so the model is never made
+    /// anew by a zoom and the device is never absent from the stage; a model
+    /// larger than the view is cut off by the stage.
+    func setFrontZoom(_ zoom: CGFloat, animated: Bool) {
+        let target = zoom.isFinite && zoom > 0 ? zoom : 1
+        guard target != frontZoomTarget else { return }
+        frontZoomTarget = target
+        frontZoomTask?.cancel()
+        frontZoomTask = nil
+        if !Self.canPan(zoom: target) {
+            panOffset = .zero
+            panStart = nil
+        }
+        let from = shownFrontZoom
+        guard animated, root != nil, presentation != .free, !reduceMotion(),
+              abs(target - from) > 0.0005 * from
+        else {
+            shownFrontZoom = target
+            layout()
+            return
+        }
+        frontZoomTask = animate(over: MotionMetrics.zoomDuration) { [weak self] eased in
+            self?.shownFrontZoom = from * pow(target / from, CGFloat(eased))
+            self?.layout()
+        } done: { [weak self] in
+            self?.shownFrontZoom = target
+            self?.frontZoomTask = nil
+            self?.layout()
+        }
+    }
+
+    /// The zoom above which the device is moved around the view (⌥⌘-drag,
+    /// scroll), as the stage's scroll view scrolls from `WindowState.zoomOverflows`.
+    static let panFromZoom: CGFloat = 1.05
+
+    static func canPan(zoom: CGFloat) -> Bool { zoom > panFromZoom }
+
+    /// Whether ⌥⌘-drag and scrolling move the device: front-on, zoomed.
+    var canPan: Bool { presentation != .free && Self.canPan(zoom: frontZoomTarget) }
+
+    /// The front-on device's outline (points) as the view sees it: `height`
+    /// tall upright, `aspect` times that wide open (its flat model's
+    /// proportions) and half that closed, when only the outer panel faces the
+    /// camera (the half-open book is narrower than the open device, which
+    /// leaves the pan a little more room than it needs there), then turned
+    /// by the hold's `roll` (radians): on its side the outline swaps its
+    /// width and height.
+    static func frontOutline(height: CGFloat, aspect: CGFloat, isClosed: Bool, roll: Float) -> CGSize {
+        let width = height * aspect * (isClosed ? 0.5 : 1)
+        let cosine = abs(CGFloat(cos(roll))), sine = abs(CGFloat(sin(roll)))
+        return CGSize(width: width * cosine + height * sine, height: width * sine + height * cosine)
+    }
+
+    /// `pan` kept where the device's `outline` (points) still reaches into
+    /// `view`: it moves as far as its edge goes past the view's, not
+    /// further, and not at all along an axis it does not overhang.
+    static func clampedPan(_ pan: CGSize, view: CGSize, outline: CGSize) -> CGSize {
+        func limit(_ value: CGFloat, view: CGFloat, outline: CGFloat) -> CGFloat {
+            let reach = max((outline - view) / 2, 0)
+            return min(max(value, -reach), reach)
+        }
+        return CGSize(
+            width: limit(pan.width, view: view.width, outline: outline.width),
+            height: limit(pan.height, view: view.height, outline: outline.height)
+        )
+    }
+
+    /// Moves the zoomed device by a drag's `translation` from where it
+    /// began, the picture following the pointer.
+    func pan(by translation: CGSize) {
+        guard canPan else { return }
+        let start = panStart ?? panOffset
+        panStart = start
+        panOffset = CGSize(width: start.width + translation.width, height: start.height + translation.height)
+        layout()
+    }
+
+    func endPan() {
+        panStart = nil
+    }
+
+    /// Moves the zoomed device by a scroll of `delta` points (the picture
+    /// following the fingers); false when it does not move.
+    @discardableResult
+    func pan(scrolledBy delta: CGSize) -> Bool {
+        guard canPan else { return false }
+        let before = panOffset
+        panOffset = CGSize(width: before.width + delta.width, height: before.height + delta.height)
+        layout()
+        return panOffset != before
     }
 
     private func setNeedsRender() {
         onNeedsRender?()
     }
 
+    /// Asks for the device to be posed again for what changed; it is posed
+    /// once on the next frame (`step`), however many things changed before.
+    private func layout() {
+        layoutRequested = true
+        setNeedsRender()
+    }
+
     /// Poses the device for the hinge as shown: placed by the fold's own
     /// geometry, turned by the book turn, the device pose, the mouse and
     /// Turn Around, and the camera backed off until the sphere it turns in
-    /// fits the view's shorter field of view.
-    private func layout() {
+    /// fits the view's shorter field of view. `delta` is the seconds since
+    /// the last frame, which the drawn centre and book turn catch up by.
+    private func applyLayout(delta: Double) {
+        layoutRequested = false
+        layoutPasses += 1
+        frameNow += .seconds(delta)
         defer { setNeedsRender() }
         guard let deviceEntity, deviceSize.x > 0 else { return }
         let framing = AppleDeviceModel.framing(
@@ -814,29 +1408,26 @@ final class DeviceModelScene {
         // the middle across (the model's bounds' centre is lower, in the
         // thickness of the device, which put a half-open device 10 pt off
         // the middle once turned as a book).
-        deviceEntity.position = hingeCenter - SIMD3(framing.center.x, framing.center.y, 0)
-        let book = simd_quatf(angle: framing.bookTurn, axis: [0, 1, 0])
-        // The roll is how the lit panel is held, seen from its own face. A
-        // tent is turned round to show its outer panel, so the same hold
-        // seen from the model's front is the mirror turn (a tent held
-        // landscape left stands with the hinge on top).
-        let roll = simd_quatf(angle: rollAngle * (1 - 2 * tentWeight), axis: [0, 0, 1])
+        let center = easedCenter(towards: framing.center, delta: delta)
+        deviceEntity.position = hingeCenter - SIMD3(center.x, center.y, 0)
+        // The face the camera sees (`AppleDeviceModel.FoldFacing`): the outer
+        // panel square to it, the other half swinging out of sight behind,
+        // or both halves alike as a book. A laptop shows its inner face, a
+        // tent its outer one.
+        let showsOuter = showsOuterFace
+        let book = simd_quatf(angle: easedBook(towards: showsOuter ? AppleDeviceModel.FoldFacing.outerTurn(opening: shownOpening) : innerTurn()), axis: [0, 1, 0])
+        // The roll is how the lit panel is held, seen from its own face.
+        let roll = simd_quatf(angle: rollAngle, axis: [0, 0, 1])
         // On its side the hinge runs across the view: a laptop tips about it
         // until its lower half lies flat, seen from a little above; a tent
-        // stands on both edges, the hinge on top, turned to show its outer
-        // panel.
+        // stands on its two edges, the hinge on top, its outer panel leaning
+        // back by half the opening (both halves alike, as the other app
+        // stands it), seen from a little above and to the side.
         let fold = Float((180 - shownOpening) * .pi / 180)
         let laptopTilt = fold / 2 - .pi / 2 + Self.laptopElevation
-        let tentTilt = Float.pi / 2 + Self.tentElevation
-        var tentTurn = Self.tentTurn
-        if tentWeight > 0 {
-            // The outer panel's normal on the half that folds over, in the
-            // stand's frame turned into the turntable's.
-            let outer = (simd_quatf(angle: tentTilt, axis: [1, 0, 0]) * roll * book).act([-sin(fold), 0, -cos(fold)])
-            if outer.z < 0 { tentTurn += .pi }
-        }
+        let tentTilt = Self.tentElevation - Float(shownOpening * .pi / 180) / 2
         let tilt = laptopWeight * laptopTilt + tentWeight * tentTilt
-        let holdTurn = laptopWeight * Self.laptopTurn + tentWeight * tentTurn
+        let holdTurn = laptopWeight * Self.laptopTurn + tentWeight * Self.tentTurn
         turntable.orientation = simd_quatf(angle: pitch, axis: [1, 0, 0])
             * simd_quatf(angle: yaw + spinAngle + holdTurn, axis: [0, 1, 0])
             * simd_quatf(angle: tilt, axis: [1, 0, 0])
@@ -851,11 +1442,28 @@ final class DeviceModelScene {
             // so the device keeps its size in every posture, as in Device Hub
             // (from the open device's plane, ours drew iPhone Duo closed 3.4 %
             // taller than open, its half-open hinge 3.3 % shorter).
-            let tanHalf = Float(viewSize.height / max(height, 1)) / 2 / Self.frontDistance
-            camera.camera.fieldOfViewInDegrees = 2 * atan(tanHalf) * 180 / .pi
+            camera.camera.fieldOfViewInDegrees = Self.frontFieldOfView(viewHeight: viewSize.height, height: height, zoom: shownFrontZoom)
             let flat = Float(min(max((shownOpening - 130) / 50, 0), 1))
             let bias = Self.flatDistanceBias * flat * flat * (3 - 2 * flat)
-            camera.position = [0, 0, facingPanelDepth() + deviceSize.z * Self.frontDistance * (1 + bias)]
+            // A moved device is the camera moved the other way, by the
+            // device's height in the scene over its height on screen per
+            // point.
+            let shown = max(height * shownFrontZoom, 1)
+            panOffset = Self.clampedPan(
+                panOffset, view: viewSize,
+                outline: Self.frontOutline(
+                    height: shown,
+                    aspect: deviceSize.z > 0 ? CGFloat(deviceSize.x / deviceSize.z) : 1,
+                    isClosed: showsOuterFace,
+                    roll: rollAngle
+                )
+            )
+            let perPoint = deviceSize.z * (1 + bias) / Float(shown)
+            camera.position = [
+                -Float(panOffset.width) * perPoint,
+                Float(panOffset.height) * perPoint,
+                facingPanelDepth() + deviceSize.z * Self.frontDistance * (1 + bias),
+            ]
             return
         }
         camera.camera.fieldOfViewInDegrees = Self.fieldOfView
@@ -868,13 +1476,139 @@ final class DeviceModelScene {
         camera.position = [0, 0, framing.radius * fit / sin(min(vertical, horizontal)) / zoomFactor]
     }
 
+    /// The device's centre as drawn: it follows the fold's own centre with a
+    /// lag (`centerLag`), as Device Hub's does, settling on its own once the
+    /// hinge stopped; at once with Reduce Motion on or before the first draw.
+    private func easedCenter(towards target: SIMD2<Float>, delta: Double) -> SIMD2<Float> {
+        var center = target
+        if let shown = shownCenter, !reduceMotion() {
+            center = shown + (target - shown) * Float(DeviceModelMotion.lagShare(delta: delta, lag: Self.centerLag))
+        }
+        shownCenter = center
+        centerTarget = target
+        return center
+    }
+
+    /// The book turn as drawn: it follows the face's turn with a short lag
+    /// (`bookLag`), so turning to the other face is a quick swing, not a
+    /// jump (closing, the device jumped 35 pt in one frame as it turned to
+    /// its outer face; Device Hub's slides on).
+    private func easedBook(towards target: Float) -> Float {
+        let book = bookEase.advance(towards: target, at: frameNow, reduceMotion: reduceMotion())
+        return book
+    }
+
+    /// Whether the drawn centre and book turn are where they head. Until they
+    /// are, every frame poses the device again (`step`).
+    private var isSettled: Bool {
+        let centerThere = zip([shownCenter], [centerTarget]).allSatisfy { shown, target in
+            guard let shown, let target else { return true }
+            return simd_distance(shown, target) <= Self.centerSettled * max(deviceSize.x, 0.001)
+        }
+        return centerThere && bookEase.isSettled
+    }
+
+    /// The hinge slider moved the device and the simulator's lit panel has
+    /// not been read since. While the fed panel shows a picture the device
+    /// faces it (dragged a little at a time the guest keeps the outer panel
+    /// lit to 120°); once its frames go black the face is the hinge's
+    /// (`AppleDeviceModel.FoldFacing`, Device Hub's 55° and 43°), as Device
+    /// Hub draws a dragged hinge. Facing the fed panel whatever its frames
+    /// showed a device opened in one go from behind, its outer panel square to
+    /// the camera, black (the guest had lit the inner one) and the other
+    /// half's back with its cameras, for about a second until a read turned it
+    /// (iOS 27.1, 2026-10-14).
+    @ObservationIgnored private var dragFacing = false
+    @ObservationIgnored private var dragFacingFallback: Task<Void, Never>?
+    /// How long a dragged hinge's face waits for the lit panel's read before
+    /// it faces the recorded panel anyway (a read that never comes).
+    static let dragFacingLimit: Duration = .seconds(3)
+
+    /// The hinge slider's angle: folds as `fold(toOpening:)`, the face going
+    /// by the hinge until the lit panel is read again (`litPanelSettled`).
+    func dragFold(toOpening degrees: Double) {
+        dragFacing = true
+        dragFacingFallback?.cancel()
+        dragFacingFallback = Task { @MainActor [weak self] in
+            try? await Task.sleep(for: Self.dragFacingLimit)
+            guard !Task.isCancelled else { return }
+            self?.litPanelSettled()
+        }
+        fold(toOpening: degrees)
+    }
+
+    /// The slider was let go. A fed panel still showing a picture is lit
+    /// (dragged a little at a time, the guest keeps the outer one lit to
+    /// 120°): the device faces it now rather than after the screenshots' read,
+    /// which kept the hinge's dark face up for about 2 s. A black one waits for
+    /// the read, or for the watchdog's move to the panel faced
+    /// (`onPanelDark`).
+    func hingeDragEnded() {
+        guard dragFacing, let buffer = feedingSession?.frames.current?.pixelBuffer,
+              FrameDarkness.isDark(buffer) == false
+        else { return }
+        litPanelSettled()
+    }
+
+    /// The lit panel was read after the slider moved the hinge: the device
+    /// faces it again, turning to it if the hinge's face was the other.
+    func litPanelSettled() {
+        guard dragFacing else { return }
+        dragFacing = false
+        dragFacingFallback?.cancel()
+        dragFacingFallback = nil
+        alignFacingWithLitPanel()
+    }
+
+    /// Outside a preset's sweep (the hinge slider, a fold made elsewhere)
+    /// the camera sees the face whose panel the simulator lights: the guest
+    /// lights a panel by how the hinge moved (dragged a few degrees at a time
+    /// to 120°, iOS 27.1 kept the outer one lit), so the face the hinge alone
+    /// picks showed a dark panel while the picture was on the other.
+    ///
+    /// The face is the fed panel's at any opening, never the angle's: the
+    /// hinge slider dragged through 55°, 90° or 107° leaves the face alone,
+    /// and a lit panel that changes (a read of the simulator's screenshots, the
+    /// watchdog) turns the device to the new face as a swing from the turn
+    /// drawn now (`BookTurnEase`), not in a snap.
+    private func alignFacingWithLitPanel() {
+        guard !dragFacing else { return }
+        faceFedPanel()
+    }
+
+    /// Faces the fed panel, as `alignFacingWithLitPanel` does, whether or not
+    /// the hinge is being dragged.
+    private func faceFedPanel() {
+        guard heldFace == nil, let lit = feedingPanel, facing.hold(outer: lit == .outer) else { return }
+        if lit == .inner {
+            bookStart = (AppleDeviceModel.FoldFacing.outerTurn(opening: shownOpening), shownOpening)
+        }
+        bookEase.startSwing(at: frameNow)
+        layout()
+    }
+
+    /// Whether the camera sees the outer face (a tent's, never a laptop's).
+    private var showsOuterFace: Bool { facing.showsOuter }
+
+    /// The book turn of a device showing its inner face: from where it
+    /// stood when the hinge set off towards `targetOpening` to the target's
+    /// own, in step with the hinge.
+    private func innerTurn() -> Float {
+        let target = AppleDeviceModel.FoldFacing.bookTurn(target: targetOpening)
+        let span = targetOpening - bookStart.opening
+        guard abs(span) > 0.001 else { return target }
+        // Device Hub's book is there half way: opening from closed to half
+        // open, the half that stays reached the end's turn by 77°.
+        let progress = Float(min(max((shownOpening - bookStart.opening) / span / Self.bookLead, 0), 1))
+        return bookStart.turn + (target - bookStart.turn) * progress
+    }
+
     /// The depth (the view's z) half way between the nearest and the
     /// farthest corner of the panel that faces the camera: the inner one
     /// unless the device is closed. Zero before the model loads.
     private func facingPanelDepth() -> Float {
         guard let model = modelEntity, let bounds = panelBounds else { return 0 }
-        let facing: SimulatorFoldPanel = shownOpening < SimulatorFold.outerPanelBelow ? .outer : .inner
-        let depths = AppleDeviceModel.PanelHit.regions(of: facing, inner: bounds.inner, outer: bounds.outer, opening: shownOpening)
+        let depths = AppleDeviceModel.PanelHit.regions(of: showsOuterFace ? .outer : .inner, inner: bounds.inner, outer: bounds.outer, opening: shownOpening)
             .flatMap { [$0.origin, $0.alongU, $0.alongV, $0.alongU + $0.alongV - $0.origin] }
             .map { model.convert(position: $0, to: nil).z }
         guard let near = depths.max(), let far = depths.min() else { return 0 }
@@ -930,7 +1664,7 @@ final class DeviceModelScene {
     /// (again to face it back).
     func spin() {
         guard presentation == .free, root != nil, spinTask == nil else { return }
-        if MotionMetrics.reduceMotion {
+        if reduceMotion() {
             resetTask?.cancel()
             yaw = remainder(yaw + .pi, 2 * .pi)
             layout()
@@ -951,7 +1685,44 @@ final class DeviceModelScene {
     func roll(toTurns turns: Int) {
         rollTurns = turns
         updateHold()
+        retargetRoll()
+    }
+
+    /// Shows the face a tent or a laptop holds: a laptop's inner one at once,
+    /// a tent's outer one once the hinge is below the point where the
+    /// device faces out (`FoldFacing.outerBelow`), or at once when no fold
+    /// strip sweep is moving it: a tent made from an open device folds shut
+    /// showing its inner face first, as any fold does.
+    private func holdFace() {
+        if heldFace != nil { bookEase.endSwing() }
+        if let heldFace, heldFace == .inner || facing.showsOuter || !isSweeping
+            || shownOpening < AppleDeviceModel.FoldFacing.outerBelow,
+           facing.hold(outer: heldFace == .outer), heldFace == .inner {
+            bookStart = (AppleDeviceModel.FoldFacing.outerTurn(opening: shownOpening), shownOpening)
+        }
+        retargetRoll()
+    }
+
+    /// Whether the fold strip's batch is moving the simulator's hinge (a tent
+    /// set up some other way, a session that came back, shows its face at
+    /// once).
+    private var isSweeping: Bool {
+        switch foldProgress?() {
+        case .sweeping?, .waiting?: return true
+        case .done?, nil: return false
+        }
+    }
+
+    /// Turns the device to the way it is held, the short way round. A tent
+    /// shows its outer panel, whose interface the guest turns the other way
+    /// round (the same hold seen from the device's back): it stands with the
+    /// hinge on top. Turning into or out of a laptop or a tent takes as long
+    /// as the device takes to tip, so the two move as one.
+    private func retargetRoll() {
+        let turns = heldFace == .outer && facing.showsOuter ? -rollTurns : rollTurns
         let target = Float(turns) * .pi / 2
+        guard target != rollTarget else { return }
+        rollTarget = target
         let from = rollAngle
         let delta = remainder(target - from, 2 * .pi)
         rollTask?.cancel()
@@ -960,20 +1731,30 @@ final class DeviceModelScene {
             layout()
             return
         }
-        rollTask = animate(over: Self.turnDuration) { [weak self] eased in
+        rollTask = animate(over: heldFace == nil ? Self.rollDuration : Self.holdDuration, easingOut: heldFace == nil) { [weak self] eased in
             self?.rollAngle = from + delta * eased
             self?.layout()
         }
+    }
+
+    /// Poses the device as `posture` (the pill's Laptop or Tent), or as a
+    /// book seen from the front when nil.
+    func hold(_ posture: SimulatorHeldPosture?) {
+        guard posture != heldPosture else { return }
+        heldPosture = posture
+        updateHold()
     }
 
     /// Poses the device as a laptop (on its side, half open, the inner panel
     /// lit) or a tent (the outer panel lit), or as a book otherwise; the
     /// camera moves there.
     private func updateHold() {
-        let sideways = rollTurns % 2 != 0
-        let halfOpen = targetOpening > 10 && targetOpening < 170
-        let laptop: Float = sideways && halfOpen && feedingPanel == .inner ? 1 : 0
-        let tent: Float = sideways && halfOpen && feedingPanel == .outer ? 1 : 0
+        let laptop: Float = heldPosture == .laptop ? 1 : 0
+        let tent: Float = heldPosture == .tent ? 1 : 0
+        // A tent shows its outer face and a laptop its inner one all the way
+        // there and back: no turn to the other face on the way.
+        heldFace = tent == 1 ? .outer : laptop == 1 ? .inner : nil
+        holdFace()
         guard laptop != laptopWeight || tent != tentWeight else { return }
         holdTask?.cancel()
         guard root != nil else {
@@ -993,81 +1774,195 @@ final class DeviceModelScene {
     /// angle as it goes; a new angle faces the device to the camera again,
     /// unzoomed.
     func fold(toOpening degrees: Double) {
+        // The slider sends an angle at the mouse's rate: while the hinge
+        // chases the last, heading the same way, only the target moves.
+        if continuesChase(towards: degrees) {
+            targetOpening = degrees
+            chaseTarget = degrees
+            return
+        }
+        // The book turn eases on from where it stands now: from the outer
+        // face's turn when the device turns to its inner one for this fold.
+        let from = facing.showsOuter ? AppleDeviceModel.FoldFacing.outerTurn(opening: shownOpening) : innerTurn()
         targetOpening = degrees
+        // A hinge that moves again may light the other panel: a panel that
+        // stays black earns the lit panel's read again.
+        darkWatch.hingeMoved()
+        if darkWatch.isDark { armDarkWatch() }
         updateHold()
+        if isSweeping {
+            // A preset after the slider: its sweep sets the face.
+            dragFacing = false
+            dragFacingFallback?.cancel()
+        }
+        if heldFace == nil {
+            if dragFacing, !isSweeping, !darkWatch.isDark {
+                // A dragged hinge whose fed panel shows a picture faces it.
+                bookStart = (from, shownOpening)
+                faceFedPanel()
+            } else if isSweeping || dragFacing {
+                // A preset's face turn is the hinge's (Device Hub's 55° and
+                // 43°), at the book turn's own pace, and so is a dragged
+                // hinge's until the lit panel is read.
+                bookEase.endSwing()
+                facing.update(opening: shownOpening, target: degrees)
+                if !facing.showsOuter { bookStart = (from, shownOpening) }
+            } else {
+                bookStart = (from, shownOpening)
+                alignFacingWithLitPanel()
+            }
+        }
         guard let spec, let controller else {
             pendingOpening = degrees
             return
         }
         let target = spec.animationTime(forOpening: degrees)
         let start = shownTime ?? target
-        foldTask?.cancel()
         guard abs(target - start) > 0.001 else {
+            cancelFoldMotion()
             apply(time: target, controller: controller)
             return
         }
         resetTurn(zoom: true)
         readoutTask?.cancel()
-        // A preset (a large change) moves as the simulator's hinge sweeps:
-        // with the sweep when it is the fold strip's, else as long; the
-        // slider's small steps follow at once.
-        let sweep = abs(target - start) / abs(spec.closedTime - spec.openTime) * 180 > Self.sweepThreshold
-        if sweep, !MotionMetrics.reduceMotion, let progress = foldProgress?(), progress != .done {
-            foldTask = followSweep(to: target, spec: spec, controller: controller)
+        let sweeping: Bool
+        switch foldProgress?() {
+        case .sweeping?, .waiting?: sweeping = true
+        case .done?, nil: sweeping = false
+        }
+        guard !reduceMotion() else {
+            cancelFoldMotion()
+            apply(time: target, controller: controller)
             return
         }
-        foldTask = animate(over: sweep ? SimulatorFold.sweepDuration : Self.foldDuration, easingOut: true) { [weak self] eased in
-            guard let self else { return }
-            self.apply(time: start + (target - start) * Double(eased), controller: controller)
-            self.readout = Int(self.shownOpening.rounded())
-        } done: { [weak self] in
-            self?.lingerReadout()
+        if sweeping {
+            // A preset moves as the simulator's hinge sweeps.
+            cancelFoldMotion(lingering: false)
+            foldTask = followSweep(to: degrees, spec: spec, controller: controller)
+            return
+        }
+        // The slider (and a fold made elsewhere): one move that heads for
+        // each new angle as it comes, rather than a new animation for every
+        // degree.
+        chaseTarget = degrees
+        if !isChasing {
+            foldTask?.cancel()
+            chaseTask = chase(spec: spec, controller: controller)
+            foldTask = chaseTask
         }
     }
 
-    /// Draws the hinge where the simulator's is while the fold strip's
-    /// batch goes out: each frame shows the angle its sweep has reached
-    /// (`SimulatorFoldSweep.angle(at:)`), so the model and what the guest
-    /// shows on its panels keep together however late a frame comes (in a
-    /// busy VM the first came up to 370 ms after the click, and a model on
-    /// its own clock trailed the hinge by as much). Holds while the batch
-    /// waits (an earlier sweep, a pause between two) and settles on `target`
-    /// once it was sent; shows `target` at once if it does not begin within
-    /// `sweepWait`.
-    private func followSweep(to target: Double, spec: AppleDeviceModel.Spec, controller: AnimationPlaybackController) -> Task<Void, Never> {
+    /// Whether the hinge is chasing the slider (`chase`).
+    private var isChasing: Bool { chaseTask.map { !$0.isFinished } ?? false }
+
+    /// Whether `degrees` is only a new target for the chase under way: the
+    /// slider is still heading the way the last angle did (on the same side
+    /// of the drawn hinge), with no tent or laptop held and no preset
+    /// sweeping. The slider's angles come at the mouse's rate, and each one
+    /// began the fold's work again: the book turn's start, the hold, the
+    /// device facing the camera, the readout. A slider that turned back is
+    /// not (the book turn would otherwise jump at the turn).
+    private func continuesChase(towards degrees: Double) -> Bool {
+        guard isChasing, spec != nil, heldFace == nil, !reduceMotion(),
+              (degrees - shownOpening) * (targetOpening - shownOpening) >= 0,
+              !isSweeping
+        else { return false }
+        return true
+    }
+
+    /// Stops the move that draws the hinge (the chase, or the sweep it
+    /// follows). The readout lingers a moment if the chase was showing it.
+    private func cancelFoldMotion(lingering: Bool = true) {
+        let wasChasing = isChasing
+        foldTask?.cancel()
+        chaseTask = nil
+        chaseTarget = nil
+        if lingering, wasChasing { lingerReadout() }
+    }
+
+    /// Follows the slider's angle (`chaseTarget`) frame by frame, trailing
+    /// it by `chaseLag`, until the hinge is there.
+    private func chase(spec: AppleDeviceModel.Spec, controller: AnimationPlaybackController) -> FrameAnimation {
+        begin(FrameAnimation { [weak self] frame in
+            guard let self, let target = self.chaseTarget else { return false }
+            let step = DeviceModelMotion.chase(
+                from: self.shownOpening, to: target, delta: frame.delta,
+                lag: Self.chaseLag, settledWithin: Self.sweepSettled
+            )
+            self.apply(time: spec.animationTime(forOpening: step.angle), controller: controller)
+            self.showReadout()
+            guard step.settled else { return true }
+            self.chaseTask = nil
+            self.chaseTarget = nil
+            self.lingerReadout()
+            return false
+        })
+    }
+
+    /// Draws the hinge after the simulator's while the fold strip's batch
+    /// goes out: each frame heads for the angle its sweep has reached
+    /// (`SimulatorFoldSweep.angle(at:)`, read at the moment the frame is due
+    /// on screen), trailing it by `sweepLag` as Device Hub's does, so the
+    /// model and what the guest shows on its panels keep together however
+    /// late a frame comes (in a busy VM the first came up to 370 ms after the
+    /// click, and a model on its own clock trailed the hinge by as much).
+    /// Holds while the batch waits (an earlier sweep, a pause between two) and
+    /// settles on `target` once it was sent; shows `target` at once if it
+    /// does not begin within `sweepWait`.
+    private func followSweep(to target: Double, spec: AppleDeviceModel.Spec, controller: AnimationPlaybackController) -> FrameAnimation {
         let asked = ContinuousClock.now
-        return Task { @MainActor [weak self] in
-            while !Task.isCancelled, let self {
-                var time = target
-                var settled = true
-                switch self.foldProgress?() {
-                case .sweeping(let sweep)?:
-                    time = spec.animationTime(forOpening: sweep.angle(at: .now))
-                    settled = false
-                case .waiting?:
-                    if ContinuousClock.now - asked < Self.sweepWait {
-                        time = self.shownTime ?? target
-                        settled = false
-                    }
-                case .done?, nil:
-                    break
+        // The angle drawn, trailing the hinge (`sweepLag`).
+        var drawn = shownOpening
+        return begin(FrameAnimation { [weak self] frame in
+            guard let self else { return false }
+            let due = Self.instant(atMediaTime: frame.time)
+            var angle = target
+            var swept = true
+            switch self.foldProgress?() {
+            case .sweeping(let sweep)?:
+                angle = sweep.angle(at: due)
+                self.lastSweepEnd = sweep.end
+                swept = false
+            case .waiting?:
+                if due - asked < Self.sweepWait {
+                    angle = drawn
+                    swept = false
                 }
-                self.apply(time: time, controller: controller)
-                self.readout = Int(self.shownOpening.rounded())
-                if settled {
-                    self.lingerReadout()
-                    break
-                }
-                try? await Task.sleep(for: .milliseconds(16))
+            case .done?, nil:
+                break
             }
-        }
+            drawn = DeviceModelMotion.followed(drawn, towards: angle, delta: frame.delta, lag: Self.sweepLag, reduceMotion: self.reduceMotion())
+            let settled = swept && abs(drawn - target) < Self.sweepSettled
+            if settled { drawn = target }
+            self.apply(time: spec.animationTime(forOpening: drawn), controller: controller)
+            self.showReadout()
+            guard settled else { return true }
+            self.lingerReadout()
+            return false
+        })
+    }
+
+    /// The clock instant a frame due at `time` (`CACurrentMediaTime`'s
+    /// seconds, the display link's) falls on; the fold strip's sweeps are
+    /// timed on the continuous clock.
+    static func instant(atMediaTime time: CFTimeInterval) -> ContinuousClock.Instant {
+        .now.advanced(by: .seconds(time - CACurrentMediaTime()))
+    }
+
+    /// Shows the hinge's angle beside the turnable model (the stage reads it
+    /// there only), once per degree.
+    private func showReadout() {
+        guard presentation == .free else { return }
+        let degrees = Int(shownOpening.rounded())
+        if readout != degrees { readout = degrees }
     }
 
     /// Hides the hinge's readout a moment after it stopped.
     private func lingerReadout() {
+        readoutTask?.cancel()
         readoutTask = Task { @MainActor [weak self] in
             try? await Task.sleep(for: Self.readoutLinger)
-            guard !Task.isCancelled else { return }
+            guard !Task.isCancelled, self?.readout != nil else { return }
             self?.readout = nil
         }
     }
@@ -1079,32 +1974,56 @@ final class DeviceModelScene {
         guard let spec, spec.closedTime != spec.openTime else { return }
         let closedness = min(max((time - spec.openTime) / (spec.closedTime - spec.openTime), 0), 1)
         shownOpening = 180 * (1 - closedness)
+        // Turning to the inner face, Device Hub holds the device at once as
+        // the book the hinge is heading for.
+        // A preset closing the device keeps its inner face, the half that
+        // stays square to the camera, until the hinge is shut, where the two
+        // faces' poses meet: Device Hub's closes without a turn (turning out
+        // at 43° on the way swung the device 43° in a frame).
+        if heldFace != nil {
+            holdFace()
+        } else if dragFacing, !isSweeping {
+            // A dragged hinge (`dragFacing`): the fed panel's face while it
+            // shows a picture, the hinge's once it went black, the book turn
+            // easing on from the outer face's when it turns in.
+            if !darkWatch.isDark {
+                faceFedPanel()
+            } else if facing.update(opening: shownOpening, target: targetOpening), !facing.showsOuter {
+                bookStart = (AppleDeviceModel.FoldFacing.outerTurn(opening: shownOpening), shownOpening)
+            }
+        } else if !isSweeping {
+            alignFacingWithLitPanel()
+        } else if facing.showsOuter || targetOpening >= AppleDeviceModel.FoldFacing.innerFrom {
+            if facing.update(opening: shownOpening, target: targetOpening), !facing.showsOuter {
+                bookStart = (AppleDeviceModel.FoldFacing.bookTurn(target: targetOpening), shownOpening)
+            }
+        }
         layout()
     }
 
-    /// Runs `step` with the eased progress (0...1) about every frame for
-    /// `duration` seconds, then `done`; at once with Reduce Motion on.
-    private func animate(
+    /// Runs `step` with the eased progress (0...1) on every frame for
+    /// `duration` seconds, then `done`, beginning with the next frame at
+    /// progress 0; with Reduce Motion on, the next frame is the last.
+    func animate(
         over duration: Double,
         easingOut: Bool = false,
         _ step: @escaping @MainActor (Float) -> Void,
         done: (@MainActor () -> Void)? = nil
-    ) -> Task<Void, Never> {
-        let duration = MotionMetrics.reduceMotion ? 0 : duration
-        return Task { @MainActor in
-            let began = Date()
-            while !Task.isCancelled {
-                let progress = duration > 0 ? Float(min(Date().timeIntervalSince(began) / duration, 1)) : 1
-                // Easing out as the simulator's hinge sweeps
-                // (`SimulatorFold.sweepAngles`), else in and out.
-                step(easingOut ? 1 - pow(1 - progress, 3) : progress * progress * (3 - 2 * progress))
-                if progress >= 1 {
-                    done?()
-                    break
-                }
-                try? await Task.sleep(for: .milliseconds(16))
-            }
-        }
+    ) -> FrameAnimation {
+        let duration = reduceMotion() ? 0 : duration
+        var began: Double?
+        return begin(FrameAnimation { frame in
+            let from = began ?? frame.time
+            began = from
+            let progress = DeviceModelMotion.progress(elapsed: frame.time - from, duration: duration)
+            // Easing out as the simulator's hinge sweeps
+            // (`SimulatorFold.sweepAngles`) and Device Hub turns the
+            // device, else in and out.
+            step(DeviceModelMotion.eased(progress, easingOut: easingOut))
+            guard progress >= 1 else { return true }
+            done?()
+            return false
+        })
     }
 
     // MARK: - Pointer
@@ -1123,12 +2042,60 @@ final class DeviceModelScene {
         return true
     }
 
+    /// Sends a touch to the lit panel, or holds it while the guest ignores
+    /// touches after a fold: SpringBoard's hinge-motion monitor suppressed
+    /// them from the sweep's first event until about 100 ms after its last
+    /// (iOS 27.1, 2026-10-13), so a tap made as the device settled was lost
+    /// and only a second one landed. Held touches go out, in order and as far
+    /// apart as they came (at most 100 ms), once that has passed.
+    private func sendTouch(_ command: TouchCommand, to session: any MirrorSessionProtocol) {
+        let now = ContinuousClock.now
+        if heldTouches.isEmpty, touchesSuppressed(at: now) == nil {
+            session.send(command)
+            return
+        }
+        heldTouches.append((command, now, session))
+        guard touchRelease == nil else { return }
+        touchRelease = Task { @MainActor [weak self] in
+            while !Task.isCancelled, let end = self?.touchesSuppressed(at: .now) {
+                try? await Task.sleep(until: end, clock: .continuous)
+            }
+            var previous: ContinuousClock.Instant?
+            while !Task.isCancelled, let self, !self.heldTouches.isEmpty {
+                let touch = self.heldTouches.removeFirst()
+                if let previous, touch.at > previous {
+                    try? await Task.sleep(for: min(touch.at - previous, .milliseconds(100)))
+                }
+                previous = touch.at
+                touch.session.send(touch.command)
+            }
+            self?.touchRelease = nil
+        }
+    }
+
+    /// When the guest takes touches again, while a fold strip sweep moves
+    /// the hinge or just after; nil when it takes them now.
+    private func touchesSuppressed(at now: ContinuousClock.Instant) -> ContinuousClock.Instant? {
+        let end: ContinuousClock.Instant?
+        switch foldProgress?() {
+        case .sweeping(let sweep)?:
+            lastSweepEnd = sweep.end
+            end = sweep.end + Self.touchSuppressionTail
+        case .waiting?:
+            end = now + .milliseconds(50)
+        case .done?, nil:
+            end = lastSweepEnd.map { $0 + Self.touchSuppressionTail }
+        }
+        guard let end, end > now else { return nil }
+        return end
+    }
+
     func pointerMoved(from start: CGPoint, to location: CGPoint, translation: CGSize) {
         if pointer == nil {
             if let point = framePoint(at: start), let session = feedingSession {
                 pointer = .touch
                 lastTouch = point
-                session.send(TouchCommand(phase: .down, x: point.x, y: point.y))
+                sendTouch(TouchCommand(phase: .down, x: point.x, y: point.y), to: session)
             } else if let button = button(at: start), let sender = buttonSender {
                 pointer = .key(button)
                 sender.send(button: button, isDown: true)
@@ -1142,7 +2109,7 @@ final class DeviceModelScene {
             // Off the panel the touch stays where it left it.
             guard let point = framePoint(at: location) ?? lastTouch, let session = feedingSession else { return }
             lastTouch = point
-            session.send(TouchCommand(phase: .move, x: point.x, y: point.y))
+            sendTouch(TouchCommand(phase: .move, x: point.x, y: point.y), to: session)
         case .turn:
             // Device Hub's front-on device does not turn.
             guard presentation == .free else { return }
@@ -1157,7 +2124,7 @@ final class DeviceModelScene {
         switch pointer {
         case .touch:
             guard let point = framePoint(at: location) ?? lastTouch, let session = feedingSession else { return }
-            session.send(TouchCommand(phase: .up, x: point.x, y: point.y))
+            sendTouch(TouchCommand(phase: .up, x: point.x, y: point.y), to: session)
             lastTouch = nil
         case .turn:
             endTurn()
@@ -1431,9 +2398,16 @@ final class DeviceModelScene {
         }
         pendingSession = nil
         observation = nil
+        // Touches held for the old session are dropped with it, but a touch
+        // under way keeps going to the new one.
+        heldTouches.removeAll { $0.session !== session }
         let previous = feedingPanel
         feedingPanel = panel
         feedingSession = session
+        // Another panel or session: what the last one looked like says
+        // nothing of this one.
+        resetDarkWatch()
+        if !isSweeping { alignFacingWithLitPanel() }
         shownFrame = nil
         panelTurns = turns
         updateHold()
@@ -1441,16 +2415,22 @@ final class DeviceModelScene {
         // The lit panel and the session change together (the session follows
         // the fold): the second call leaves the other panel's blur running.
         if previous == panel {
-            // Nothing to dim.
-        } else if previous == other, feeder.blurLast(on: other) {
+            // The other panel still shows a picture and none is waiting to
+            // go dark: the stage was away while the device folded.
+            if darkening == nil, feeder.hasPicture(other) { darken(other) }
+        } else if previous == other, feeder.holdLast(on: other, blurred: presentation == .free) {
             darkenTask?.cancel()
+            darkening = other
             darkenTask = Task { @MainActor [weak self] in
                 await self?.waitForFold()
-                guard !Task.isCancelled, self?.feedingPanel != other else { return }
+                guard !Task.isCancelled else { return }
+                self?.darkening = nil
+                guard self?.feedingPanel != other else { return }
                 self?.darken(other)
             }
         } else {
             darkenTask?.cancel()
+            darkening = nil
             darken(other)
         }
         let frames = session.frames
@@ -1489,6 +2469,7 @@ final class DeviceModelScene {
     /// texture again when it lit cost the main thread up to 50 ms in the
     /// middle of each fold (iPhone Duo in a VM).
     private func darken(_ panel: SimulatorFoldPanel) {
+        materialRetries.removeValue(forKey: panel)?.cancel()
         if feeder.clear(panel) {
             setNeedsRender()
             return
@@ -1496,6 +2477,7 @@ final class DeviceModelScene {
         guard let modelEntity, let panels, var component = modelEntity.components[ModelComponent.self] else { return }
         component.materials[panel == .inner ? panels.inner : panels.outer] = UnlitMaterial(color: .black)
         modelEntity.components.set(component)
+        pendingMaterials[panel] = nil
         feeder.forget(panel)
         setNeedsRender()
     }
@@ -1510,13 +2492,61 @@ final class DeviceModelScene {
         pointer = nil
         lastTouch = nil
         observation = nil
-        for task in [foldTask, resetTask, rollTask, spinTask, readoutTask, darkenTask, holdTask] { task?.cancel() }
+        for task in [readoutTask, darkenTask, touchRelease] { task?.cancel() }
+        for animation in [foldTask, resetTask, rollTask, spinTask, holdTask] { animation?.cancel() }
+        chaseTask = nil
+        chaseTarget = nil
+        // A panel waiting to go dark while the stage was left would keep its
+        // blurred picture for good: it goes dark now.
+        if let waiting = darkening {
+            darkening = nil
+            darken(waiting)
+        }
+        for task in materialRetries.values { task.cancel() }
+        materialRetries = [:]
+        resetDarkWatch()
+        touchRelease = nil
+        heldTouches = []
         spinTask = nil
+        // A turn cut short is turned again when the stage comes back, and the
+        // device stands where its fold puts it.
+        rollTarget = nil
+        shownCenter = nil
+        bookEase.forget()
     }
+
+    /// Puts the session's latest picture on the lit panel again.
+    func refeed() {
+        guard let frames = feedingSession?.frames else { return }
+        skippedFrame = false
+        frameArrived(frames)
+    }
+
+    /// `refeed`, when pictures came while the view was not on screen.
+    func refeedIfSkipped() {
+        if skippedFrame { refeed() }
+    }
+
+    /// Whether the scene copies a session's pictures to its panels: not
+    /// while the view's window is off screen (the main window ordered out
+    /// behind the compact one shows the same device in a scene of its own,
+    /// and nobody sees this one). A view that is not in a window yet, or a
+    /// scene without a view, takes them.
+    static func copiesFrames(hostWindowVisible: Bool?) -> Bool {
+        hostWindowVisible != false
+    }
+
+    /// A picture arrived while `copiesFrames` was false.
+    @ObservationIgnored private var skippedFrame = false
 
     private func frameArrived(_ frames: FrameStore) {
         // A callback queued before the session changed.
         guard frames === feedingSession?.frames else { return }
+        guard Self.copiesFrames(hostWindowVisible: host?.window?.isVisible) else {
+            skippedFrame = true
+            return
+        }
+        watchFedPanel()
         guard let frame = frames.current, let buffer = frame.pixelBuffer,
               let panel = feedingPanel, let panels, let modelEntity
         else { return }
@@ -1525,16 +2555,203 @@ final class DeviceModelScene {
         shownFrame = (frame.width, frame.height, turns)
         let size = turns % 2 == 1 ? (frame.height, frame.width) : (frame.width, frame.height)
         guard let texture = feeder.texture(for: panel, width: size.0, height: size.1) else { return }
-        if feeder.needsMaterial(panel), var component = modelEntity.components[ModelComponent.self] {
+        if feeder.needsMaterial(panel) {
+            // The panel takes its new texture once the texture has a
+            // picture (`panelPresented`): RealityKit drew nothing of the
+            // whole device while a material's drawable texture had none yet
+            // (three frames, each time a fold lit the other panel). Asked
+            // again with each frame until then, in case one never reached it,
+            // and with the current frame when none comes (`armMaterialRetry`).
+            pendingMaterials[panel] = (texture, index)
+            armMaterialRetry(panel)
+        }
+        feeder.copy(buffer, to: panel, turns: turns)
+    }
+
+    /// Feeds `panel` the session's current frame again while it still waits
+    /// for its first picture, after 0.25, 0.5 and 1 s: a static screen sends
+    /// no frame to replace the one a drawable queue that was full dropped, or
+    /// the one the panel's new texture (a size change after a rotation or a
+    /// fold) never received, and the panel would stay on the black
+    /// placeholder.
+    private func armMaterialRetry(_ panel: SimulatorFoldPanel) {
+        guard materialRetries[panel] == nil else { return }
+        materialRetries[panel] = Task { @MainActor [weak self] in
+            for delay in Self.materialRetryDelays {
+                try? await Task.sleep(for: delay)
+                guard !Task.isCancelled, let self, self.pendingMaterials[panel] != nil, self.feedingPanel == panel,
+                      let frames = self.feedingSession?.frames
+                else { break }
+                self.frameArrived(frames)
+            }
+            if !Task.isCancelled { self?.materialRetries[panel] = nil }
+        }
+    }
+
+    // MARK: - A panel that stays black
+
+    private func resetDarkWatch() {
+        darkWatchTask?.cancel()
+        darkWatchTask = nil
+        darkWatch.reset()
+        lastDarkSample = nil
+        sampleGap = Self.darkSampleInterval
+    }
+
+    /// Looks at the panel being fed, for the watchdog, at most every
+    /// `darkSampleInterval` (`slowSampleInterval` after a look that cost more
+    /// than `darkSampleBudget`), and only while no timer waits to look again:
+    /// a lit panel costs a glance a tenth of a second, no timer.
+    private func watchFedPanel() {
+        guard darkWatchTask == nil else { return }
+        let now = ContinuousClock.now
+        if let last = lastDarkSample, now - last < sampleGap { return }
+        sampleFedPanel(at: now)
+        armDarkWatch()
+    }
+
+    /// Notes whether the fed panel's current frame is black. A preset's sweep
+    /// lights the panel it heads for as it goes (dark until the guest gets
+    /// there): nothing is held against it until the sweep is over.
+    private func sampleFedPanel(at now: ContinuousClock.Instant) {
+        lastDarkSample = now
+        guard feedingPanel != nil, let frames = feedingSession?.frames else { return }
+        if isSweeping {
+            darkWatch.reset()
+            return
+        }
+        if let buffer = frames.current?.pixelBuffer, let dark = FrameDarkness.isDark(buffer) {
+            darkWatch.observe(dark: dark, at: now)
+            sampleGap = Self.darkSampleGap(afterCost: ContinuousClock.now - now)
+        }
+    }
+
+    /// Wakes when the next check is due (the panel stayed black for
+    /// `DarkPanelWatchdog.darkFor`), or soon after a sweep started to look
+    /// again once it ended.
+    private func armDarkWatch() {
+        guard darkWatchTask == nil, feedingPanel != nil else { return }
+        let wake: ContinuousClock.Instant
+        if isSweeping {
+            wake = .now + Self.darkPoll
+        } else if let due = darkWatch.due {
+            wake = due
+        } else {
+            return
+        }
+        darkWatchTask = Task { @MainActor [weak self] in
+            try? await Task.sleep(until: wake, clock: .continuous)
+            guard !Task.isCancelled, let self else { return }
+            self.darkWatchTask = nil
+            let now = ContinuousClock.now
+            self.sampleFedPanel(at: now)
+            if self.darkWatch.take(at: now) {
+                // While the slider drags the hinge the guest switches panels
+                // as it goes, so the other panel is the likely one; at rest a
+                // black panel may be a black app, and only a read tells.
+                let other: SimulatorFoldPanel? = self.feedingPanel.map { $0 == .outer ? .inner : .outer }
+                self.onPanelDark?(self.dragFacing ? other : nil)
+            }
+            self.armDarkWatch()
+        }
+    }
+
+    /// The scene is drawn by another renderer now (a view made anew): each
+    /// panel takes a texture of its own again, fed the current frame. The
+    /// drawables of a panel's queue went on to the renderer that drew it
+    /// before and never came back: after the stage was left and shown again
+    /// (a simulator's reboot), every frame found no drawable and the panel
+    /// kept its last picture for good, the 2D stage meanwhile live
+    /// (2026-10-15).
+    func rendererChanged() {
+        // The first renderer: no other one took the drawables.
+        guard hadRenderer else {
+            hadRenderer = true
+            return
+        }
+        rebuildTextures([.outer, .inner])
+    }
+
+    /// The scene's renderer drew a frame (`panelStalled`).
+    func noteDrawn() {
+        drawsSinceStall += 1
+    }
+
+    /// A frame for `panel` found no drawable: the scene draws, so RealityKit
+    /// takes the drawables it holds. A queue that stays starved has lost its
+    /// drawables (`rendererChanged`): after `stallsBeforeNewTexture` stalls
+    /// with no picture through, the panel takes a new texture, at most once
+    /// every `newTextureInterval`.
+    private func panelStalled(_ panel: SimulatorFoldPanel) {
+        setNeedsRender()
+        // A renderer that rests (a window that is not drawing) takes no
+        // drawable either: only a stall after a frame was drawn counts.
+        guard drawsSinceStall > 0 else { return }
+        drawsSinceStall = 0
+        let count = (stalls[panel] ?? 0) + 1
+        stalls[panel] = count
+        let now = ContinuousClock.now
+        guard Self.takesNewTexture(stalls: count, lastNewTexture: lastNewTexture[panel], now: now) else { return }
+        lastNewTexture[panel] = now
+        rebuildTextures([panel])
+    }
+
+    /// The stalls after which a panel's texture is made anew, and how often
+    /// at most.
+    static let stallsBeforeNewTexture = 3
+    static let newTextureInterval: Duration = .seconds(3)
+
+    /// Whether a panel whose frames found no drawable `stalls` times in a row
+    /// takes a new texture now, its last new one made at `lastNewTexture`.
+    static func takesNewTexture(
+        stalls: Int,
+        lastNewTexture: ContinuousClock.Instant?,
+        now: ContinuousClock.Instant
+    ) -> Bool {
+        guard stalls >= stallsBeforeNewTexture else { return false }
+        return lastNewTexture.map { now - $0 >= newTextureInterval } ?? true
+    }
+
+    /// Drops `panels`' textures and feeds the panel lit now again: its
+    /// material keeps showing the old texture until the new one has its
+    /// first picture (`panelPresented`). Another panel goes dark at once,
+    /// its material black: the old texture's queue would not take the black
+    /// either.
+    private func rebuildTextures(_ panels: [SimulatorFoldPanel]) {
+        for panel in panels where feeder.hasTexture(panel) {
+            stalls[panel] = nil
+            pendingMaterials[panel] = nil
+            materialRetries.removeValue(forKey: panel)?.cancel()
+            feeder.forget(panel)
+            // A panel held while the device folds goes dark when the fold
+            // ends (`darkenTask`).
+            if panel != feedingPanel, panel != darkening { darken(panel) }
+        }
+        if let panel = feedingPanel, panels.contains(panel), let frames = feedingSession?.frames {
+            frameArrived(frames)
+        }
+    }
+
+    /// A picture reached `panel`'s texture: the panel takes a texture
+    /// waiting for its first one, and the scene draws again.
+    private func panelPresented(_ panel: SimulatorFoldPanel, queue: ObjectIdentifier) {
+        if feeder.isCurrent(queue: queue, for: panel) { stalls[panel] = nil }
+        // A picture drawn for the texture before (the panel's frames turned)
+        // does not count for the new one.
+        if let pending = pendingMaterials[panel], feeder.isCurrent(pending.texture, queue: queue, for: panel),
+           let modelEntity, var component = modelEntity.components[ModelComponent.self],
+           component.materials.indices.contains(pending.index) {
             // The simulator's own pixels: tone mapping, which the lit
             // device takes, greyed and dimmed them (Device Hub's are not).
             var material = UnlitMaterial(applyPostProcessToneMap: false)
-            material.color = .init(texture: .init(texture))
-            component.materials[index] = material
+            material.color = .init(texture: .init(pending.texture))
+            component.materials[pending.index] = material
             modelEntity.components.set(component)
+            pendingMaterials[panel] = nil
+            materialRetries.removeValue(forKey: panel)?.cancel()
             feeder.markMaterialSet(panel)
         }
-        feeder.copy(buffer, to: panel, turns: turns)
+        setNeedsRender()
     }
 }
 
@@ -1551,10 +2768,20 @@ final class DeviceModelScene {
 final class PanelTextureFeeder {
     private let renderer = PanelRenderer()
     /// Runs on the main actor after a frame reached a panel's texture.
-    var onPresented: (@MainActor () -> Void)? {
+    var onPresented: (@MainActor (SimulatorFoldPanel, ObjectIdentifier) -> Void)? {
         didSet {
-            renderer.setPresented { [weak self] in
-                DispatchQueue.main.async { MainActor.assumeIsolated { self?.onPresented?() } }
+            renderer.setPresented { [weak self] panel, queue in
+                DispatchQueue.main.async { MainActor.assumeIsolated { self?.onPresented?(panel, queue) } }
+            }
+        }
+    }
+    /// Runs on the main actor when a panel's drawable queue had no drawable
+    /// for a frame (RealityKit took none since): the scene should draw, so it
+    /// takes the queue's drawables, and the frame is tried again.
+    var onStalled: (@MainActor (SimulatorFoldPanel) -> Void)? {
+        didSet {
+            renderer.setStalled { [weak self] panel, _ in
+                DispatchQueue.main.async { MainActor.assumeIsolated { self?.onStalled?(panel) } }
             }
         }
     }
@@ -1587,12 +2814,28 @@ final class PanelTextureFeeder {
     }
 
     func needsMaterial(_ panel: SimulatorFoldPanel) -> Bool { !materialSet.contains(panel) }
+    /// Whether `panel` still shows a picture (it was fed one and not cleared).
+    func hasPicture(_ panel: SimulatorFoldPanel) -> Bool { last[panel] != nil }
+    /// Whether `texture` is `panel`'s texture and `queue` its drawable queue.
+    func isCurrent(_ texture: TextureResource, queue: ObjectIdentifier, for panel: SimulatorFoldPanel) -> Bool {
+        guard let current = textures[panel] else { return false }
+        return current.resource === texture && ObjectIdentifier(current.queue) == queue
+    }
     func markMaterialSet(_ panel: SimulatorFoldPanel) { materialSet.insert(panel) }
+    /// Whether `panel` has a texture.
+    func hasTexture(_ panel: SimulatorFoldPanel) -> Bool { textures[panel] != nil }
+    /// Whether `queue` is `panel`'s drawable queue now.
+    func isCurrent(queue: ObjectIdentifier, for panel: SimulatorFoldPanel) -> Bool {
+        textures[panel].map { ObjectIdentifier($0.queue) == queue } ?? false
+    }
 
-    /// Draws `panel`'s last picture again, blurred; false when it has none.
-    func blurLast(on panel: SimulatorFoldPanel) -> Bool {
+    /// Draws `panel`'s last picture again, blurred when `blurred`; false
+    /// when it has none. Device Hub keeps the picture sharp on the panel
+    /// folding away (iPhone Duo seen from the front); the turnable view
+    /// blurs it, as the other app's does.
+    func holdLast(on panel: SimulatorFoldPanel, blurred: Bool) -> Bool {
         guard let picture = last[panel] else { return false }
-        return copy(picture.buffer, to: panel, turns: picture.turns, blur: Self.blurStep)
+        return copy(picture.buffer, to: panel, turns: picture.turns, blur: blurred ? Self.blurStep : 0)
     }
 
     /// Draws `panel` black, keeping its texture for the next time it lights;
@@ -1640,6 +2883,8 @@ final class PanelRenderer: @unchecked Sendable {
         let queue: TextureResource.DrawableQueue
         let turns: Int
         let blur: Float
+        /// Set on the second try (`retryDelay`): a frame is tried twice.
+        var retried = false
     }
 
     private let device = MTLCreateSystemDefaultDevice()
@@ -1653,20 +2898,32 @@ final class PanelRenderer: @unchecked Sendable {
     /// read, until a drawing thread's stack overflows (measured: 2,232
     /// frames after 1,111 reads).
     private let presented = Mutex<PresentedHandler?>(nil)
+    /// Runs on the drawing queue when a frame found no drawable.
+    private let stalled = Mutex<PresentedHandler?>(nil)
 
     final class PresentedHandler: Sendable {
-        let call: @Sendable () -> Void
-        init(_ call: @escaping @Sendable () -> Void) { self.call = call }
+        let call: @Sendable (SimulatorFoldPanel, ObjectIdentifier) -> Void
+        init(_ call: @escaping @Sendable (SimulatorFoldPanel, ObjectIdentifier) -> Void) { self.call = call }
     }
-    private let state = Mutex<(waiting: [SimulatorFoldPanel: Job], drawing: Set<SimulatorFoldPanel>)>(([:], []))
+    private let state = Mutex(PanelJobBoard<Job>())
 
-    func setPresented(_ handler: @escaping @Sendable () -> Void) {
+    /// How long a frame that found no drawable waits before its second try:
+    /// the scene is asked to draw meanwhile, so RealityKit takes the drawables
+    /// it holds.
+    static let retryDelay: DispatchTimeInterval = .milliseconds(30)
+
+    func setPresented(_ handler: @escaping @Sendable (SimulatorFoldPanel, ObjectIdentifier) -> Void) {
         presented.withLock { $0 = PresentedHandler(handler) }
     }
 
+    func setStalled(_ handler: @escaping @Sendable (SimulatorFoldPanel, ObjectIdentifier) -> Void) {
+        stalled.withLock { $0 = PresentedHandler(handler) }
+    }
+
     /// Calls the handler, as a drawn frame does.
-    func notifyPresented() {
-        presented.withLock { $0 }?.call()
+    /// Reports a picture that reached `panel`'s texture through `queue`.
+    func notifyPresented(_ panel: SimulatorFoldPanel, queue: ObjectIdentifier) {
+        presented.withLock { $0 }?.call(panel, queue)
     }
 
     init() {
@@ -1739,41 +2996,48 @@ final class PanelRenderer: @unchecked Sendable {
 
     /// Queues `job` for `panel`, replacing one still waiting.
     func submit(_ job: Job, for panel: SimulatorFoldPanel) {
-        let start = state.withLock { state -> Bool in
-            state.waiting[panel] = job
-            return state.drawing.insert(panel).inserted
-        }
+        let start = state.withLock { $0.submit(job, for: panel).start }
         if start { queue.async { [self] in drain(panel) } }
     }
 
-    /// Drops `panel`'s waiting job (the panel went dark).
+    /// Drops `panel`'s waiting job (the panel went dark), and with it any
+    /// second try of an earlier frame.
     func drop(_ panel: SimulatorFoldPanel) {
-        state.withLock { _ = $0.waiting.removeValue(forKey: panel) }
+        state.withLock { $0.drop(panel) }
     }
 
     private func drain(_ panel: SimulatorFoldPanel) {
-        while let job = state.withLock({ state -> Job? in
-            guard let job = state.waiting.removeValue(forKey: panel) else {
-                state.drawing.remove(panel)
-                return nil
-            }
-            return job
-        }) {
-            draw(job)
+        while let (job, sequence) = state.withLock({ $0.next(for: panel) }) {
+            if !draw(job, for: panel), !job.retried { retryLater(job, sequence: sequence, for: panel) }
         }
     }
 
-    /// One frame into the job's next drawable. A drawable not handed out in
-    /// time (RealityKit took none since) drops the frame.
-    private func draw(_ job: Job) {
+    /// A frame that found no drawable is tried once more shortly after, unless
+    /// a newer one came meanwhile (that one is the picture the panel should
+    /// show): the newest frame was lost with the queue full, and a static
+    /// screen sends no other.
+    private func retryLater(_ job: Job, sequence: UInt64, for panel: SimulatorFoldPanel) {
+        stalled.withLock { $0 }?.call(panel, ObjectIdentifier(job.queue))
+        queue.asyncAfter(deadline: .now() + Self.retryDelay) { [self] in
+            var again = job
+            again.retried = true
+            let start = state.withLock { $0.requeue(again, sequence: sequence, for: panel) }
+            if start { drain(panel) }
+        }
+    }
+
+    /// One frame into the job's next drawable; false when it found none (the
+    /// queue was full, RealityKit having taken no drawable since), which a
+    /// second try can mend.
+    @discardableResult
+    private func draw(_ job: Job, for panel: SimulatorFoldPanel) -> Bool {
         guard let buffer = job.buffer else {
-            clear(job.queue)
-            return
+            return clear(job.queue, for: panel)
         }
         guard let commandQueue, let pipeline, let cache,
-              CVPixelBufferGetPixelFormatType(buffer) == kCVPixelFormatType_32BGRA,
-              let drawable = try? job.queue.nextDrawable()
-        else { return }
+              CVPixelBufferGetPixelFormatType(buffer) == kCVPixelFormatType_32BGRA
+        else { return true }
+        guard let drawable = try? job.queue.nextDrawable() else { return false }
         // Lets go of the textures of buffers nobody holds any more, as the
         // 2D renderer does (`MirrorRenderer.wrap`).
         CVMetalTextureCacheFlush(cache, 0)
@@ -1782,12 +3046,12 @@ final class PanelRenderer: @unchecked Sendable {
         CVMetalTextureCacheCreateTextureFromImage(nil, cache, buffer, nil, .bgra8Unorm_srgb, width, height, 0, &wrapped)
         guard let wrapped, let source = CVMetalTextureGetTexture(wrapped),
               let commands = commandQueue.makeCommandBuffer()
-        else { return }
+        else { return false }
         let pass = MTLRenderPassDescriptor()
         pass.colorAttachments[0].texture = drawable.texture
         pass.colorAttachments[0].loadAction = .dontCare
         pass.colorAttachments[0].storeAction = .store
-        guard let encoder = commands.makeRenderCommandEncoder(descriptor: pass) else { return }
+        guard let encoder = commands.makeRenderCommandEncoder(descriptor: pass) else { return false }
         var quarterTurns = Int32(job.turns)
         var blurStep = job.blur
         encoder.setRenderPipelineState(pipeline)
@@ -1803,24 +3067,73 @@ final class PanelRenderer: @unchecked Sendable {
         commands.commit()
         commands.waitUntilScheduled()
         drawable.present()
-        notifyPresented()
+        notifyPresented(panel, queue: ObjectIdentifier(job.queue))
+        return true
     }
 
     /// The queue's next drawable, black.
-    private func clear(_ queue: TextureResource.DrawableQueue) {
-        guard let commandQueue, let drawable = try? queue.nextDrawable(),
-              let commands = commandQueue.makeCommandBuffer()
-        else { return }
+    private func clear(_ queue: TextureResource.DrawableQueue, for panel: SimulatorFoldPanel) -> Bool {
+        guard let commandQueue else { return true }
+        guard let drawable = try? queue.nextDrawable(), let commands = commandQueue.makeCommandBuffer() else { return false }
         let pass = MTLRenderPassDescriptor()
         pass.colorAttachments[0].texture = drawable.texture
         pass.colorAttachments[0].loadAction = .clear
         pass.colorAttachments[0].clearColor = MTLClearColor(red: 0, green: 0, blue: 0, alpha: 1)
         pass.colorAttachments[0].storeAction = .store
-        guard let encoder = commands.makeRenderCommandEncoder(descriptor: pass) else { return }
+        guard let encoder = commands.makeRenderCommandEncoder(descriptor: pass) else { return false }
         encoder.endEncoding()
         commands.commit()
         commands.waitUntilScheduled()
         drawable.present()
-        notifyPresented()
+        notifyPresented(panel, queue: ObjectIdentifier(queue))
+        return true
+    }
+}
+
+/// The frames `PanelRenderer` has to draw, by panel: the newest one waiting
+/// for each, which panels are being drawn, and which frame is the newest each
+/// panel was handed, so a frame that found no drawable is tried again only
+/// while no newer one came (a stale picture must never replace a newer one).
+struct PanelJobBoard<Job> {
+    private var waiting: [SimulatorFoldPanel: (job: Job, sequence: UInt64)] = [:]
+    private var drawing: Set<SimulatorFoldPanel> = []
+    private var latest: [SimulatorFoldPanel: UInt64] = [:]
+    private var counter: UInt64 = 0
+
+    /// Queues `job` for `panel`, replacing one still waiting; `start` when
+    /// nothing is drawing the panel yet, so the caller starts draining it.
+    mutating func submit(_ job: Job, for panel: SimulatorFoldPanel) -> (sequence: UInt64, start: Bool) {
+        counter += 1
+        latest[panel] = counter
+        waiting[panel] = (job, counter)
+        return (counter, drawing.insert(panel).inserted)
+    }
+
+    /// The job to draw next for `panel` and its sequence; nil when none is
+    /// waiting, which ends the draining.
+    mutating func next(for panel: SimulatorFoldPanel) -> (Job, UInt64)? {
+        guard let next = waiting.removeValue(forKey: panel) else {
+            drawing.remove(panel)
+            return nil
+        }
+        return (next.job, next.sequence)
+    }
+
+    /// Queues `job` again, as the frame with `sequence` once handed to
+    /// `panel`; `start` when the caller drains the panel. Nothing happens
+    /// (nil) when a newer frame was handed to the panel since, or the panel
+    /// was dropped.
+    mutating func requeue(_ job: Job, sequence: UInt64, for panel: SimulatorFoldPanel) -> Bool {
+        guard latest[panel] == sequence, waiting[panel] == nil else { return false }
+        waiting[panel] = (job, sequence)
+        return drawing.insert(panel).inserted
+    }
+
+    /// Forgets `panel`'s waiting job (it went dark) and makes every frame
+    /// handed to it before stale.
+    mutating func drop(_ panel: SimulatorFoldPanel) {
+        waiting.removeValue(forKey: panel)
+        counter += 1
+        latest[panel] = counter
     }
 }

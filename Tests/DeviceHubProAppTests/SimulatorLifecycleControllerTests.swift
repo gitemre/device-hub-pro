@@ -711,6 +711,70 @@ final class SimulatorLifecycleControllerTests: XCTestCase {
         XCTAssertNil(h.controller.readiness[u])
     }
 
+    /// A simulator whose live session saw it go away, and that a listing then
+    /// shows booted in another boot without ever showing it off (Device Hub
+    /// shut it down when it quit and it booted again 4 s later,
+    /// 2026-10-14), is followed to ready again; a listing that still shows
+    /// the boot that ended changes nothing.
+    func testABootAfterTheSessionSawTheSimulatorGoIsFollowedAgain() async throws {
+        let h = try harness(
+            arms: Self.arms(bootstatus: SimulatorFixtures.cat("simctl-bootstatus.already-booted.stdout.txt")),
+            entries: [try bootedEntry()]
+        )
+        h.controller.noteSnapshot([try bootedEntry()])
+        await waitUntil(timeout: 10, "ready") { h.controller.isReady(self.u) }
+
+        h.controller.noteWentAway(u)
+        await waitUntil("the list is read again") { h.reloads.value == 1 }
+        h.controller.noteSnapshot([try bootedEntry()])
+        XCTAssertEqual(h.controller.readiness[u], .ready, "the same boot: the listing is behind")
+
+        let rebooted = try rebootedEntry()
+        h.controller.noteSnapshot([rebooted])
+        XCTAssertEqual(h.controller.runState(for: rebooted), .booting(.launching))
+        await waitUntil(timeout: 10, "ready again") { h.controller.isReady(self.u) }
+        XCTAssertEqual(h.ready.calls, ["followed", "followed"])
+        XCTAssertEqual(h.stub.calls.filter { $0 == "bootstatus \(u)" }.count, 2)
+
+        h.controller.noteSnapshot([rebooted])
+        XCTAssertEqual(h.controller.readiness[u], .ready, "followed once")
+    }
+
+    /// A session that saw the simulator go while an operation of this
+    /// controller runs on it (its own Shut Down or Restart) leaves the
+    /// operation to it.
+    func testAnOperationKeepsItsSimulatorWhenItsSessionSeesItGo() async throws {
+        // The shutdown takes a moment, so the session's note lands inside it.
+        let h = try harness(
+            arms: Self.arms(extra: """
+              *" shutdown \(u)")
+                sleep 0.5; exit 0 ;;
+            """),
+            entries: [try bootedEntry()]
+        )
+        await h.controller.boot(u)
+        XCTAssertTrue(h.controller.isReady(u))
+        let restart = Task { await h.controller.restart(self.u) }
+        await waitUntil("the restart runs") { h.controller.operations[self.u] != nil }
+        h.controller.noteWentAway(u)
+        await restart.value
+        h.controller.noteSnapshot([try rebootedEntry()])
+        XCTAssertTrue(h.controller.isReady(u), "the restart's boot is ready; nothing follows it again")
+    }
+
+    /// The booted fixture a minute later into another boot.
+    private func rebootedEntry() throws -> SimulatorEntry {
+        let d = try bootedEntry().device
+        let device = SimulatorDevice(
+            udid: d.udid, name: d.name, state: d.state, isAvailable: d.isAvailable,
+            availabilityError: d.availabilityError, deviceTypeIdentifier: d.deviceTypeIdentifier,
+            runtimeIdentifier: d.runtimeIdentifier, dataPath: d.dataPath, logPath: d.logPath,
+            dataPathSize: d.dataPathSize, logPathSize: d.logPathSize,
+            lastUsedAt: try XCTUnwrap(d.lastUsedAt).addingTimeInterval(60)
+        )
+        return SimulatorEntry(device: device, runtimes: [], deviceTypes: [], defaultDeviceUDIDs: [])
+    }
+
     /// A simulator Device Hub Pro booted and someone shut down elsewhere is no
     /// longer Device Hub Pro's to shut down at quit.
     func testAShutdownElsewhereEndsTheOwnership() async throws {

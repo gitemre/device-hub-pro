@@ -536,8 +536,14 @@ final class ProblemReportCollectorTests: XCTestCase {
         try make("adb-2026-10-01-010101.ips", daysAgo: 20)
         try make("Safari-2026-10-09-123456.ips", daysAgo: 1)
         try make("DeviceHubPro-2026-10-10-090909.ips", daysAgo: 0.5)
+        // A simulator's Safari and wallpaper (the Mac's Safari above is not one).
+        try make("MobileSafari-2026-10-14-193840.ips", daysAgo: 0.25)
+        try make("PosterBoard-2026-10-14-210952.ips", daysAgo: 0.75)
         let report = await world.collect(try world.inputs()).report
-        XCTAssertEqual(report.crashReports.map(\.process), ["DeviceHubPro", "qemu-system-aarch64"])
+        XCTAssertEqual(
+            report.crashReports.map(\.process),
+            ["MobileSafari", "DeviceHubPro", "PosterBoard", "qemu-system-aarch64"]
+        )
         XCTAssertFalse(try report.jsonText().contains("must stay unread"))
         XCTAssertEqual(CollectionRun.crashProcessName("qemu-system-aarch64-2026-10-09-123456.ips"), "qemu-system-aarch64")
     }

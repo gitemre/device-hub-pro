@@ -42,10 +42,10 @@ public enum SimulatorWatcherEvent: Sendable {
 /// `list -j devices` read costs about 80–90 ms of CPU, so polling the list
 /// itself every 5 s would cost the idle watcher ~1.7 % of a core.
 ///
-/// Snapshots are emitted only when a device's identity or state changed
-/// (UDID, name, state, availability, device type, runtime); the sizes the
-/// listing also carries change constantly on a booted device and do not
-/// count. A failed read emits `.health(.listFailing)` and nothing else — an
+/// Snapshots are emitted only when a device's identity, state or boot
+/// changed (UDID, name, state, availability, device type, runtime,
+/// `lastUsedAt`); the sizes the listing also carries change constantly on a
+/// booted device and do not count. A failed read emits `.health(.listFailing)` and nothing else — an
 /// empty list would read as "every simulator deleted".
 public final class SimulatorWatcher: @unchecked Sendable {
     private let simctl: SimctlClient
@@ -293,6 +293,10 @@ private struct DeviceKey: Equatable {
     let isAvailable: Bool
     let deviceType: String?
     let runtime: String
+    /// The boot (`lastUsedAt`, set when the device boots and left while it
+    /// runs): a device shut down and booted again between two reads is
+    /// Booted in both, and only this tells the new boot from the old one.
+    let boot: Date?
 
     init(_ device: SimulatorDevice) {
         udid = device.udid
@@ -301,6 +305,7 @@ private struct DeviceKey: Equatable {
         isAvailable = device.isAvailable
         deviceType = device.deviceTypeIdentifier
         runtime = device.runtimeIdentifier
+        boot = device.lastUsedAt
     }
 }
 

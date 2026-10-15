@@ -92,7 +92,88 @@ extension AppModel {
             screenStalled: workspace.mirror.emulatorScreenStalled,
             streamWarning: workspace.mirror.mirrorStreamWarning,
             unresponsivePolls: workspace.controlsPanel.emulatorUnresponsivePolls,
-            recoveryCard: workspace.controlsPanel.recoveryReason?.title
+            recoveryCard: workspace.controlsPanel.recoveryReason?.title,
+            foldable: problemReportFoldable(of: workspace)
+        )
+    }
+
+    /// The foldable simulator the window shows, as the app holds it (no
+    /// simulator is asked); nil for any other selection.
+    private func problemReportFoldable(of workspace: DeviceWorkspace) -> ProblemReport.FoldableInfo? {
+        let fold = workspace.simulatorFold
+        guard fold.showsFoldControls, let device = workspace.context.device, device.platform == .apple,
+              let entry = simulators.entry(udid: device.id)
+        else { return nil }
+        let canvas = workspace.simulatorCanvas
+        let view: ProblemReport.FoldView = fold.deviceModel == nil || !workspace.window.showDeviceFrame
+            ? .flat2D
+            : (preferences.showDeviceModel ? .turnable3D : .front3D)
+        return Self.problemReportFoldable(
+            model: entry.modelName ?? "foldable simulator",
+            record: simulators.folds.record(of: entry.udid),
+            posture: fold.postureChoice,
+            shownPanel: canvas.shownPanel(of: entry.udid),
+            lastRead: canvas.lastLitReadings[entry.udid],
+            screensStuck: canvas.stuckScreens == entry.udid,
+            view: view,
+            now: Date()
+        )
+    }
+
+    /// `problemReportFoldable` from what the app holds.
+    nonisolated static func problemReportFoldable(
+        model: String,
+        record: SimulatorFoldRecord,
+        posture: SimulatorFoldPostureChoice?,
+        shownPanel: SimulatorFoldPanel?,
+        lastRead: SimulatorCanvasController.LitPanelReading?,
+        screensStuck: Bool,
+        view: ProblemReport.FoldView,
+        now: Date
+    ) -> ProblemReport.FoldableInfo {
+        func panel(_ panel: SimulatorFoldPanel) -> ProblemReport.FoldPanel { panel == .inner ? .inner : .outer }
+        func reading(_ reading: SimulatorReadiness.ScreenReading?) -> ProblemReport.PanelReading? {
+            guard let reading else { return nil }
+            let content: ProblemReport.PanelContent = switch reading.content {
+            case .dark: .dark
+            case .homeScreen: .screen
+            case .bootScreen: .bootLogo
+            }
+            return ProblemReport.PanelReading(content: content, grey: Int((reading.luminance * 255).rounded()))
+        }
+        let shownPosture: ProblemReport.FoldPosture = switch posture {
+        case .preset(.closed)?: .closed
+        case .preset(.halfOpened)?: .partiallyOpen
+        case .preset(.opened)?: .open
+        case .held(.laptop)?: .laptop
+        case .held(.tent)?: .tent
+        case nil: .other
+        }
+        let held: ProblemReport.FoldHold = switch record.pose ?? .portrait {
+        case .portrait: .portrait
+        case .portraitUpsideDown: .upsideDown
+        case .landscapeLeft: .landscapeLeft
+        case .landscapeRight: .landscapeRight
+        case .faceUp: .faceUp
+        case .faceDown: .faceDown
+        }
+        return ProblemReport.FoldableInfo(
+            model: model,
+            hingeAngle: record.angle,
+            posture: shownPosture,
+            held: held,
+            litPanel: panel(record.panel),
+            shownPanel: shownPanel.map(panel),
+            lastRead: lastRead.map {
+                ProblemReport.PanelRead(
+                    secondsAgo: max(0, Int(now.timeIntervalSince($0.at).rounded())),
+                    outer: reading($0.outer),
+                    inner: reading($0.inner),
+                    lit: $0.lit.map(panel)
+                )
+            },
+            screensStuck: screensStuck,
+            view: view
         )
     }
 

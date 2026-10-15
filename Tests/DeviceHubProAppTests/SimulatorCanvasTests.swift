@@ -89,8 +89,17 @@ final class SimulatorCanvasTests: XCTestCase {
 
     /// Its arms match with or without `--set <folder>` in front (a private
     /// set, or the default one).
-    private func makeSimctl(dtuhiddFlag: String = "before-input") throws -> StubTool {
-        try makeStubTool("simctl", arms: """
+    private func makeSimctl(dtuhiddFlag: String = "before-input", panelScreenshot: String? = nil) throws -> StubTool {
+        // A screenshot of one display (a foldable's panel) answers with
+        // `panelScreenshot` when given, ahead of the screenshot arm.
+        let panelArm = panelScreenshot.map {
+            """
+              *"io \(Self.udid) screenshot --type=png --display="*)
+                \(SimulatorFixtures.screenshot($0)) ;;
+            """
+        } ?? ""
+        return try makeStubTool("simctl", arms: """
+        \(panelArm)
           *"spawn \(Self.udid) notifyutil -g com.apple.coredevice.dtuhidd.active")
             \(SimulatorFixtures.cat("simctl-spawn-notifyutil-g-dtuhidd-active.\(dtuhiddFlag).stdout.txt")) ;;
           *"list -j devices")
@@ -125,9 +134,10 @@ final class SimulatorCanvasTests: XCTestCase {
         devicectl: StubTool? = nil,
         privateSet: Bool = true,
         adb: AdbClient? = nil,
-        realSessions: Bool = false
+        realSessions: Bool = false,
+        panelScreenshot: String? = nil
     ) async throws -> (AppModel, Made, StubTool) {
-        let simctl = try makeSimctl(dtuhiddFlag: dtuhiddFlag)
+        let simctl = try makeSimctl(dtuhiddFlag: dtuhiddFlag, panelScreenshot: panelScreenshot)
         var apple = AppleTooling.stubbed(
             simctl: simctl,
             devicectl: devicectl,
@@ -676,6 +686,64 @@ final class SimulatorCanvasTests: XCTestCase {
         follower.cancel()
         await follower.value
         XCTAssertFalse(canvas.bootFrameReady.contains(Self.udid), "cleared when the boot ends")
+    }
+
+    /// A foldable whose panels both stay dark after a fold, through the
+    /// read's retries and a second look, is offered Lock and Wake (a
+    /// simulator whose foreground app hung kept them dark, 2026-10-14);
+    /// dismissing takes the offer back.
+    func testPanelsLeftDarkAfterAFoldOfferLockAndWake() async throws {
+        let (model, made, _) = try await readyModel(panelScreenshot: "simctl-io-screenshot.tvos-dark.png")
+        let canvas = model.simulatorCanvas
+        canvas.stuckScreensConfirmDelay = .milliseconds(10)
+        try makeFoldable(model)
+        canvas.attach(Self.udid)
+        try XCTUnwrap(made.fakes.first).putFrame()
+        canvas.checkLitPanel(Self.udid)
+        await waitUntil(timeout: 10, "offered") { canvas.stuckScreens == Self.udid }
+        canvas.dismissStuckScreens()
+        XCTAssertNil(canvas.stuckScreens)
+    }
+
+    /// Two panels that both show something as brightly do not tell the lit
+    /// one, but they are not stuck: nothing is offered.
+    func testPanelsThatBothShowSomethingOfferNothing() async throws {
+        let (model, made, _) = try await readyModel()
+        let canvas = model.simulatorCanvas
+        canvas.stuckScreensConfirmDelay = .milliseconds(10)
+        try makeFoldable(model)
+        canvas.attach(Self.udid)
+        try XCTUnwrap(made.fakes.first).putFrame()
+        canvas.checkLitPanel(Self.udid)
+        // Past the retries (0.5, 1 and 2 s) and the second look.
+        try? await Task.sleep(for: .seconds(5))
+        XCTAssertNil(canvas.stuckScreens)
+    }
+
+    /// Makes the fixture's iPhone 17 Pro a foldable with iPhone Duo's two
+    /// panels (screens 1 and 3).
+    private func makeFoldable(_ model: AppModel) throws {
+        let entry = try entry(model)
+        let capabilities: [String: Any] = ["displays": [
+            ["displayType": "integrated", "hasDigitizer": true, "height": 2034, "width": 1398, "scale": 3, "screenID": 1],
+            ["displayType": "integrated", "hasDigitizer": true, "height": 2853, "width": 2007, "scale": 3, "nativeRotation": 270, "screenID": 3],
+        ] as [[String: Any]]]
+        let panels = try XCTUnwrap(SimulatorFoldPanels(panels: SimulatorDisplayProfile.panels(capabilities: capabilities)))
+        model.simulators.noteFoldable(panels: panels, deviceType: try XCTUnwrap(entry.deviceTypeIdentifier))
+    }
+
+    /// A session that ends because its simulator went away hands that on to
+    /// the lifecycle (`onSimulatorWentAway`), once.
+    func testASessionThatSawItsSimulatorGoSaysSo() async throws {
+        let (model, made, _) = try await readyModel()
+        var wentAway: [String] = []
+        model.simulatorCanvas.onSimulatorWentAway = { wentAway.append($0) }
+        model.simulatorCanvas.attach(Self.udid)
+        let live = try XCTUnwrap(made.fakes.first)
+        live.putFrame()
+        live.end(SimulatorMirrorSession.shutDownMessage)
+        await waitUntil(timeout: 3, "torn down") { model.workspace.mirror.session == nil }
+        XCTAssertEqual(wentAway, [Self.udid])
     }
 
     /// A first boot keeps the bare spinner while its boot has not finished,

@@ -153,23 +153,45 @@ When the tools are installed, the app offers to create your first emulator.
 - **Foldable simulators (iPhone Duo, Xcode 27.1).** The stage's pill folds it, as Xcode's
   Device Hub does: Rotate shares a capsule with Closed, Partially Open and Open (Device Hub's own
   glyphs, read from the user's Xcode), and Laptop and Tent (half open on its side) sit beside
-  them; the current posture shows in the accent colour. Device ▸ Fold / Unfold does the same from
-  the menu. As in Device Hub, a preset moves the hinge over about half a second (apps see the
-  fold, not a jump) and Partially Open opens to Device Hub's angle; Device ▸ Orientation holds it
+  them; the current posture shows in the accent colour, and the glyphs turn with the device as
+  Device Hub's do. Device Hub's hinge slider (84 pt for 180°) is always at the capsule's right
+  end, where Device Hub shows it only while Option is held; holding Option makes Rotate, which
+  turns right, turn left. A 3D button after Rotate shows and hides the turnable 3D model, as
+  View ▸ Show 3D Model does (the button is lit while it is on and is offered while the device
+  frame is shown; the menu item stays). Where the stage is too narrow for all of it (the
+  narrowest window with the inspector open, the compact window) the capsule gives up Laptop and
+  Tent, then the slider, then the 3D button, then Save Replay (still in Record's right-click
+  menu), and at the least width the pill is scaled to fit. Device ▸ Fold / Unfold does the same
+  from the menu. As in Device Hub, a preset moves the hinge over about half a second (apps see the
+  fold, not a jump) and Partially Open opens to Device Hub's angle, the device kept turned the way
+  it is held; Device ▸ Orientation holds it
   portrait, upside down, landscape left or right, face up or face down, and Rotate turns it. The
   stage follows the lit panel: the outer one closed, the inner one open. The app remembers the
   fold while the simulator stays booted, so quitting and opening it again shows the device as it
   was left; a simulator something else opened (Device Hub, a test) is read off its two panels'
-  screenshots, and the stage shows the lit one. Where the selected Xcode ships Apple's 3D model of
+  screenshots, and the stage shows the lit one (a locked one dims its lock screen on the other
+  panel: the brighter one is lit). When a fold leaves both panels dark for several seconds (a
+  hung app kept the simulator's display change waiting), a banner over the pill offers to lock
+  and wake the simulator, which lets it go. Where the selected Xcode ships Apple's 3D model of
   the device, the stage draws it as Device Hub does: seen from the front through a long lens, its
   body in neutral greys under one even light (its dark finish by default; View ▸ Device Color picks
   the light one), the black round each panel pure black, centred and sized as Device Hub's Zoom to
   Fit and Physical Size draw it (the stage's zoom and scale modes size it) and one size in every
-  posture; the hinge folds on screen where the simulator's hinge is at each frame, the panel going
-  dark keeping its last picture, blurred, until it stops; the lit panel shows the live simulator's
+  posture; the hinge folds on screen where the simulator's hinge is at each frame, and the device
+  shows its outer panel square to the camera up to 55° (43° closing) and its inner one, held as a
+  book, from there, as Device Hub turns it. Off a preset (the hinge slider) it faces the panel the
+  simulator lights, at any angle, and swings to the other face when that changes: the simulator
+  lights a panel by how the hinge moved, not only by where it stopped, so the app reads which one
+  is lit after every fold, and at once when the panel it shows stays black for 0.3 s. The panel
+  going dark keeps its last picture
+  until the hinge stops (blurred in the turnable view); Laptop and Tent turn, tip and fold in one
+  move, the lit panel facing the camera all the way (a laptop lies on its flat half, the camera
+  half up as its lid); the lit panel shows the live simulator's
   own colours to its rounded edges and takes clicks, drags and, with Keyboard
   Capture, typing; its volume and side buttons move out under the pointer and in on a click (held
-  as long as the click is), as a device frame's keys do. View ▸ Show 3D Model lets the mouse turn
+  as long as the click is), as a device frame's keys do. Zoom In, Zoom Out, Zoom to Fit and the
+  scale modes scale the model itself (animated, never rebuilt, so it does not blank), and a zoomed
+  model moves with ⌥⌘-drag or a scroll. View ▸ Show 3D Model lets the mouse turn
   it (a drag anywhere off the panel; a pinch or a scroll zooms, a double click faces it again,
   and View ▸ Turn Around shows its back), the hinge's angle beside it while it folds. The model is
   read from the user's Xcode at runtime, never copied (`DHP_DISABLE_DEVICE_MODEL=1` turns it off,
@@ -321,8 +343,9 @@ When the tools are installed, the app offers to create your first emulator.
   know, such as an empty `~/.emulator_console_auth_token`, an emulator made by old Command-line
   Tools, a missing hypervisor or a second adb, and shows each with its fix. It also makes a report
   for a GitHub issue: the Mac, the tools, the emulators and what they answered, the app's recent
-  errors and the end of the emulator logs, with your user name, Mac name, serial numbers,
-  addresses and tokens left out. Copy, Save… and Open GitHub Issue; nothing is sent by the app.
+  errors and the end of the emulator logs, and for a foldable simulator its fold, lit and shown
+  panels and last read of both panels, with your user name, Mac name, serial numbers, addresses
+  and tokens left out. Copy, Save… and Open GitHub Issue; nothing is sent by the app.
 - **Log focus (⌥⌘L).** View ▸ Log Focus, the toolbar button or Reports ▸ Logs ▸ Focus
   turns the window into the phone (still interactive) on the left and a wide log pane
   on the right; the sidebar and inspector hide and Esc or the same button brings the
@@ -381,7 +404,11 @@ When the tools are installed, the app offers to create your first emulator.
   (bezel, camera cutout, hinge) and follows folds; foldables have a stage strip with
   posture presets and a 0–180° hinge slider that moves the device while dragged.
 - **Compact window.** The toolbar's compress button (Switch to compact window) shows the
-  live mirror and its controls in a small window. Window ▸ Stay on Top keeps the window you are in (the compact
+  live mirror and its controls in a small window. A foldable simulator is drawn in the same 3D
+  model as the main window's (a scene of its own, fitted as the main window fits it), and the
+  window opens at Device Hub's 696 × 784 pt and keeps that size as the device folds, unfolds or
+  turns (a size you drag it to is kept for as long as the window lives, `CompactDuoLayout`); every
+  other device keeps Device Hub's 258 × 587 pt. Window ▸ Stay on Top keeps the window you are in (the compact
   window or a main window) above other windows; the choice is per window and new windows
   start with the last one set.
 - **Scale modes.** View ▸ Physical Size (⌘1), Point Accurate (⌘2: one device point, or one

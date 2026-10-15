@@ -67,6 +67,55 @@ public enum SimulatorFold {
         return current
     }
 
+    /// A hinge that moves by less than this in one go (an arrow key, VoiceOver,
+    /// a drag the 2D stage sends event by event) is a stepwise move to the
+    /// guest, not the one-go jump `innerPanelAbove` was measured with.
+    public static let stepwiseSpan: Double = 20
+    /// Moved a few degrees at a time, the outer panel stayed lit up to 120°
+    /// (iPhone Duo on iOS 27.1, 2026-10-14; the inner one lit above, a guess
+    /// the lit-panel read corrects).
+    public static let stepwiseInnerAbove: Double = 120
+
+    /// The panel lit after the hinge moves to `angle` from `previous`, with
+    /// `current` lit: a step of less than `stepwiseSpan` keeps the lit panel
+    /// up to `stepwiseInnerAbove` (`panel(afterAngle:from:)` would light the
+    /// inner one at 91° and show a dark panel until the screenshots say
+    /// otherwise); a bigger move goes by `panel(afterAngle:from:)`.
+    public static func panel(
+        afterStepTo angle: Double,
+        from previous: Double,
+        lit current: SimulatorFoldPanel
+    ) -> SimulatorFoldPanel {
+        guard abs(angle - previous) < stepwiseSpan else { return panel(afterAngle: angle, from: current) }
+        if angle > stepwiseInnerAbove { return .inner }
+        if angle < outerPanelBelow { return .outer }
+        return current
+    }
+
+    /// The panel a booted foldable's two screenshots say is lit: the one
+    /// that is not dark, or, when both show something, the one at least
+    /// `dimmedPanelRatio` times as bright. A locked iPhone Duo shows its
+    /// lock screen dimmed on the panel that is not lit (iOS 27.1, open and
+    /// locked: the outer panel's mean grey 65/255 beside the inner lock
+    /// screen's 137; asleep, both 65), where an unlocked one leaves it black.
+    /// Nil when both are dark (a boot), both are as bright, or a screenshot
+    /// is missing.
+    public static func litPanel(
+        outer: SimulatorReadiness.ScreenReading?,
+        inner: SimulatorReadiness.ScreenReading?
+    ) -> SimulatorFoldPanel? {
+        guard let outer, let inner else { return nil }
+        if let lit = litPanel(outer: outer.content, inner: inner.content) { return lit }
+        guard outer.content != .dark, inner.content != .dark else { return nil }
+        if outer.luminance >= inner.luminance * dimmedPanelRatio { return .outer }
+        if inner.luminance >= outer.luminance * dimmedPanelRatio { return .inner }
+        return nil
+    }
+
+    /// How much brighter the lit panel is than the dimmed one beside it at
+    /// least (measured 2.1, `litPanel`).
+    public static let dimmedPanelRatio = 1.6
+
     /// The panel a booted foldable's two screenshots say is lit, when they
     /// agree: the unlit panel is dark (iPhone Duo open on iOS 27.1: the outer
     /// panel's screenshot is black, the inner one shows the home screen).
@@ -140,11 +189,16 @@ public enum SimulatorFold {
         return 1 - pow(1 - clamped, 3)
     }
 
-    /// What a preset sends, as Device Hub does: the device held upright
-    /// (Device Hub set portrait before every preset), then the hinge swept
-    /// from where it is.
-    public static func presetSteps(for posture: PostureKind, from angle: Double) -> [SimulatorFoldStep] {
-        [.pose(.portrait), .sweep(from: angle, to: Self.angle(for: posture))]
+    /// What a preset sends, as Device Hub does: the device held as it is
+    /// (`held`; Xcode 27.1's Device Hub, iPhone Duo turned to landscape and
+    /// then closed, half open, open and closed again, kept it turned each
+    /// time, 2026-10-13), then the hinge swept from where it is.
+    public static func presetSteps(
+        for posture: PostureKind,
+        from angle: Double,
+        held: SimulatorDevicePose = .portrait
+    ) -> [SimulatorFoldStep] {
+        [.pose(held), .sweep(from: angle, to: Self.angle(for: posture))]
     }
 
     /// The angle a hinge event carries (`hingeEvent`): whole degrees, 0...180.
@@ -269,6 +323,14 @@ public enum SimulatorFoldStep: Sendable, Equatable {
     /// A wait, so the guest settles one step (a panel lighting) before the
     /// next.
     case pause(TimeInterval)
+
+    /// Whether the step moves the hinge (and so may light the other panel).
+    public var movesHinge: Bool {
+        switch self {
+        case .hinge, .sweep: return true
+        case .pose, .pause: return false
+        }
+    }
 }
 
 /// A hinge sweep as `SimulatorFoldSender` sends it: from and to (whole
@@ -360,14 +422,18 @@ public enum SimulatorHeldPosture: String, CaseIterable, Identifiable, Sendable {
         }
     }
 
-    /// Both lie on the device's side, the hinge across the view, but each
-    /// shows a panel on its own face of the device: the laptop's inner one
-    /// is held landscape right, and the same turn seen from the tent's outer
-    /// side is landscape left (iOS 27.1: a tent held landscape right showed
-    /// its outer panel's interface upside down under the hinge).
+    /// Both lie on the device's side, the hinge across the view, each held
+    /// landscape left. A tent so held shows its outer panel's interface
+    /// upright (iOS 27.1: held landscape right it was upside down under the
+    /// hinge). A laptop so held lies on its flat half, the one whose back is
+    /// the outer panel, and stands the half with the cameras on its back up
+    /// as its lid; held landscape right it lay on the camera bump, its lid
+    /// the outer panel's half. Seen from their own faces the two holds are
+    /// half a turn apart, so going from one to the other the device turns
+    /// round as it tips, as the other app's does.
     public var orientation: SimulatorOrientation {
         switch self {
-        case .laptop: return .landscapeRight
+        case .laptop: return .landscapeLeft
         case .tent: return .landscapeLeft
         }
     }
@@ -376,6 +442,13 @@ public enum SimulatorHeldPosture: String, CaseIterable, Identifiable, Sendable {
     /// got there, before the device turns.
     public static let panelSwitchPause: TimeInterval = 0.4
 
+    /// The fold a laptop opened with the outer panel lit starts from: the
+    /// guest lights the inner panel on the way open only from a fold this far
+    /// shut (iOS 27.1, iPhone Duo: from a tent at 70° the inner panel stayed
+    /// dark at 105°, even at 120°; after folding to 40° first it lit, after
+    /// 50° it did not).
+    public static let laptopDip: Double = 30
+
     /// The steps from a fold at `angle` lighting `current`: when the posture
     /// needs the other panel, the hinge first sweeps past that panel's
     /// threshold (flat, or closed) and the guest lights it; then the device
@@ -383,7 +456,17 @@ public enum SimulatorHeldPosture: String, CaseIterable, Identifiable, Sendable {
     public func steps(from current: SimulatorFoldPanel, angle start: Double) -> [SimulatorFoldStep] {
         var steps: [SimulatorFoldStep] = []
         var from = start
-        if current != panel {
+        // A laptop opened from a fold short of `innerPanelAbove` passes it on
+        // the way: the guest lights the inner panel as it goes, so the device
+        // turns and opens in one move, as the other app's laptop does.
+        let lightsOnTheWay = panel == .inner && start <= SimulatorFold.innerPanelAbove && angle > SimulatorFold.innerPanelAbove
+        // Above `laptopDip` the guest keeps the outer panel lit on the way to
+        // a laptop: the hinge folds that far first.
+        if lightsOnTheWay, current == .outer, start > Self.laptopDip {
+            steps.append(.sweep(from: from, to: Self.laptopDip))
+            from = Self.laptopDip
+        }
+        if current != panel, !lightsOnTheWay {
             let extreme: Double = panel == .inner ? 180 : 0
             steps += [.sweep(from: from, to: extreme), .pause(Self.panelSwitchPause)]
             from = extreme
@@ -668,13 +751,31 @@ public struct SimulatorFoldBook: Sendable, Equatable, Codable {
 
     /// Records the hinge at `angle` for `udid` (`SimulatorFold.panel`'s
     /// hysteresis), in the boot at `bootedAt`; returns whether the lit panel
-    /// changed.
+    /// changed. With `stepwise` the move is one step of a slow one (the arrow
+    /// keys): see `SimulatorFold.panel(afterStepTo:from:lit:)`.
     @discardableResult
-    public mutating func note(udid: String, angle: Double, bootedAt: Date? = nil) -> Bool {
+    public mutating func note(udid: String, angle: Double, stepwise: Bool = false, bootedAt: Date? = nil) -> Bool {
         let before = current(udid, bootedAt: bootedAt)
         var after = before
         after.angle = angle
-        after.panel = SimulatorFold.panel(afterAngle: angle, from: before.panel)
+        after.panel = stepwise
+            ? SimulatorFold.panel(afterStepTo: angle, from: before.angle, lit: before.panel)
+            : SimulatorFold.panel(afterAngle: angle, from: before.panel)
+        records[udid] = after
+        return after.panel != before.panel
+    }
+
+    /// Records the hinge at `angle` for `udid` with `panel` lit, as the
+    /// simulator's screenshots showed it: its lit panel depends on how fast
+    /// the hinge moved, not only on where it stopped (a slider dragged a few
+    /// degrees at a time to 120° kept the outer panel lit, iOS 27.1). Returns
+    /// whether the lit panel changed.
+    @discardableResult
+    public mutating func note(udid: String, angle: Double, panel: SimulatorFoldPanel, bootedAt: Date? = nil) -> Bool {
+        let before = current(udid, bootedAt: bootedAt)
+        var after = before
+        after.angle = angle
+        after.panel = panel
         records[udid] = after
         return after.panel != before.panel
     }

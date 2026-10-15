@@ -420,8 +420,10 @@ extension CollectionRun {
     }
 
     /// Crash reports of the processes that matter, from the last 14 days,
-    /// newest first, at most ten. Only their names and dates: a report is
-    /// never opened.
+    /// newest first, at most ten: the emulator's, the app's, adb's, and a
+    /// simulator's home screen, Safari and wallpaper (a Safari that hung held
+    /// iPhone Duo's display change until it was killed, 2026-10-14). Only
+    /// their names and dates: a report is never opened.
     mutating func crashReports(now: Date) -> [ProblemReport.CrashReportRef] {
         guard let directory = inputs.diagnosticReportsDirectory else { return [] }
         let manager = FileManager.default
@@ -429,7 +431,7 @@ extension CollectionRun {
             at: directory, includingPropertiesForKeys: [.contentModificationDateKey], options: [.skipsHiddenFiles]
         ) else { return [] }
 
-        let prefixes = ["qemu-system-", "emulator", "DeviceHubPro", "adb"]
+        let prefixes = ["qemu-system-", "emulator", "DeviceHubPro", "adb", "SpringBoard", "MobileSafari", "PosterBoard"]
         let cutoff = now.addingTimeInterval(-14 * 24 * 3600)
         let found = urls.compactMap { url -> ProblemReport.CrashReportRef? in
             let name = url.lastPathComponent

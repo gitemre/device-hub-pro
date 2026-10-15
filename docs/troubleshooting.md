@@ -49,8 +49,14 @@ report to paste into a GitHub issue. It lists the Mac, the Android and Xcode too
 and what they answered, the app's recent errors (kept in
 `~/Library/Logs/DeviceHubPro/recent-problems.json`, with the serials of the phones that were
 connected when each error was shown, so the report can leave them out after you unplug a phone)
-and the end of the emulator logs; it leaves out your user name, Mac name, serial numbers,
-addresses and tokens, and you can read all of it first.
+and the end of the emulator logs. For a window showing a foldable simulator (iPhone Duo) it adds
+the fold as the app holds it: the hinge angle, the posture and how the device is held, the panel
+the app takes as lit and the one the live view shows, its last read of the two panels' screenshots
+(what each showed and how bright), the stage's view (3D or 2D) and whether it offers to lock and
+wake a simulator whose screens stopped switching; the names and dates of recent crash reports of a
+simulator's home screen, Safari and wallpaper come with the emulator's and the app's. It leaves out
+your user name, Mac name, serial numbers, addresses, tokens and simulator UDIDs, and you can read
+all of it first.
 To look at the emulators it reads the device list the app already has and runs only
 `adb -s emulator-N emu avd name` and two `getprop` reads, on emulators only, never on a phone, and
 only while an adb server of the same adb is already running on the port adb will use (and

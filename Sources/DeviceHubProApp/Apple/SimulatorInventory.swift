@@ -229,6 +229,13 @@ final class SimulatorInventory {
         entry.deviceTypeIdentifier.flatMap { foldables[$0]?.panels }
     }
 
+    /// Makes the device type `identifier` a foldable with `panels`, as its
+    /// bundle's two panels do when its display is read (tests: the
+    /// fixtures' device types have one panel).
+    func noteFoldable(panels: SimulatorFoldPanels, deviceType identifier: String) {
+        foldables[identifier] = SimulatorFoldable(panels: panels, innerChrome: nil, innerShape: nil, model: nil)
+    }
+
     /// The panel a foldable `entry` shows: the inner one only after Device
     /// Hub Pro opened it past `SimulatorFold.innerPanelAbove`.
     func litPanel(of entry: SimulatorEntry) -> SimulatorFoldPanel {
@@ -276,10 +283,17 @@ final class SimulatorInventory {
     }
 
     /// Records the hinge at `angle` for the foldable `udid`; returns whether
-    /// the lit panel changed (the session then has to follow it).
+    /// the lit panel changed (the session then has to follow it). `stepwise`
+    /// for one step of a slow move (`SimulatorFold.panel(afterStepTo:from:lit:)`).
     @discardableResult
-    func noteFold(udid: String, angle: Double) -> Bool {
-        folds.note(udid: udid, angle: angle, bootedAt: bootTime(of: udid))
+    func noteFold(udid: String, angle: Double, stepwise: Bool = false) -> Bool {
+        folds.note(udid: udid, angle: angle, stepwise: stepwise, bootedAt: bootTime(of: udid))
+    }
+
+    /// Records the foldable `udid`'s hinge at `angle` with `panel` lit, as
+    /// its screenshots showed; true when the lit panel changed.
+    func noteFold(udid: String, angle: Double, panel: SimulatorFoldPanel) -> Bool {
+        folds.note(udid: udid, angle: angle, panel: panel, bootedAt: bootTime(of: udid))
     }
 
     /// Records the foldable `udid` held at `pose`.
@@ -469,6 +483,11 @@ final class SimulatorInventory {
         // Best effort: the watcher reports a list that keeps failing.
         guard let devices = try? await simctl.listDevices() else { return }
         apply(devices)
+        // The watcher reads too: it publishes only what differs from its own
+        // last read, so a simulator this read found shut down and that boots
+        // again was never published if the watcher had not seen it off (the
+        // stage kept it stopped while it ran, 2026-10-14).
+        watcher?.refresh()
     }
 
     /// Stops the watcher for good (quit hygiene): a refresh that was waiting
@@ -690,9 +709,12 @@ final class SimulatorInventory {
         )
         let recorded = Set(folds.records.keys)
         folds.keep(only: booted)
-        // Their input channels too: a reboot starts a new connection.
+        // Their input channels too, the hinge's and a session's parked one:
+        // a reboot starts a new connection.
         for udid in recorded.subtracting(folds.records.keys) {
-            madeFoldSender?.forget(SimulatorAddress(udid: udid, deviceSetPath: deviceSet?.path))
+            let address = SimulatorAddress(udid: udid, deviceSetPath: deviceSet?.path)
+            madeFoldSender?.forget(address)
+            bridge?.inputPool?.discard(for: address)
         }
         if entries != simulators {
             simulators = entries

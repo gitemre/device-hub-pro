@@ -87,6 +87,32 @@ struct CompactMirrorView: View {
     @Environment(SimulatorActionDialogs.self) private var simulatorDialogs
     @Environment(AvdActionDialogs.self) private var avdDialogs
     @Environment(\.dismiss) private var dismiss
+    /// Gives a foldable's window Device Hub's 696 × 784 pt and remembers the
+    /// size the user gives it (`CompactDuoLayout`).
+    @State private var sizer = CompactWindowSizer()
+
+    /// What the stage draws around the mirrored device.
+    private func chrome(of device: DeviceRef) -> DeviceChrome {
+        DeviceChromeResolver.chrome(
+            device: device,
+            avdCards: model.catalog.avdCards,
+            forceVector: model.launchOptions.forceVectorChrome,
+            appleDisplayShapes: device.platform == .apple ? workspace.mirror.liveDisplayShapes : [],
+            appleChrome: DeviceChromeResolver.appleChrome(
+                for: device,
+                simulators: model.simulators,
+                physical: model.physicalInventory
+            )
+        )
+    }
+
+    /// Whether the mirrored device is a foldable shown in its 3D model, whose
+    /// window has Device Hub's 696 × 784 pt (whatever the hinge does); any
+    /// other device's keeps 258 × 587.
+    private var drawsFoldModel: Bool {
+        guard let device = workspace.context.device, workspace.mirror.session != nil else { return false }
+        return DeviceModelStageView.isDrawn(chrome: chrome(of: device), workspace: workspace)
+    }
 
     var body: some View {
         let stage = StageTitle(model: model, workspace: workspace)
@@ -95,18 +121,9 @@ struct CompactMirrorView: View {
                 GeometryReader { proxy in
                     Self.stageContent(
                         session: session,
-                        chrome: DeviceChromeResolver.chrome(
-                            device: device,
-                            avdCards: model.catalog.avdCards,
-                            forceVector: model.launchOptions.forceVectorChrome,
-                            appleDisplayShapes: device.platform == .apple ? workspace.mirror.liveDisplayShapes : [],
-                            appleChrome: DeviceChromeResolver.appleChrome(
-                                for: device,
-                                simulators: model.simulators,
-                                physical: model.physicalInventory
-                            )
-                        ),
-                        available: proxy.size
+                        chrome: chrome(of: device),
+                        available: proxy.size,
+                        showsFoldableModel: workspace.simulatorFold.showsFoldControls
                     )
                 }
                 // DH's phone fills the compact width and starts at the
@@ -135,7 +152,7 @@ struct CompactMirrorView: View {
             minHeight: CompactMirrorWindow.minimumSize.height
         )
         .background(Color(nsColor: .textBackgroundColor), ignoresSafeAreaEdges: .top)
-        .background(CompactWindowConfigurator(workspace: workspace))
+        .background(CompactWindowConfigurator(workspace: workspace, sizer: sizer, isFoldable: drawsFoldModel))
         .navigationTitle(stage.title)
         .navigationSubtitle(stage.subtitle ?? "")
         // The title is drawn by hand: the system's would not shrink for the
@@ -272,14 +289,24 @@ struct CompactMirrorView: View {
     }
 
     /// The compact window's stage: the main stage's content in the same
-    /// chrome (`DeviceChromeResolver`), without the fold control strip — the
-    /// compact window stays flat, a foldable included.
+    /// chrome (`DeviceChromeResolver`), without the fold control strip. A
+    /// foldable simulator is drawn in the same 3D model as the main stage's
+    /// (`showsFoldableModel`), in a scene of this window's own, fitted to the
+    /// stage as the main stage fits it (`MirrorStageContent.frontModel`); the
+    /// compact window has no zoom.
     static func stageContent(
         session: any MirrorSessionProtocol,
         chrome: DeviceChrome,
-        available: CGSize
+        available: CGSize,
+        showsFoldableModel: Bool = false
     ) -> MirrorStageContent {
-        MirrorStageContent(session: session, chrome: chrome, available: available)
+        MirrorStageContent(
+            session: session,
+            chrome: chrome,
+            available: available,
+            showsFoldableModel: showsFoldableModel,
+            modelSurface: .compact
+        )
     }
 }
 
@@ -319,21 +346,46 @@ extension WindowState {
 }
 
 /// Applies the compact window's AppKit behavior once its view is in a window:
-/// Device Hub's 258 × 587 frame centred on the main window it replaces, which
-/// it then hides.
+/// Device Hub's 258 × 587 frame (696 × 784 for a foldable shown in its 3D
+/// model) centred on the main window it replaces, which it then hides.
 struct CompactWindowConfigurator: NSViewRepresentable {
     let workspace: DeviceWorkspace
+    /// Sizes the window to the device it shows (`isFoldable`: a foldable in
+    /// its 3D model, false for any other device).
+    let sizer: CompactWindowSizer
+    let isFoldable: Bool
 
     func makeNSView(context: Context) -> NSView {
         let view = ConfiguringView()
         view.workspace = workspace
+        view.sizer = sizer
+        view.isFoldable = isFoldable
         return view
     }
 
-    func updateNSView(_ nsView: NSView, context: Context) {}
+    func updateNSView(_ nsView: NSView, context: Context) {
+        guard let view = nsView as? ConfiguringView else { return }
+        view.isFoldable = isFoldable
+        view.fitSize()
+    }
 
     private final class ConfiguringView: NSView {
         var workspace: DeviceWorkspace?
+        var sizer: CompactWindowSizer?
+        var isFoldable = false
+
+        /// Gives the window its size once the window is placed, when the
+        /// device changed from a foldable to another or back: not inside the
+        /// update that found it changed, which the resize would lay out
+        /// again.
+        func fitSize() {
+            guard let window, let sizer, sizer.needsFit(foldable: isFoldable) else { return }
+            let foldable = isFoldable
+            DispatchQueue.main.async { [weak window, weak sizer] in
+                guard let window, let sizer else { return }
+                MainActor.assumeIsolated { sizer.fit(window, foldable: foldable) }
+            }
+        }
 
         override func viewDidMoveToWindow() {
             super.viewDidMoveToWindow()
@@ -353,13 +405,16 @@ struct CompactWindowConfigurator: NSViewRepresentable {
                     width: CompactMirrorWindow.minimumSize.width,
                     height: CompactMirrorWindow.minimumSize.height
                 )
-                let size = CompactMirrorWindow.frameSize
+                // A foldable in its 3D model opens at Device Hub's 696 × 784
+                // and keeps it as it folds; any other device at 258 × 587.
+                let size = sizer?.size(foldable: isFoldable, on: window.screen) ?? CompactMirrorWindow.frameSize
+                sizer?.noteInitial(foldable: isFoldable, window: window)
                 if let main = workspace?.window.mainWindowHiddenForCompact {
                     let center = NSPoint(x: main.frame.midX, y: main.frame.midY)
-                    window.setFrame(
-                        NSRect(x: center.x - size.width / 2, y: center.y - size.height / 2, width: size.width, height: size.height),
-                        display: true
-                    )
+                    var frame = NSRect(x: center.x - size.width / 2, y: center.y - size.height / 2, width: size.width, height: size.height)
+                    // The foldable's frame is large: keep it on the screen.
+                    if isFoldable, let screen = window.screen { frame = window.constrainFrameRect(frame, to: screen) }
+                    window.setFrame(frame, display: true)
                     // The compact window replaces the main window: it goes
                     // out of sight (not closed: its workspace lives on).
                     main.orderOut(nil)

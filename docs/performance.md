@@ -157,6 +157,26 @@ work off the main thread or removes it:
   4.5 s at 884 × 1920 retained 1.2 MB on a mostly static home screen; CPU was
   not profiled separately (expect the Android ring's ~0.2 %, plus the scale).
 
+- **The 3D foldable stage on the display link (2026-10-14).** Every motion of
+  `DeviceModelScene` (the slider's chase, a preset's sweep, roll, hold, turn,
+  Turn Around, the keys, the drawn centre and book turn catching up) is stepped
+  from the canvas's display link at the moment the frame is due on screen
+  (`step(at:)`), with one pose and one draw per frame; before, each ran a
+  `Task.sleep(16 ms)` loop off the link's beat (a 1.2 s slider drag recorded at
+  60 fps showed no movement in 66–72 % of the frames). The lags and durations
+  are the same seconds (`chaseLag` 0.06, `sweepLag` 0.15, `centerLag` 0.19,
+  `bookLag` 0.08, …) and are applied by the time between frames, not per frame.
+  The link rests while nothing moves or waits to be drawn (it ran at the
+  display's rate for ever), the renderer takes up to 2 frames at once
+  (`RenderCadence.maxFramesInFlight`; the in-flight count is cleared in the GPU's
+  completion without a hop to the main queue) and is given the real time between
+  frames. The slider's angle reaches the model as the knob has it, not rounded
+  to the degree the simulator takes (`HingeDragFilter`). The installed
+  CoreSimulator's Info.plist is read once and kept (`InstalledCoreSimulator`):
+  `SimulatorFoldController.foldableEntry` read and parsed it twice on every
+  access. Not measured live yet: re-record a slider drag at 120 Hz and compare
+  with the numbers above.
+
 Scrolling, gallery previews and logcat filtering were also moved off the main
 thread or made incremental in this round (see `CHANGELOG.md`).
 

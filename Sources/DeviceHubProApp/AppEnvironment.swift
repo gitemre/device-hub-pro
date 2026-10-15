@@ -136,6 +136,9 @@ struct AppEnvironment {
         let diagnosticReportsDirectory = ProcessInfo.processInfo.environment["DHP_DIAGNOSTIC_REPORTS_DIR"]
             .flatMap { $0.isEmpty ? nil : URL(fileURLWithPath: $0, isDirectory: true) }
             ?? SimulatorCrashReportScanner.userDiagnosticReportsDirectory
+        // The installed CoreSimulator's version, read from disk once and kept
+        // (the stage asks for the bridge's verdict dozens of times a frame).
+        let installedCoreSimulator = InstalledCoreSimulator()
         let emulatorManagerForPath: @MainActor (String) -> EmulatorManager? = { path in
             resolveEmulatorManager(
                 path: path,
@@ -166,13 +169,11 @@ struct AppEnvironment {
                 makeBridge: { toolchain in
                     toolchain.developerDirectory.map { LiveSimulatorBridge(developerDir: $0.path) }
                 },
-                bridgeVerdict: {
-                    BridgeCompatibility.verdict(coreSimulatorVersion: BridgeCompatibility.installedCoreSimulatorVersion())
-                },
+                bridgeVerdict: { installedCoreSimulator.verdict() },
                 bridgeIsStale: {
                     BridgeCompatibility.isStale(
                         loadedVersion: LiveSimulatorBridge.loadedCoreSimulatorVersion,
-                        installedVersion: BridgeCompatibility.installedCoreSimulatorVersion()
+                        installedVersion: installedCoreSimulator.version()
                     )
                 },
                 deviceKit: AppleDeviceKit(

@@ -36,9 +36,11 @@ import Synchronization
 /// field tried (see the spec). Hardware buttons (the frame's side
 /// buttons, Home and Lock) go through the same channel, in order with the
 /// touches and keys; a button still down when the session stops goes up
-/// before its channel closes. The dtuhidd connection opens lazily, on the
-/// first input event of each start: connecting marks dtuhidd active for the
-/// rest of that simulator's boot.
+/// before its channel closes, or is parked in the bridge's `inputPool` for
+/// the next session of the simulator, which takes it. The dtuhidd
+/// connection opens lazily, on the first input event of a start that took
+/// none: connecting marks dtuhidd active for the rest of that simulator's
+/// boot.
 ///
 /// **Lifecycle.** `start()` returns at once; failures land in `lastError`.
 /// When the simulator shuts down (the screen reports a nil surface) the
@@ -247,21 +249,31 @@ public final class SimulatorMirrorSession: MirrorSessionProtocol, SimulatorButto
         guard taken.screen != nil || taken.input != nil else { return }
         // Off the caller's queue (the main queue, typically), and never the
         // screen's callback queue. The next start opens a channel of its
-        // own, so no disconnect here reaches it.
+        // own, or takes this one from the bridge's pool, so no disconnect
+        // here reaches it.
         let (screen, input, held) = taken
+        // A connected channel is parked for the next session of the
+        // simulator (a foldable's other panel), so its first tap does not
+        // wait for a connect.
+        let pool = input?.isConnected == true ? bridge.inputPool : nil
         sessionQueue.async {
             screen?.stop()
             // Cancels a dtuhidd connect in progress on the input queue. A
             // channel with a button held is connected (the down went through
             // it): it closes on the input queue, after the ups.
-            if held.isEmpty { input?.disconnect() }
+            if held.isEmpty, pool == nil { input?.disconnect() }
         }
         if let input {
-            // Behind the send in flight: releases what is held, then closes
-            // a connection that send reopened.
+            // Behind the send in flight: releases what is held, then parks
+            // or closes a connection that send reopened.
+            let address = self.address
             inputQueue.async {
                 Self.release(held, on: input)
-                input.disconnect()
+                if let pool, input.isConnected {
+                    pool.park(input, for: address)
+                } else {
+                    input.disconnect()
+                }
             }
         }
     }
@@ -777,6 +789,20 @@ public final class SimulatorMirrorSession: MirrorSessionProtocol, SimulatorButto
         }
     }
 
+    /// Opens the input channel now, or takes the one parked for the
+    /// simulator, so the first touch does not wait for dtuhidd. For a
+    /// foldable's session started with the device at rest: a session that
+    /// starts because the device folded takes the channel the previous one
+    /// parked, and never connects mid-fold (connecting while the guest
+    /// switched panels left SpringBoard's fold transition stuck, iOS 27.1).
+    public func prepareInput() {
+        guard let generation = currentGeneration() else { return }
+        inputQueue.async { [self] in
+            guard let input = inputChannel(generation: generation), !input.isConnected else { return }
+            _ = try? input.connect()
+        }
+    }
+
     /// The generation's input channel, made on its first use; nil once the
     /// generation is over. Each start gets its own: the disconnects `stop()`
     /// queues for the previous one must not reach the next one's connect.
@@ -788,15 +814,19 @@ public final class SimulatorMirrorSession: MirrorSessionProtocol, SimulatorButto
         guard current.live else { return nil }
         if let input = current.input { return input }
         // Nothing connects until the first send, so a channel made for a
-        // generation that ended meanwhile is simply dropped.
-        let made = bridge.makeInput(for: address)
+        // generation that ended meanwhile is simply dropped; one taken from
+        // the pool goes back.
+        let parked = bridge.inputPool?.take(for: address)
+        let made = parked ?? bridge.makeInput(for: address)
         made.setDigitizerTarget(panel.digitizerTarget)
-        return state.withLock { state in
+        let installed = state.withLock { state -> (any SimulatorInputBridging)? in
             guard state.running, state.generation == generation else { return nil }
             if let existing = state.input { return existing }
             state.input = made
             return made
         }
+        if let parked, installed !== parked { bridge.inputPool?.park(parked, for: address) }
+        return installed
     }
 
     private func type(_ command: KeyboardCommand, input: any SimulatorInputBridging, generation: UInt64) throws {

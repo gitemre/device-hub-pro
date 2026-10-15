@@ -284,14 +284,10 @@ public struct AppleDeviceModel: Sendable, Hashable {
         return groups
     }
 
-    /// How the 3D stage poses a device open by `opening` degrees (0 closed,
+    /// How the 3D stage frames a device open by `opening` degrees (0 closed,
     /// 180 flat), from its flat size (the width across both halves, the
     /// height along the hinge, the thickness of one half).
     public struct FoldFraming: Sendable, Equatable {
-        /// Radians about the hinge that turn a half-open device so both
-        /// halves face the camera alike, the hinge away, as a book is held
-        /// to be read; none closed or flat.
-        public var bookTurn: Float
         /// The centre of the device's box from the hinge, in the flat
         /// device's frame: across (x, the half that stays put is +x) and in
         /// depth (y, towards the inner panel, which the other half folds
@@ -301,14 +297,66 @@ public struct AppleDeviceModel: Sendable, Hashable {
         public var radius: Float
     }
 
-    /// The opening from which a half-open device is fully turned as a book;
-    /// it turns in gradually below, so a closed one faces the camera.
-    public static let bookTurnFullAt: Double = 45
+    /// Which face of a foldable the stage turns to the camera, as Xcode
+    /// 27.1's Device Hub turns iPhone Duo (2026-10-13): dragging its hinge
+    /// slider a few degrees at a time, the outer panel, the device posed as
+    /// if still closed, up to 53° opening and the inner one, both halves
+    /// turned alike as a book, from 56°; closing, the book held at 45° and
+    /// the outer panel faced again at 40°. A preset opening past that point
+    /// (closed to half open) shows the inner face from its first frame; one
+    /// closing keeps it until the hinge passes the same point. Device Hub
+    /// turns between the two within one frame.
+    public struct FoldFacing: Sendable, Equatable {
+        public private(set) var showsOuter: Bool
 
-    /// `hingeReach` is how far the hinge's rounded back stands out past
-    /// the hinge once the device is closed (it turns out as the device
-    /// folds): Device Hub centres the closed device with it, iPhone Duo's
-    /// spine 0.25 of the model's centimetres to the left of the hinge.
+        /// The opening from which the device shows its inner face, and
+        /// below which a closing one shows its outer face again.
+        public static let innerFrom: Double = 55
+        public static let outerBelow: Double = 43
+
+        public init(opening: Double) {
+            showsOuter = !(opening.isFinite && opening >= Self.innerFrom)
+        }
+
+        /// Follows the hinge, shown at `opening` on its way to `target`;
+        /// true when the face changed.
+        @discardableResult
+        public mutating func update(opening: Double, target: Double) -> Bool {
+            guard opening.isFinite, target.isFinite else { return false }
+            let outer = target < Self.innerFrom
+                && opening < (showsOuter ? Self.innerFrom : Self.outerBelow)
+            defer { showsOuter = outer }
+            return outer != showsOuter
+        }
+
+        /// Shows the outer face (`outer`) or the inner one whatever the
+        /// hinge: a device held as a tent or a laptop; true when it changed.
+        @discardableResult
+        public mutating func hold(outer: Bool) -> Bool {
+            defer { showsOuter = outer }
+            return outer != showsOuter
+        }
+
+        /// Radians about the hinge that keep the half carrying the outer
+        /// panel square to the camera while the device opens by `opening`
+        /// degrees: the other half swings out of sight behind it.
+        public static func outerTurn(opening: Double) -> Float {
+            Float(min(max(opening.isFinite ? opening : 0, 0), 180) * .pi / 180)
+        }
+
+        /// Radians about the hinge that hold a device opening to `target`
+        /// as a book (both halves facing the camera alike, the hinge away)
+        /// once it shows its inner face: Device Hub turns it so for where
+        /// the hinge is going, not where it is (opening from closed to half
+        /// open, the half that stays sits at the end's 25° all the way), and
+        /// keeps the half that stays square to the camera when the hinge is
+        /// going towards closed or flat.
+        public static func bookTurn(target: Double) -> Float {
+            guard target.isFinite, target >= innerFrom else { return 0 }
+            return -Float((180 - min(target, 180)) * .pi / 180) / 2
+        }
+    }
+
     public static func framing(opening: Double, width: Float, height: Float, thickness: Float, hingeReach: Float = 0) -> FoldFraming {
         let degrees = min(max(opening.isFinite ? opening : 0, 0), 180)
         let fold = Float((180 - degrees) * .pi / 180)
@@ -320,9 +368,7 @@ public struct AppleDeviceModel: Sendable, Hashable {
         let upper = points.dropFirst().reduce(points[0], simd_max)
         let center = (lower + upper) / 2
         let reach = points.map { simd_length($0 - center) }.max() ?? 0
-        let ramp = Float(min(max(degrees / bookTurnFullAt, 0), 1))
         return FoldFraming(
-            bookTurn: -fold / 2 * ramp * ramp * (3 - 2 * ramp),
             center: center,
             radius: (reach * reach + height * height / 4).squareRoot() + thickness / 2
         )

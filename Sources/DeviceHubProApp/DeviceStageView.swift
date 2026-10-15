@@ -1151,7 +1151,7 @@ private struct MirrorContainer: View {
             // The 3D model stays: it draws no video to settle (it would wait
             // out the fallback), keeps the device in view while the panels
             // switch, and folds on screen.
-            .opacity((hidesUntilZoomSettles || isSettlingNewSession) && !showsDeviceModel ? 0.001 : 1)
+            .opacity((hidesUntilZoomSettles || isSettlingNewSession) && !drawsDeviceModel ? 0.001 : 1)
             .onChange(of: liveSessionID, initial: true) { _, _ in revealWhenSettled() }
             .onChange(of: stageSettled) { _, _ in revealWhenSettled() }
             .onChange(of: workspace.mirror.mirrorViewState.videoPointsPerPixel) { _, _ in revealWhenSettled() }
@@ -1190,16 +1190,32 @@ private struct MirrorContainer: View {
         }
     }
 
-    /// A foldable simulator in its 3D model fills the stage whatever the
-    /// zoom: the zoom's scale modes measure the 2D screen's drawn pixels,
-    /// which the model does not draw, and would shrink it to a speck.
-    private var showsDeviceModel: Bool {
-        DeviceModelStageView.isShown(chrome: chrome, workspace: workspace, preferences: model.preferences)
+    /// The stage draws a foldable's 3D model, front-on or turnable: it stays
+    /// in view while a fold switches the session to the other panel (hidden,
+    /// the front-on model vanished for two or three frames at each switch),
+    /// and in one layout whatever the zoom (`StageZoomLayout.model`). Turnable,
+    /// it fills the stage and has a zoom of its own; front-on it is scaled by
+    /// the stage zoom inside its view.
+    private var drawsDeviceModel: Bool {
+        DeviceModelStageView.isDrawn(chrome: chrome, workspace: workspace)
     }
 
     @ViewBuilder
     private func zoomableStage(visible: CGSize, stage: CGSize, topInset: CGFloat) -> some View {
-        if let zoom = workspace.window.stageZoom, !showsDeviceModel {
+        switch StageZoomLayout(stageZoom: workspace.window.stageZoom, drawsDeviceModel: drawsDeviceModel) {
+        case .model:
+            // The 3D model's view is the stage less its padding: it runs to
+            // the stage's edges, behind the toolbar band above and the
+            // pill's band below, as the scroll view did, and centred on the
+            // fit area.
+            content(
+                available: visible,
+                modelBleed: CGSize(
+                    width: Self.stagePadding,
+                    height: Self.stagePadding + max(topInset, bottomBand)
+                )
+            )
+        case .scrolling(let zoom):
             ScrollView([.horizontal, .vertical]) {
                 content(available: CGSize(
                     width: visible.width * zoom,
@@ -1231,14 +1247,14 @@ private struct MirrorContainer: View {
                 bottom: -Self.stagePadding,
                 trailing: -Self.stagePadding
             ))
-        } else {
+        case .fitted:
             content(available: visible)
                 .scaleEffect(workspace.window.zoomPresentation)
         }
     }
 
     @ViewBuilder
-    private func content(available: CGSize) -> some View {
+    private func content(available: CGSize, modelBleed: CGSize = .zero) -> some View {
         MirrorStageContent(
             session: session,
             chrome: chrome,
@@ -1246,6 +1262,9 @@ private struct MirrorContainer: View {
             // A foldable simulator's postures sit in the stage's pill.
             showsFoldControls: workspace.hardware.showsFoldControls,
             showsFoldableModel: workspace.simulatorFold.showsFoldControls,
+            stageZoom: workspace.window.stageZoom,
+            animatesZoom: workspace.window.zoomPresentation != 1,
+            modelBleed: modelBleed,
             showsNavigationBar: NavigationBarSpec.isShown(
                 preference: model.preferences.showNavigationButtons,
                 device: workspace.context.device,
@@ -1255,6 +1274,31 @@ private struct MirrorContainer: View {
         )
     }
 
+}
+
+/// How the stage lays its content out for the zoom.
+enum StageZoomLayout: Equatable {
+    /// A foldable's 3D model: one layout for every zoom. The model is scaled
+    /// inside its view (`MirrorStageContent.stageZoom`), so a zoom step never
+    /// makes the view anew: switching between the scroll view and the plain
+    /// layout rebuilt it, the model loaded again and the device was gone from
+    /// the stage for half a second at each step from or to Zoom to Fit
+    /// (measured live, release build, 0.45–0.50 s).
+    case model
+    /// A zoomed device scrolls in a scroll view.
+    case scrolling(zoom: Double)
+    /// The fitted device.
+    case fitted
+
+    init(stageZoom: Double?, drawsDeviceModel: Bool) {
+        if drawsDeviceModel {
+            self = .model
+        } else if let stageZoom {
+            self = .scrolling(zoom: stageZoom)
+        } else {
+            self = .fitted
+        }
+    }
 }
 
 /// The mirror surface in the chrome `DeviceChromeResolver` picked: the skin
@@ -1267,15 +1311,38 @@ struct MirrorStageContent: View {
     @Environment(AppModel.self) private var model
     @Environment(DeviceWorkspace.self) private var workspace
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
+    /// Set by the main stage only: the compact window's model does not
+    /// publish its scale, which would move the main window's zoom.
+    @Environment(\.reportsStageScale) private var reportsStageScale
     let session: any MirrorSessionProtocol
     let chrome: DeviceChrome
     let available: CGSize
     /// Main stage only: `CompactMirrorView` keeps the default `false` and
     /// stays flat.
     var showsFoldControls = false
-    /// Main stage only: a foldable simulator in its 3D model
-    /// (`DeviceModelStageView`); the compact window keeps its 2D chrome.
+    /// A foldable simulator in its 3D model (`DeviceModelStageView`), in the
+    /// main stage and the compact window alike (`modelSurface`); its 2D
+    /// chrome where Xcode ships no model.
     var showsFoldableModel = false
+    /// Which window the 3D model is in (each has a scene of its own).
+    var modelSurface: DeviceModelSurface = .main
+    /// The finish the 3D model is drawn in: View ▸ Device Color's once its
+    /// model has loaded (`DeviceModelScenes.prepare`), the old one until then.
+    @State private var shownModelColor: String?
+    private var modelColor: String { shownModelColor ?? model.preferences.deviceModelColor }
+    /// The stage zoom (a multiplier of the fitted size, nil at Zoom to Fit)
+    /// the front-on 3D model is drawn at. The model is scaled inside its
+    /// view, which keeps its size: the stage does not swap to a scroll view
+    /// and the view is not resized by a zoom, so the model is never made
+    /// anew or blank (`StageZoomLayout`). Main stage only.
+    var stageZoom: Double?
+    /// Whether the last change of `stageZoom` is a zoom step to animate.
+    var animatesZoom = false
+    /// How far the front-on model's view runs past `available` on each side,
+    /// so a zoomed model is cut off by the stage and not by the fit area
+    /// (the old scroll view ran behind the toolbar and the pill too). The
+    /// model stays centred on `available`. Main stage only.
+    var modelBleed: CGSize = .zero
     /// Main stage only: the Back / Home / Recents bar under an Android
     /// handheld (`NavigationBarSpec.isShown`).
     var showsNavigationBar = false
@@ -1318,16 +1385,19 @@ struct MirrorStageContent: View {
     static let frontFitHeight: CGFloat = 0.550
     static let frontFitWidth: CGFloat = 0.5455
 
-    static func frontModel(outerFrame: AppleChromeFrame, available: CGSize) -> (height: CGFloat, pointsPerPixel: CGFloat) {
+    /// `zoom` is the stage zoom, a multiplier of the fitted size: the model
+    /// is that much taller than the fit, which is what the stage zoom's
+    /// scale modes measure (`publishFrontScale`).
+    static func frontModel(outerFrame: AppleChromeFrame, available: CGSize, zoom: CGFloat = 1) -> (height: CGFloat, pointsPerPixel: CGFloat) {
         let native = DeviceCompositionPlanner.appleChrome(outerFrame).layoutSize
-        let height = max(min(available.height * frontFitHeight, available.width * frontFitWidth), 1)
+        let height = max(min(available.height * frontFitHeight, available.width * frontFitWidth) * zoom, 1)
         return (height, height / max(native.height, 1))
     }
 
     /// Publishes the front-on model's scale in its outer panel's pixels,
     /// the frame the stage zoom's scale modes count in.
     private func publishFrontScale(_ scale: CGFloat) {
-        guard workspace.simulatorFold.deviceModel != nil, !model.preferences.showDeviceModel,
+        guard reportsStageScale, workspace.simulatorFold.deviceModel != nil, !model.preferences.showDeviceModel,
               let outer = workspace.simulatorFold.outerPanelPixels
         else { return }
         let state = workspace.mirror.mirrorViewState
@@ -1335,8 +1405,24 @@ struct MirrorStageContent: View {
         state.publishVideoScale(Double(scale))
     }
 
-    private func front(_ frame: AppleChromeFrame) -> (height: CGFloat, pointsPerPixel: CGFloat) {
-        Self.frontModel(outerFrame: workspace.simulatorFold.outerChrome ?? frame, available: available)
+    /// How far the front-on model's view runs past the stage's frame on
+    /// each side, which the stage's clip then leaves it (`StageClip`).
+    private var clipBleed: CGSize {
+        model.preferences.showDeviceModel ? .zero : modelBleed
+    }
+
+    /// The stage zoom the front-on model is drawn at (the compact window has
+    /// none).
+    private var modelZoom: CGFloat {
+        modelSurface == .main && !model.preferences.showDeviceModel ? CGFloat(stageZoom ?? 1) : 1
+    }
+
+    /// The front-on model's height and scale at `zoom` times the fitted
+    /// size: Device Hub's Zoom to Fit of the stage, in the compact window
+    /// too (its stage is smaller; Device Hub fits the model to it the same
+    /// way, `ParityMetrics.compactFoldableWindowSize`).
+    private func front(_ frame: AppleChromeFrame, zoom: CGFloat) -> (height: CGFloat, pointsPerPixel: CGFloat) {
+        Self.frontModel(outerFrame: workspace.simulatorFold.outerChrome ?? frame, available: available, zoom: zoom)
     }
 
     var body: some View {
@@ -1355,36 +1441,59 @@ struct MirrorStageContent: View {
                         // in the stage's pill.
                         Group {
                             if let deviceModel = workspace.simulatorFold.deviceModel {
+                                // Turnable, the model fills the stage; front-on, its
+                                // view runs past the fit area by `modelBleed`.
+                                let bleed = clipBleed
+                                let canvas = CGSize(width: available.width + 2 * bleed.width, height: available.height + 2 * bleed.height)
                                 DeviceModelStageView(
                                     model: deviceModel,
                                     session: session,
                                     opening: workspace.simulatorFold.hingeAngle ?? 0,
-                                    foldProgress: { [fold = workspace.simulatorFold] in fold.foldProgress() },
+                                    // The scene outlives this view (in the controller's
+                                    // registry): it must not hold the controller back.
+                                    foldProgress: { [weak fold = workspace.simulatorFold] in fold?.foldProgress() },
                                     litPanel: workspace.simulatorFold.litPanel,
+                                    fold: workspace.simulatorFold,
+                                    held: { if case .held(let posture) = workspace.simulatorFold.postureChoice { posture } else { nil } }(),
                                     presentation: model.preferences.showDeviceModel
                                         ? .free
-                                        : .front(height: front(frame).height),
-                                    color: model.preferences.deviceModelColor,
-                                    size: available,
+                                        : .front(height: front(frame, zoom: 1).height),
+                                    color: modelColor,
+                                    size: canvas,
                                     panelTurns: Self.modelPanelTurns(
                                         frame: frame,
                                         session: session,
                                         devicePose: workspace.simulatorCanvas.devicePose,
                                         restingTurns: workspace.simulatorFold.restingTurns
                                     ),
-                                    roll: ((workspace.simulatorCanvas.devicePose.targetTurns
-                                        - workspace.simulatorFold.restingTurns) % 4 + 4) % 4,
-                                    spinRequests: workspace.simulatorFold.spinRequests
+                                    roll: workspace.foldModelRoll,
+                                    spinRequests: workspace.simulatorFold.spinRequests,
+                                    zoom: modelZoom,
+                                    animatesZoom: animatesZoom,
+                                    surface: modelSurface
                                 )
-                                // A new finish is a new model: the stage loads it.
-                                .id(model.preferences.deviceModelColor)
-                                .frame(width: available.width, height: available.height)
-                                .offset(y: model.preferences.showDeviceModel ? 0 : -ParityMetrics.foldModelLift)
+                                // A new finish is a new model, shown once loaded.
+                                .id(modelColor)
+                                .frame(width: canvas.width, height: canvas.height)
+                                // The lift was measured on the main window's fit area:
+                                // the compact window's model sits at its middle
+                                // (`CompactDuoLayout`).
+                                .offset(y: model.preferences.showDeviceModel || modelSurface == .compact ? 0 : -ParityMetrics.foldModelLift)
                             } else {
                                 AppleChromeDeviceView(session: session, frame: frame, available: available)
                             }
                         }
                         .task(id: ObjectIdentifier(session)) { workspace.simulatorFold.prepareFold() }
+                        .task(id: model.preferences.deviceModelColor) {
+                            let wanted = model.preferences.deviceModelColor
+                            if let shown = shownModelColor, shown != wanted, let deviceModel = workspace.simulatorFold.deviceModel {
+                                await workspace.simulatorFold.modelScenes.prepare(
+                                    DeviceModelScenes.Key(surface: modelSurface, model: deviceModel, color: wanted)
+                                )
+                                guard !Task.isCancelled else { return }
+                            }
+                            shownModelColor = wanted
+                        }
                         // The front-on model draws the outer panel as its 2D
                         // chrome would, whichever panel is lit: the stage
                         // zoom's scale modes (Physical Size, Point Accurate)
@@ -1394,11 +1503,11 @@ struct MirrorStageContent: View {
                         // A session that moves to the inner panel sets its own
                         // size (the mirror's seed picture): put the outer one
                         // back, or Physical Size went grey with the device open.
-                        .onChange(of: front(frame).pointsPerPixel, initial: true) { _, scale in
+                        .onChange(of: front(frame, zoom: modelZoom).pointsPerPixel, initial: true) { _, scale in
                             publishFrontScale(scale)
                         }
                         .onChange(of: workspace.mirror.mirrorViewState.devicePixelSize) { _, _ in
-                            publishFrontScale(front(frame).pointsPerPixel)
+                            publishFrontScale(front(frame, zoom: modelZoom).pointsPerPixel)
                         }
                     } else {
                         AppleChromeDeviceView(session: session, frame: frame, available: available)
@@ -1432,7 +1541,7 @@ struct MirrorStageContent: View {
         }
         .frame(width: available.width, height: available.height)
         .background(Color(nsColor: .textBackgroundColor))
-        .clipped()
+        .modifier(StageClip(bleed: clipBleed))
         // Input is disabled while the rotation wrapper animates: a tap would
         // be mapped against a pose the view is no longer in. A simulator in
         // its Apple chrome turns with its own pose.
@@ -1606,6 +1715,26 @@ struct MirrorStageContent: View {
             // that is neither the old device nor the new one.
             backgroundIsTransparent: clearUntilFrame && workspace.context.isPhysicalView
         )
+    }
+}
+
+/// Clips the stage to its frame, leaving a front-on 3D model's view the
+/// `bleed` it runs past the frame on purpose (`MirrorStageContent.modelBleed`).
+///
+/// One modifier chain whatever the bleed (it is a value of the padding, zero
+/// when the stage is clipped to its frame): a modifier that chose between
+/// `content` and `content.clipped()` made the stage a different view each
+/// time View ▸ Show 3D Model flipped it, and the model's view was made anew.
+/// Laid out, the chain takes the frame's size: the padding outside the clip
+/// takes back what the padding inside gave.
+struct StageClip: ViewModifier {
+    let bleed: CGSize
+
+    func body(content: Content) -> some View {
+        content
+            .padding(EdgeInsets(top: bleed.height, leading: bleed.width, bottom: bleed.height, trailing: bleed.width))
+            .clipped()
+            .padding(EdgeInsets(top: -bleed.height, leading: -bleed.width, bottom: -bleed.height, trailing: -bleed.width))
     }
 }
 

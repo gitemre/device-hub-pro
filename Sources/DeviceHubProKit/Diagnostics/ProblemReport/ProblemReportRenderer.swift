@@ -131,6 +131,9 @@ public enum ProblemReportRenderer {
         lines.append("- **Emulators:** " + emulatorsSummary(report))
         lines.append("- **Phones:** " + phonesSummary(report))
         lines.append("- **Xcode:** " + xcodeSummary(report))
+        for foldable in report.windows.compactMap(\.foldable) {
+            lines.append("- **\(MarkdownText.text(foldable.model)):** " + foldableSummary(foldable))
+        }
         lines.append("- **Recent problems:** " + recentProblemsSummary(report))
         lines.append("")
 
@@ -315,6 +318,24 @@ public enum ProblemReportRenderer {
         return text
     }
 
+    /// "105°, laptop, held landscape left, lit inner, shown inner, 3D
+    /// turnable; read 3 s before: outer dark (0), inner screen (137), lit
+    /// inner; screens stuck".
+    static func foldableSummary(_ foldable: ProblemReport.FoldableInfo) -> String {
+        var text = "\(Int(foldable.hingeAngle.rounded()))\u{00B0}, \(foldable.posture.rawValue), held \(foldable.held.rawValue)"
+        text += ", lit \(foldable.litPanel.rawValue), shown " + (foldable.shownPanel?.rawValue ?? "none")
+        text += ", " + foldable.view.rawValue
+        if let read = foldable.lastRead {
+            func panel(_ name: String, _ reading: ProblemReport.PanelReading?) -> String {
+                reading.map { "\(name) \($0.content.rawValue) (\($0.grey))" } ?? "\(name) unread"
+            }
+            text += "; read \(read.secondsAgo) s before: " + panel("outer", read.outer) + ", " + panel("inner", read.inner)
+            text += ", lit " + (read.lit?.rawValue ?? "untold")
+        }
+        if foldable.screensStuck { text += "; screens stuck" }
+        return text
+    }
+
     private static func recentProblemsSummary(_ report: ProblemReport) -> String {
         guard let newest = report.recentProblems.first else { return "none" }
         let seconds = max(0, Int(report.createdAt.timeIntervalSince(newest.at)))
@@ -358,6 +379,9 @@ public enum ProblemReportRenderer {
         lines.append("Mac:      " + plain(macSummary(report)))
         lines.append("Android:  " + plain(androidSummary(report)))
         lines.append("Apple:    " + plain(xcodeSummary(report)))
+        for foldable in report.windows.compactMap(\.foldable) {
+            lines.append("Foldable: \(foldable.model): " + foldableSummary(foldable))
+        }
         let listRead = !report.android.devicesSource.hasPrefix("not read")
         lines.append("Devices:  " + (listRead ? "read from \(report.android.devicesSource)" : report.android.devicesSource))
         let adb = report.android.adb

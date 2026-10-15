@@ -302,6 +302,9 @@ public protocol SimulatorBridging: Sendable {
     /// send or `connect()`: connecting marks dtuhidd active for the rest of
     /// the boot, which cuts legacy-Indigo clients off.
     func makeInput(for address: SimulatorAddress) -> any SimulatorInputBridging
+    /// Where a stopped session leaves its connected input channel for the
+    /// next session of the same simulator; nil keeps no channel.
+    var inputPool: SimulatorInputPool? { get }
     /// The simulator's GSEvent port (rotation, lock). Connectionless: each
     /// send looks the port up, so making one does nothing.
     func makeGSEvents(for address: SimulatorAddress) -> any SimulatorGSEventBridging
@@ -312,6 +315,9 @@ public protocol SimulatorBridging: Sendable {
 }
 
 extension SimulatorBridging {
+    /// A bridge that keeps no channel (a test double, say).
+    public var inputPool: SimulatorInputPool? { nil }
+
     /// Loads the bridge only when `BridgeCompatibility` allows
     /// `installedVersion` (by default the installed CoreSimulator, read
     /// without loading it); otherwise throws `.incompatible` and loads nothing.
@@ -373,6 +379,73 @@ public protocol SimulatorInputBridging: AnyObject, Sendable {
     func disconnect()
 }
 
+/// Connected input channels kept between sessions of one simulator. A
+/// foldable's session starts again on the other panel at each fold, and a
+/// channel connects on its first send (the device lookup and dtuhidd's
+/// reply tail): the first tap on the new panel waited about a second
+/// (iPhone Duo, iOS 27.1, 2026-10-13: 1.1–1.3 s, the next one 0.2 s), where
+/// Device Hub answered at once. A stopping session parks its channel here and
+/// the next one takes it, aiming it at its own panel; a channel nobody takes
+/// within `lingering` disconnects.
+public final class SimulatorInputPool: Sendable {
+    /// How long a parked channel waits for the next session.
+    public static let lingering: Duration = .seconds(10)
+
+    private let parked = Mutex<(channels: [SimulatorAddress: (input: any SimulatorInputBridging, token: UInt64)], next: UInt64)>(([:], 0))
+    private let lingering: Duration
+
+    public init(lingering: Duration = SimulatorInputPool.lingering) {
+        self.lingering = lingering
+    }
+
+    /// Keeps `input`, connected, for the next session of `address`; one
+    /// parked before for it disconnects.
+    public func park(_ input: any SimulatorInputBridging, for address: SimulatorAddress) {
+        let (token, replaced) = parked.withLock { state -> (UInt64, (any SimulatorInputBridging)?) in
+            state.next &+= 1
+            let replaced = state.channels[address]?.input
+            state.channels[address] = (input, state.next)
+            return (state.next, replaced)
+        }
+        if let replaced, replaced !== input { replaced.disconnect() }
+        DispatchQueue.global(qos: .utility).asyncAfter(deadline: .now() + .nanoseconds(Self.nanoseconds(lingering))) { [weak self] in
+            self?.expire(address, token: token)
+        }
+    }
+
+    /// The channel parked for `address`, if it is still connected.
+    public func take(for address: SimulatorAddress) -> (any SimulatorInputBridging)? {
+        guard let input = parked.withLock({ $0.channels.removeValue(forKey: address)?.input }) else { return nil }
+        guard input.isConnected else {
+            input.disconnect()
+            return nil
+        }
+        return input
+    }
+
+    /// Disconnects the channel parked for `address`: its simulator shut down
+    /// or booted again, and a channel into the boot that ended would take
+    /// the next session's first send. The disconnect runs off the caller's
+    /// queue, as `expire`'s does: a channel never disconnects on the main
+    /// queue.
+    public func discard(for address: SimulatorAddress) {
+        guard let input = parked.withLock({ $0.channels.removeValue(forKey: address)?.input }) else { return }
+        DispatchQueue.global(qos: .utility).async { input.disconnect() }
+    }
+
+    private func expire(_ address: SimulatorAddress, token: UInt64) {
+        let input = parked.withLock { state -> (any SimulatorInputBridging)? in
+            guard state.channels[address]?.token == token else { return nil }
+            return state.channels.removeValue(forKey: address)?.input
+        }
+        input?.disconnect()
+    }
+
+    private static func nanoseconds(_ duration: Duration) -> Int {
+        Int(duration.components.seconds) * 1_000_000_000 + Int(duration.components.attoseconds / 1_000_000_000)
+    }
+}
+
 /// The GSEvents SpringBoard reads from the simulator's `PurpleWorkspacePort`.
 /// Each send is one mach message with a send timeout (about 2 s at most).
 public protocol SimulatorGSEventBridging: AnyObject, Sendable {
@@ -420,9 +493,11 @@ public final class FakeSimulatorBridge: SimulatorBridging {
     }
 
     private let state: Mutex<State>
+    public let inputPool: SimulatorInputPool?
 
-    public init(_ configuration: Configuration = Configuration()) {
+    public init(_ configuration: Configuration = Configuration(), inputPool: SimulatorInputPool? = nil) {
         state = Mutex(State(configuration: configuration))
+        self.inputPool = inputPool
     }
 
     public var configuration: Configuration {

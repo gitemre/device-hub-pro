@@ -153,6 +153,24 @@ public enum SimulatorReadiness {
     /// (the home screen), only inside it (the boot screen), or none (dark).
     /// Nil when the image cannot be drawn.
     public static func screenContent(_ image: CGImage) -> ScreenContent? {
+        screenReading(image)?.content
+    }
+
+    /// What a screenshot shows and how bright it is.
+    public struct ScreenReading: Sendable, Equatable {
+        public var content: ScreenContent
+        /// The mean grey of the thumbnail, 0 (black) to 1 (white).
+        public var luminance: Double
+
+        public init(content: ScreenContent, luminance: Double) {
+            self.content = content
+            self.luminance = luminance
+        }
+    }
+
+    /// `screenContent` of `image` and its mean grey, read off the same
+    /// thumbnail; nil when the image cannot be drawn.
+    public static func screenReading(_ image: CGImage) -> ScreenReading? {
         guard image.width > 0, image.height > 0 else { return nil }
         let width = 120
         let height = max(1, Int((Double(image.height) * Double(width) / Double(image.width)).rounded()))
@@ -187,8 +205,14 @@ public enum SimulatorReadiness {
                 }
             }
         }
-        if litOutside >= minimumLitPixels { return .homeScreen }
-        return litOutside + litInside >= minimumLitPixels ? .bootScreen : .dark
+        let luminance = Double(pixels.reduce(0) { $0 + Int($1) }) / Double(pixels.count * 255)
+        let content: ScreenContent
+        if litOutside >= minimumLitPixels {
+            content = .homeScreen
+        } else {
+            content = litOutside + litInside >= minimumLitPixels ? .bootScreen : .dark
+        }
+        return ScreenReading(content: content, luminance: luminance)
     }
 
     /// `showsHomeScreen` for a PNG file (`simctl io screenshot`); nil when
@@ -200,10 +224,15 @@ public enum SimulatorReadiness {
     /// `screenContent` for a PNG file (`simctl io screenshot`); nil when the
     /// file holds no image.
     public static func screenContent(imageAt url: URL) -> ScreenContent? {
+        screenReading(imageAt: url)?.content
+    }
+
+    /// `screenReading` for a PNG file; nil when the file holds no image.
+    public static func screenReading(imageAt url: URL) -> ScreenReading? {
         guard let source = CGImageSourceCreateWithURL(url as CFURL, nil),
               let image = CGImageSourceCreateImageAtIndex(source, 0, nil)
         else { return nil }
-        return screenContent(image)
+        return screenReading(image)
     }
 
     /// A thumbnail pixel brighter than this (of 255) is drawn content.
