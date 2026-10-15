@@ -1,5 +1,6 @@
 import XCTest
 import AppKit
+import UniformTypeIdentifiers
 @testable import DeviceHubProApp
 @testable import DeviceHubProKit
 
@@ -286,6 +287,16 @@ final class StageParityTests: XCTestCase {
         XCTAssertNil(SystemDeviceIcon.image(forModelIdentifier: "NoSuchModel99,9"))
         XCTAssertNil(SystemDeviceIcon.image(forModelIdentifier: nil))
         XCTAssertNil(SystemDeviceIcon.image(forModelIdentifier: ""))
+    }
+
+    /// A model macOS declares without a picture of its own gets the blank
+    /// document icon, which is no picture: the chrome stands in.
+    func testTheBlankDocumentIconIsNoPicture() {
+        XCTAssertTrue(SystemDeviceIcon.isGenericDocumentIcon(NSWorkspace.shared.icon(for: .data)))
+        for model in ["iPhone18,3", "iPad15,7", "AppleTV5,3"] {
+            guard let type = UTType(tag: model, tagClass: UTTagClass(rawValue: "com.apple.device-model-code"), conformingTo: nil) else { continue }
+            XCTAssertFalse(SystemDeviceIcon.isGenericDocumentIcon(NSWorkspace.shared.icon(for: type)), model)
+        }
     }
 
     func testTheIconsContentIsFoundByItsAlpha() throws {

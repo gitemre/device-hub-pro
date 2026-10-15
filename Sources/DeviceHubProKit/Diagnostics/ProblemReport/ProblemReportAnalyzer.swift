@@ -93,7 +93,7 @@ public enum ProblemReportAnalyzer {
 
     // MARK: Rules
 
-    public static let rules: [ProblemRule] = coreRules + logRules
+    public static let rules: [ProblemRule] = coreRules + windowRules + logRules
 
     private static let noHypervisorFix = "Run the emulator on a Mac directly, not inside a virtual machine, or in one that passes virtualization through."
     private static let systemImageFix = "Download it again from the OS Version menu of the New Emulator sheet, or recreate the emulator."
@@ -337,6 +337,24 @@ public enum ProblemReportAnalyzer {
             var evidence = missing.map { "\(label(of: $0)): the process runs, adb doesn\u{2019}t list it" }
             evidence.append("Device Hub Pro\u{2019}s adb: \(android.adb.path ?? "unknown path")")
             return (evidence, .likely)
+        },
+    ]
+
+    // MARK: Rules from the app's windows
+
+    private static let windowRules: [ProblemRule] = [
+        ProblemRule(
+            id: "foldable-screens-stuck",
+            title: "The foldable simulator\u{2019}s screens stopped switching",
+            explanation: "After a fold both panels stayed dark: the simulator held back its display change, as iOS 27.1 does while the app in front hangs.",
+            fix: "Click the Screens Not Responding banner over the pill, or choose Controls \u{25B8} Lock twice. If an app keeps hanging, quit it in the simulator.",
+            evidenceKeys: ["windows[].foldable.screensStuck", "windows[].foldable.lastRead"],
+            priority: 35,
+            suppressedBy: []
+        ) { report in
+            let stuck = report.windows.compactMap(\.foldable).filter(\.screensStuck)
+            guard !stuck.isEmpty else { return nil }
+            return (stuck.map { "\($0.model): " + ProblemReportRenderer.foldableSummary($0) }, .likely)
         },
     ]
 

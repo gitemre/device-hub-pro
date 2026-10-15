@@ -645,6 +645,9 @@ final class DeviceWorkspace {
         simulatorCanvas.onLiveCanvasStarted = { [weak keyboard = services.simulatorHardwareKeyboard] udid in
             keyboard?.liveCanvasStarted(udid: udid)
         }
+        simulatorCanvas.onSimulatorWentAway = { [weak lifecycle = services.simulatorLifecycle] udid in
+            lifecycle?.noteWentAway(udid)
+        }
         simulatorCanvas.beginSession = { [weak self] session, device, capabilities in
             self?.beginMirrorSession(session, device: device, port: nil, capabilities: capabilities)
         }

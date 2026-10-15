@@ -99,6 +99,54 @@ final class ProblemReportStateTests: XCTestCase {
         XCTAssertEqual(AppModel.problemReportSelection(.physicalApple("00008101-001E30590A0A001E")).kind, "iPhone or iPad")
     }
 
+    /// A foldable's window carries the fold the app holds, the panel its
+    /// live view shows and the last read of its two panels, the brightness
+    /// as 0–255 and the age in whole seconds: no UDID.
+    func testAFoldableIsDescribedFromTheAppsOwnState() throws {
+        var record = SimulatorFoldRecord(angle: 105, panel: .inner)
+        record.pose = .landscapeLeft
+        let read = SimulatorCanvasController.LitPanelReading(
+            at: Date(timeIntervalSince1970: 1_000),
+            outer: SimulatorReadiness.ScreenReading(content: .homeScreen, luminance: 65.0 / 255),
+            inner: SimulatorReadiness.ScreenReading(content: .homeScreen, luminance: 137.0 / 255),
+            lit: .inner
+        )
+        let info = AppModel.problemReportFoldable(
+            model: "iPhone Duo",
+            record: record,
+            posture: .held(.laptop),
+            shownPanel: .outer,
+            lastRead: read,
+            screensStuck: false,
+            view: .front3D,
+            now: Date(timeIntervalSince1970: 1_004.4)
+        )
+        XCTAssertEqual(info, ProblemReport.FoldableInfo(
+            model: "iPhone Duo",
+            hingeAngle: 105,
+            posture: .laptop,
+            held: .landscapeLeft,
+            litPanel: .inner,
+            shownPanel: .outer,
+            lastRead: ProblemReport.PanelRead(
+                secondsAgo: 4,
+                outer: ProblemReport.PanelReading(content: .screen, grey: 65),
+                inner: ProblemReport.PanelReading(content: .screen, grey: 137),
+                lit: .inner
+            ),
+            screensStuck: false,
+            view: .front3D
+        ))
+        let closed = AppModel.problemReportFoldable(
+            model: "iPhone Duo", record: .closed, posture: .preset(.closed), shownPanel: nil,
+            lastRead: nil, screensStuck: true, view: .flat2D, now: Date()
+        )
+        XCTAssertEqual(closed.posture, .closed)
+        XCTAssertEqual(closed.held, .portrait)
+        XCTAssertNil(closed.lastRead)
+        XCTAssertTrue(closed.screensStuck)
+    }
+
     /// The preferences are yes/no and counts: no path, no team, no identifier.
     func testPreferencesAreYesNoAndCountsOnly() throws {
         let defaults = UserDefaults.scratch()

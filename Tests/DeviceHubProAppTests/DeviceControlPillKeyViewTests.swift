@@ -21,6 +21,31 @@ import XCTest
 @MainActor
 final class DeviceControlPillKeyViewTests: XCTestCase {
     func testATextFieldBesideThePillTakesFocus() throws {
+        let model = AppModel.testing()
+        try assertAFieldTakesFocus(
+            beside: DeviceControlPill().environment(model).environment(model.workspace),
+            width: 320
+        )
+    }
+
+    /// A foldable's pill, the real one with its width tiers (`ViewThatFits`)
+    /// and the hinge slider in view all the time (it came and went with
+    /// Option): the buttons, the slider and the capsules' interactive glass
+    /// leave the key-view walk as it was, in the widest tier, one that
+    /// drops Laptop and Tent, and the scaled one the compact window uses
+    /// (`GeometryReader`, `scaleEffect`).
+    func testATextFieldBesideTheFoldablePillTakesFocusInEveryWidth() throws {
+        for width in [620, 450, 330, 258] as [CGFloat] {
+            let model = AppModel.testing()
+            try assertAFieldTakesFocus(
+                beside: DeviceControlPill(fixture: .init()).environment(model).environment(model.workspace)
+                    .frame(maxWidth: width, alignment: .leading),
+                width: width
+            )
+        }
+    }
+
+    private func assertAFieldTakesFocus(beside pill: some View, width: CGFloat) throws {
         let finished = Flag()
         Thread.detachNewThread {
             Thread.sleep(forTimeInterval: 20)
@@ -32,11 +57,10 @@ final class DeviceControlPillKeyViewTests: XCTestCase {
         }
         defer { finished.set() }
 
-        let model = AppModel.testing()
-        let host = NSHostingView(rootView: DeviceControlPill().environment(model).environment(model.workspace))
-        host.frame = CGRect(x: 0, y: 0, width: 320, height: 60)
+        let host = NSHostingView(rootView: pill)
+        host.frame = CGRect(x: 0, y: 0, width: width, height: 60)
         let field = NSTextField(frame: CGRect(x: 10, y: 80, width: 200, height: 22))
-        let content = NSView(frame: CGRect(x: 0, y: 0, width: 320, height: 120))
+        let content = NSView(frame: CGRect(x: 0, y: 0, width: width, height: 120))
         content.addSubview(host)
         content.addSubview(field)
         let window = NSWindow(contentRect: content.frame, styleMask: [.titled], backing: .buffered, defer: false)

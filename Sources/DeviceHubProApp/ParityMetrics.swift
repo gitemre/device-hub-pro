@@ -284,9 +284,26 @@ enum ParityMetrics {
     /// left edge, Open's 20.4 pt from its right). The divider is 1 x 20 pt,
     /// centred, #eaeaea over the capsule's #fdfdfd, and Rotate's and
     /// Closed's centres are 37.9 pt apart: 1.45 pt either side of it.
+    /// Ours is that capsule only in its narrowest tier (`FoldPillLayout.posturesOnly`,
+    /// 146.4 pt): the widest adds the 3D button after Rotate, Laptop and Tent
+    /// after Open, and a second divider and the hinge slider at the right end
+    /// (354.3 pt), Device Hub's pill having none of them.
     static let foldPillDividerWidth: CGFloat = 1
     static let foldPillDividerHeight: CGFloat = 20
     static let foldPillDividerGap: CGFloat = 1.45
+    /// The hinge slider (DH 27.1, iPhone Duo, 2026-10-12, measured from a 2x
+    /// screen recording of the pill, 0.91 px per pt against the capsule's
+    /// 145.6 pt) is the native macOS 26 slider (white capsule knob, accent
+    /// fill left of it, grey track), drawn by SwiftUI's `Slider`, starting
+    /// 9 pt inside the three posture buttons' 102 pt: 84 pt for 180°. Ours
+    /// takes the same width (2026-10-13: on our five buttons' row it ran
+    /// 150 pt, the hinge moving under 1.2° a point where Device Hub's moves
+    /// 2.1°). Device Hub shows it only while Option is held, in place of the
+    /// postures; ours is always in view at the capsule's right end, past a
+    /// divider, so it is found without knowing about Option and the postures
+    /// stay: a deliberate departure from Device Hub. Option only turns
+    /// Rotate left.
+    static let foldPillSliderInset: CGFloat = 9
     /// How far above the fit area's middle Device Hub draws a foldable's
     /// front-on 3D model: iPhone Duo's outline centred 5–7 px (at 2x)
     /// higher than ours in each posture, in windows of the same frame
@@ -311,6 +328,17 @@ enum ParityMetrics {
     /// DH's compact stage begins 6.5 pt above the toolbar band's bottom edge
     /// (its phone is 480 pt tall and starts 1.5 pt under the band).
     static let compactStageTopOverlap: CGFloat = 6.5
+    /// Device Hub's compact window round iPhone Duo (Xcode 27.1 RC, 2026-10-14,
+    /// "Switch to compact window"): its frame is 696 x 784 pt, and it keeps
+    /// that size through Closed, Partially Open and Open (it does not resize
+    /// as the device folds). The model in it is the main window's front-on
+    /// one, centred with room round it: about 379 pt tall closed, and about
+    /// 494 x 382 pt open. That is `MirrorStageContent.frontModel` on the
+    /// compact stage's 696 x 693.5 pt (the frame less the 52 pt toolbar band,
+    /// plus `compactStageTopOverlap`, less `compactStagePillBand`):
+    /// min(693.5 x 0.550, 696 x 0.5455) = 379.7 pt. Another device keeps
+    /// 258 x 587 (`CompactMirrorWindow.frameSize`).
+    static let compactFoldableWindowSize = CGSize(width: 696, height: 784)
     /// The band the main stage keeps under the device for the pill (the
     /// compact window keeps `compactStagePillBand`): DH centres the running
     /// device 9.5 pt lower than that band gave (audit 2026-09-29: DH's art

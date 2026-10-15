@@ -178,223 +178,243 @@ struct EmulatorPressButton<Label: View>: View {
 /// navigation bar; the pill's buttons keep their long-press and right-click
 /// behaviours, and carry no tooltips, like DH's.
 ///
+/// On a foldable simulator the rotate circle is a second capsule instead
+/// (Rotate, a 3D button, the postures and the hinge slider: `FoldPillLayout`),
+/// and the pill is drawn in the widest of its width tiers that the stage has
+/// room for (`FoldPillTier`, `FoldPillFitting`): the compact window is 258 pt
+/// wide and the narrowest main window leaves the stage 349 pt.
+///
 /// The first button is Home (DH's "Home", `app.grid.3x3`): it presses the
 /// device's Home button. The inspector's Apps tab is reached from the
 /// toolbar's segments, as in DH.
 struct DeviceControlPill: View {
+    /// What a live foldable simulator and its replay ring give the pill,
+    /// fixed by a test: a test run has no foldable simulator to mirror.
+    /// The app passes none.
+    struct Fixture: Equatable {
+        var offersModelToggle = true
+        var offersReplay = true
+    }
+
     @Environment(AppModel.self) private var model
     @Environment(DeviceWorkspace.self) private var workspace
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
+    /// Option held, which turns a foldable simulator's Rotate left, and a
+    /// hinge slider drag in progress.
+    @State private var optionKey = OptionKeyMonitor()
+    @State private var draggingHinge = false
+    private let fixture: Fixture?
+
+    init(fixture: Fixture? = nil) {
+        self.fixture = fixture
+    }
+
+    /// Whether the pill carries a foldable's capsule.
+    private var showsFoldCapsule: Bool { fixture != nil || workspace.simulatorFold.showsFoldControls }
+
+    /// Whether the fold capsule has the 3D button (`FoldPillLayout.offersModelToggle`).
+    private var offersModelToggle: Bool {
+        fixture?.offersModelToggle ?? FoldPillLayout.offersModelToggle(
+            hasModel: workspace.simulatorFold.deviceModel != nil,
+            showsDeviceFrame: workspace.window.showDeviceFrame
+        )
+    }
 
     var body: some View {
+        if showsFoldCapsule {
+            // A foldable's pill is the widest of its tiers the stage has room
+            // for (`FoldPillTier`).
+            FoldPillFitting(offersModelToggle: offersModelToggle, offersReplay: showsReplayButton) { row($0) }
+                .onAppear { optionKey.start() }
+                .onDisappear { optionKey.stop() }
+        } else {
+            row(.widest)
+        }
+    }
+
+    /// The whole pill for one tier: the first capsule, then a foldable's
+    /// capsule or the rotate circle.
+    private func row(_ tier: FoldPillTier) -> some View {
         HStack(spacing: ParityMetrics.pillSpacing) {
-            HStack(spacing: 0) {
-                EmulatorPressButton(
-                    size: pillButtonSize,
-                    hitSize: ParityMetrics.pillButtonHitSize,
-                    platter: .capsule(ParityMetrics.pillPlatterSize),
-                    onTap: { await pressHome() },
-                    accessibilityTitle: "Home",
-                    showsTooltip: false,
-                    // A physical iPhone without Control says why in the
-                    // tooltip (Home starts Control on demand).
-                    help: physicalActionReason
-                ) {
-                    PillGridGlyph()
-                }
-                .disabled(!canPressHome)
-                .padding(.leading, ParityMetrics.pillCapsulePadding)
-
-                EmulatorPressButton(
-                    size: pillButtonSize,
-                    hitSize: ParityMetrics.pillButtonHitSize,
-                    platter: .capsule(ParityMetrics.pillPlatterSize),
-                    onTap: { await workspace.capture.takeScreenshot() },
-                    onLongPress: { await workspace.capture.copyScreenshotToClipboard() },
-                    menuItems: [
-                        // The annotation editor, off the default path:
-                        // DH's button saves at once.
-                        EmulatorMenuItem(title: "Annotate Screenshot…", isEnabled: workspace.capture.canTakeScreenshot) {
-                            await workspace.capture.annotateScreenshot()
-                        },
-                        EmulatorMenuItem(title: "Copy to Clipboard", isEnabled: workspace.capture.canTakeScreenshot) {
-                            await workspace.capture.copyScreenshotToClipboard()
-                        },
-                        EmulatorMenuItem(
-                            title: model.preferences.includeDeviceFrameInScreenshots
-                                ? "Exclude Device Frame"
-                                : "Include Device Frame",
-                            isEnabled: workspace.capture.canTakeScreenshot
-                        ) {
-                            model.preferences.setIncludeDeviceFrameInScreenshots(
-                                !model.preferences.includeDeviceFrameInScreenshots
-                            )
-                        },
-                    ],
-                    accessibilityTitle: "Screenshot",
-                    showsTooltip: false
-                ) {
-                    pillLabel("camera.viewfinder")
-                }
-                // Off (no platter, dimmed) where it cannot act, as in
-                // the Device menu; a simulator captures from its canvas.
-                .disabled(!workspace.capture.canTakeScreenshot)
-                .padding(.trailing, isPhysicalPill ? ParityMetrics.pillCapsulePadding : 0)
-
-                // Device Hub's Record Screen is disabled for a physical
-                // iPhone: its pill has no Record button (recording stays
-                // reachable through the Controls menu's item).
-                if !isPhysicalPill {
-                    EmulatorPressButton(
-                        size: pillButtonSize,
-                        hitSize: ParityMetrics.pillButtonHitSize,
-                        platter: .capsule(ParityMetrics.pillPlatterSize),
-                        onTap: { await workspace.media.toggleRecording() },
-                        menuItems: recordMenuItems,
-                        accessibilityTitle: workspace.media.isRecording ? "Stop Recording" : "Record",
-                        showsTooltip: false
-                    ) {
-                        // The glyph swap animates as a symbol replace (it
-                        // snapped) when recording starts or stops.
-                        pillLabel(workspace.media.isRecording ? "stop.circle.fill" : "record.circle")
-                            .contentTransition(.symbolEffect(.replace))
-                            .animation(reduceMotion ? nil : MotionMetrics.banner, value: workspace.media.isRecording)
-                    }
-                    .padding(.trailing, showsReplayButton ? 0 : ParityMetrics.pillCapsulePadding)
-
-                    // Save the last N seconds: only where a replay ring
-                    // exists for this device (an Android device, a
-                    // simulator's live canvas), off only while it saves or
-                    // before the ring has frames.
-                    if showsReplayButton {
-                        EmulatorPressButton(
-                            size: pillButtonSize,
-                            hitSize: ParityMetrics.pillButtonHitSize,
-                            platter: .capsule(ParityMetrics.pillPlatterSize),
-                            onTap: { await workspace.media.saveReplay() },
-                            accessibilityTitle: "Save Replay",
-                            showsTooltip: false,
-                            help: workspace.media.replayTooltip
-                        ) {
-                            pillLabel("clock.arrow.circlepath")
-                        }
-                        .disabled(!workspace.media.canSaveReplayNow)
-                        .padding(.trailing, ParityMetrics.pillCapsulePadding)
-                        .popover(
-                            isPresented: Binding(
-                                get: { workspace.media.replayHintVisible },
-                                set: { workspace.media.replayHintVisible = $0 }
-                            ),
-                            arrowEdge: .top
-                        ) {
-                            Text(workspace.media.replayHintText)
-                                .font(.callout)
-                                .padding(.horizontal, 12)
-                                .padding(.vertical, 8)
-                        }
-                    }
-                }
-            }
-            // One interactive glass capsule behind the three buttons, and no
-            // GlassEffectContainer: on macOS 27 the buttons' own interactive
-            // glass, joined with `glassEffectUnion` inside a container, sent
-            // AppKit's key-view walk (AutoFill runs it each time a text field
-            // takes focus: the sidebar's search, the log search) into a loop
-            // that never ended, and the app hung at 100 % CPU while a device
-            // was live (SIM-18, `DeviceControlPillKeyViewTests`). The
-            // toolbar's capsule groups have one parent glass too
-            // (`toolbarControlSurface`).
-            .background(ParityMetrics.pillLift, in: Capsule())
-            .liquidGlass(interactive: true, tint: ParityMetrics.pillTint, in: Capsule())
-            .glassHairline(in: Capsule())
-            .dhGlassRim(in: Capsule())
+            mainCapsule(showsReplay: tier.showsReplay(offered: showsReplayButton))
 
             // A foldable simulator: Rotate shares a capsule with the
             // postures, as in Device Hub 27.1. A TV, a watch and a car do not
             // rotate: no Rotate button.
-            if workspace.simulatorFold.showsFoldControls {
-                foldPill
+            if showsFoldCapsule {
+                foldPill(tier.layout)
             } else if workspace.deviceRotates {
-            EmulatorPressButton(
-                size: CGSize(
-                    width: ParityMetrics.pillCircleDiameter,
-                    height: ParityMetrics.pillCircleDiameter
-                ),
-                platter: .circle(diameter: ParityMetrics.pillCirclePlatterDiameter),
-                onTap: { await rotate(left: true) },
-                onLongPress: { await rotate(left: false) },
-                menuItems: [
-                    EmulatorMenuItem(title: "Rotate Left", isEnabled: canRotate) { await rotate(left: true) },
-                    EmulatorMenuItem(title: "Rotate Right", isEnabled: canRotate) { await rotate(left: false) },
-                ],
-                accessibilityTitle: "Rotate Left",
-                showsTooltip: false,
-                help: isPhysicalPill ? workspace.physicalLive.rotationAvailability : nil
-            ) {
-                PillRotateGlyph()
-            }
-            // A simulator turns only where its session can (the live
-            // canvas, or devicectl at T2); an Android device as before; a
-            // physical iPhone turns through devicectl, no Control.
-            .disabled(!canRotate)
-            .background(ParityMetrics.pillLift, in: Circle())
-            .liquidGlass(interactive: true, tint: ParityMetrics.pillTint, in: Circle())
-            .glassHairline(in: Circle())
-            .dhGlassRim(in: Circle())
+                rotateCircle
             }
         }
     }
 
-    /// A foldable simulator's second capsule, as Device Hub 27.1 draws iPhone
-    /// Duo's: Rotate, a divider, then Closed, Partially Open and Open, with a
-    /// laptop and a tent beside them; the current posture in the accent
-    /// colour, each named in its tooltip.
-    private var foldPill: some View {
+    /// The [home │ screenshot │ record] capsule, with Save Replay where
+    /// `showsReplay` (offered, and the tier keeps it).
+    private func mainCapsule(showsReplay: Bool) -> some View {
         HStack(spacing: 0) {
             EmulatorPressButton(
                 size: pillButtonSize,
                 hitSize: ParityMetrics.pillButtonHitSize,
                 platter: .capsule(ParityMetrics.pillPlatterSize),
-                onTap: { await rotate(left: true) },
-                onLongPress: { await rotate(left: false) },
+                onTap: { await pressHome() },
+                accessibilityTitle: "Home",
+                showsTooltip: false,
+                // A physical iPhone without Control says why in the
+                // tooltip (Home starts Control on demand).
+                help: physicalActionReason
+            ) {
+                PillGridGlyph()
+            }
+            .disabled(!canPressHome)
+            .padding(.leading, ParityMetrics.pillCapsulePadding)
+
+            EmulatorPressButton(
+                size: pillButtonSize,
+                hitSize: ParityMetrics.pillButtonHitSize,
+                platter: .capsule(ParityMetrics.pillPlatterSize),
+                onTap: { await workspace.capture.takeScreenshot() },
+                onLongPress: { await workspace.capture.copyScreenshotToClipboard() },
                 menuItems: [
-                    EmulatorMenuItem(title: "Rotate Left", isEnabled: canRotate) { await rotate(left: true) },
-                    EmulatorMenuItem(title: "Rotate Right", isEnabled: canRotate) { await rotate(left: false) },
+                    // The annotation editor, off the default path:
+                    // DH's button saves at once.
+                    EmulatorMenuItem(title: "Annotate Screenshot…", isEnabled: workspace.capture.canTakeScreenshot) {
+                        await workspace.capture.annotateScreenshot()
+                    },
+                    EmulatorMenuItem(title: "Copy to Clipboard", isEnabled: workspace.capture.canTakeScreenshot) {
+                        await workspace.capture.copyScreenshotToClipboard()
+                    },
+                    EmulatorMenuItem(
+                        title: model.preferences.includeDeviceFrameInScreenshots
+                            ? "Exclude Device Frame"
+                            : "Include Device Frame",
+                        isEnabled: workspace.capture.canTakeScreenshot
+                    ) {
+                        model.preferences.setIncludeDeviceFrameInScreenshots(
+                            !model.preferences.includeDeviceFrameInScreenshots
+                        )
+                    },
                 ],
-                accessibilityTitle: "Rotate Left",
+                accessibilityTitle: "Screenshot",
                 showsTooltip: false
             ) {
-                if let model = workspace.simulatorFold.deviceModel, let bundle = FoldPostureGlyphs.bundle(for: model),
-                   FoldPostureGlyphs.hasSymbol(FoldPostureGlyphs.rotateName, model: model) {
-                    Image(FoldPostureGlyphs.rotateName, bundle: bundle)
-                        .font(.system(size: ParityMetrics.pillIconSize, weight: .medium))
-                } else {
-                    PillRotateGlyph()
-                }
+                pillLabel("camera.viewfinder")
             }
-            .disabled(!canRotate)
+            // Off (no platter, dimmed) where it cannot act, as in
+            // the Device menu; a simulator captures from its canvas.
+            .disabled(!workspace.capture.canTakeScreenshot)
+            .padding(.trailing, isPhysicalPill ? ParityMetrics.pillCapsulePadding : 0)
 
-            Rectangle()
-                .fill(.separator)
-                .frame(width: ParityMetrics.foldPillDividerWidth, height: ParityMetrics.foldPillDividerHeight)
-                .padding(.horizontal, ParityMetrics.foldPillDividerGap)
-
-            ForEach(SimulatorFoldPostureChoice.pillOrder, id: \.title) { choice in
+            // Device Hub's Record Screen is disabled for a physical
+            // iPhone: its pill has no Record button (recording stays
+            // reachable through the Controls menu's item).
+            if !isPhysicalPill {
                 EmulatorPressButton(
                     size: pillButtonSize,
                     hitSize: ParityMetrics.pillButtonHitSize,
                     platter: .capsule(ParityMetrics.pillPlatterSize),
-                    onTap: { select(choice) },
-                    accessibilityTitle: choice.title,
-                    showsTooltip: false,
-                    help: choice.title
+                    onTap: { await workspace.media.toggleRecording() },
+                    menuItems: recordMenuItems,
+                    accessibilityTitle: workspace.media.isRecording ? "Stop Recording" : "Record",
+                    showsTooltip: false
                 ) {
-                    FoldPostureGlyph(
-                        choice: choice,
-                        model: workspace.simulatorFold.deviceModel,
-                        isCurrent: workspace.simulatorFold.postureChoice == choice
-                    )
+                    // The glyph swap animates as a symbol replace (it
+                    // snapped) when recording starts or stops.
+                    pillLabel(workspace.media.isRecording ? "stop.circle.fill" : "record.circle")
+                        .contentTransition(.symbolEffect(.replace))
+                        .animation(reduceMotion ? nil : MotionMetrics.banner, value: workspace.media.isRecording)
                 }
+                .padding(.trailing, showsReplay ? 0 : ParityMetrics.pillCapsulePadding)
+
+                // Save the last N seconds: only where a replay ring
+                // exists for this device (an Android device, a
+                // simulator's live canvas), off only while it saves or
+                // before the ring has frames.
+                if showsReplay {
+                    EmulatorPressButton(
+                        size: pillButtonSize,
+                        hitSize: ParityMetrics.pillButtonHitSize,
+                        platter: .capsule(ParityMetrics.pillPlatterSize),
+                        onTap: { await workspace.media.saveReplay() },
+                        accessibilityTitle: "Save Replay",
+                        showsTooltip: false,
+                        help: workspace.media.replayTooltip
+                    ) {
+                        pillLabel("clock.arrow.circlepath")
+                    }
+                    .disabled(!workspace.media.canSaveReplayNow)
+                    .padding(.trailing, ParityMetrics.pillCapsulePadding)
+                    .popover(
+                        isPresented: Binding(
+                            get: { workspace.media.replayHintVisible },
+                            set: { workspace.media.replayHintVisible = $0 }
+                        ),
+                        arrowEdge: .top
+                    ) {
+                        Text(workspace.media.replayHintText)
+                            .font(.callout)
+                            .padding(.horizontal, 12)
+                            .padding(.vertical, 8)
+                    }
+                }
+            }
+        }
+        // One interactive glass capsule behind the buttons, and no
+        // GlassEffectContainer: on macOS 27 the buttons' own interactive
+        // glass, joined with `glassEffectUnion` inside a container, sent
+        // AppKit's key-view walk (AutoFill runs it each time a text field
+        // takes focus: the sidebar's search, the log search) into a loop
+        // that never ended, and the app hung at 100 % CPU while a device
+        // was live (SIM-18, `DeviceControlPillKeyViewTests`). The
+        // toolbar's capsule groups have one parent glass too
+        // (`toolbarControlSurface`).
+        .background(ParityMetrics.pillLift, in: Capsule())
+        .liquidGlass(interactive: true, tint: ParityMetrics.pillTint, in: Capsule())
+        .glassHairline(in: Capsule())
+        .dhGlassRim(in: Capsule())
+    }
+
+    /// The rotate circle beside the first capsule on a device that rotates but
+    /// does not fold.
+    private var rotateCircle: some View {
+        EmulatorPressButton(
+            size: CGSize(
+                width: ParityMetrics.pillCircleDiameter,
+                height: ParityMetrics.pillCircleDiameter
+            ),
+            platter: .circle(diameter: ParityMetrics.pillCirclePlatterDiameter),
+            onTap: { await rotate(left: true) },
+            onLongPress: { await rotate(left: false) },
+            menuItems: [
+                EmulatorMenuItem(title: "Rotate Left", isEnabled: canRotate) { await rotate(left: true) },
+                EmulatorMenuItem(title: "Rotate Right", isEnabled: canRotate) { await rotate(left: false) },
+            ],
+            accessibilityTitle: "Rotate Left",
+            showsTooltip: false,
+            help: isPhysicalPill ? workspace.physicalLive.rotationAvailability : nil
+        ) {
+            PillRotateGlyph()
+        }
+        // A simulator turns only where its session can (the live
+        // canvas, or devicectl at T2); an Android device as before; a
+        // physical iPhone turns through devicectl, no Control.
+        .disabled(!canRotate)
+        .background(ParityMetrics.pillLift, in: Circle())
+        .liquidGlass(interactive: true, tint: ParityMetrics.pillTint, in: Circle())
+        .glassHairline(in: Circle())
+        .dhGlassRim(in: Circle())
+    }
+
+    /// A foldable simulator's second capsule: Device Hub 27.1's, which holds
+    /// Rotate, a divider and Closed, Partially Open and Open (the current
+    /// posture in the accent colour, each named in its tooltip), with a 3D
+    /// button after Rotate, a laptop and a tent beside the postures, and the
+    /// hinge slider at the right end, past a second divider, where Device
+    /// Hub shows it only while Option is held (`FoldPillLayout`).
+    private func foldPill(_ layout: FoldPillLayout) -> some View {
+        HStack(spacing: 0) {
+            ForEach(Array(layout.items(offersModelToggle: offersModelToggle).enumerated()), id: \.offset) { _, item in
+                foldPillItem(item)
             }
         }
         .padding(.horizontal, ParityMetrics.pillCapsulePadding)
@@ -402,6 +422,116 @@ struct DeviceControlPill: View {
         .liquidGlass(interactive: true, tint: ParityMetrics.pillTint, in: Capsule())
         .glassHairline(in: Capsule())
         .dhGlassRim(in: Capsule())
+    }
+
+    @ViewBuilder
+    private func foldPillItem(_ item: FoldPillItem) -> some View {
+        switch item {
+        case .rotate:
+            foldRotateButton
+        case .modelToggle:
+            modelToggleButton
+        case .divider:
+            Rectangle()
+                .fill(.separator)
+                .frame(width: ParityMetrics.foldPillDividerWidth, height: ParityMetrics.foldPillDividerHeight)
+                .padding(.horizontal, ParityMetrics.foldPillDividerGap)
+        case .posture(let choice):
+            EmulatorPressButton(
+                size: pillButtonSize,
+                hitSize: ParityMetrics.pillButtonHitSize,
+                platter: .capsule(ParityMetrics.pillPlatterSize),
+                onTap: { select(choice) },
+                accessibilityTitle: choice.title,
+                showsTooltip: false,
+                help: choice.title
+            ) {
+                FoldPostureGlyph(
+                    choice: choice,
+                    model: workspace.simulatorFold.deviceModel,
+                    isCurrent: workspace.simulatorFold.postureChoice == choice,
+                    quarterTurned: FoldPostureGlyphs.isQuarterTurned(
+                        targetTurns: workspace.simulatorCanvas.devicePose.targetTurns,
+                        restingTurns: workspace.simulatorFold.restingTurns
+                    )
+                )
+            }
+        case .hingeSlider:
+            FoldHingeSlider(
+                angle: workspace.simulatorFold.hingeAngle ?? 0,
+                onChange: { degrees in
+                    if draggingHinge {
+                        workspace.simulatorFold.dragHinge(degrees)
+                    } else {
+                        workspace.simulatorFold.setHingeAngle(degrees)
+                    }
+                },
+                onDragging: { dragging in
+                    draggingHinge = dragging
+                    if !dragging { workspace.simulatorFold.endHingeDrag() }
+                }
+            )
+            .frame(width: FoldPillSlider.width)
+            .padding(.horizontal, ParityMetrics.foldPillSliderInset)
+        }
+    }
+
+    /// Rotate turns right, and left while Option is held.
+    private var foldRotateButton: some View {
+        EmulatorPressButton(
+            size: pillButtonSize,
+            hitSize: ParityMetrics.pillButtonHitSize,
+            platter: .capsule(ParityMetrics.pillPlatterSize),
+            onTap: { await rotate(left: FoldPillSlider.rotatesLeft(optionHeld: optionKey.isHeld)) },
+            onLongPress: { await rotate(left: !FoldPillSlider.rotatesLeft(optionHeld: optionKey.isHeld)) },
+            menuItems: [
+                EmulatorMenuItem(title: "Rotate Left", isEnabled: canRotate) { await rotate(left: true) },
+                EmulatorMenuItem(title: "Rotate Right", isEnabled: canRotate) { await rotate(left: false) },
+            ],
+            accessibilityTitle: optionKey.isHeld ? "Rotate Left" : "Rotate Right",
+            showsTooltip: false
+        ) {
+            // Rotate Right, and Rotate Left with Option held, each with
+            // its own symbol from the plug-in; without them the circle's
+            // arrows, mirrored for the left turn.
+            let name = optionKey.isHeld ? FoldPostureGlyphs.rotateLeftName : FoldPostureGlyphs.rotateName
+            if let model = workspace.simulatorFold.deviceModel, let bundle = FoldPostureGlyphs.bundle(for: model),
+               FoldPostureGlyphs.hasSymbol(name, model: model) {
+                Image(name, bundle: bundle)
+                    .font(.system(size: ParityMetrics.pillIconSize, weight: .medium))
+            } else {
+                PillRotateGlyph()
+                    .scaleEffect(x: optionKey.isHeld ? -1 : 1, y: 1)
+            }
+        }
+        .disabled(!canRotate)
+    }
+
+    /// View ▸ Show 3D Model, where the pill is: the same preference, so the
+    /// menu's check mark follows it. In the accent colour while the turnable
+    /// model is on, as the current posture is.
+    private var modelToggleButton: some View {
+        let isOn = model.preferences.showDeviceModel
+        let title = isOn ? "Show Front View" : "Show 3D Model"
+        return EmulatorPressButton(
+            size: pillButtonSize,
+            hitSize: ParityMetrics.pillButtonHitSize,
+            platter: .capsule(ParityMetrics.pillPlatterSize),
+            onTap: { model.preferences.setShowDeviceModel(!model.preferences.showDeviceModel) },
+            accessibilityTitle: title,
+            showsTooltip: false,
+            help: title
+        ) {
+            // "3D" spelled out: `rotate.3d`, a globe with an orbit at the
+            // pill's size, read as a language or web button.
+            Image(systemName: "view.3d")
+                .symbolRenderingMode(.hierarchical)
+                .font(.system(size: ParityMetrics.pillIconSize, weight: .medium))
+                .foregroundStyle(isOn ? AnyShapeStyle(.tint) : AnyShapeStyle(.primary))
+        }
+        // Named for what a press does; the lit glyph is the visible state,
+        // and a selected trait on top would read as a selected action.
+        .accessibilityIdentifier("deviceChrome.show3DModel")
     }
 
     private func select(_ choice: SimulatorFoldPostureChoice) {
@@ -431,7 +561,7 @@ struct DeviceControlPill: View {
     }
 
     /// Whether the pill carries the Save Replay button.
-    private var showsReplayButton: Bool { !isPhysicalPill && workspace.media.offersReplay }
+    private var showsReplayButton: Bool { fixture?.offersReplay ?? (!isPhysicalPill && workspace.media.offersReplay) }
 
     private var pillButtonSize: CGSize {
         CGSize(width: ParityMetrics.pillButtonWidth, height: ParityMetrics.pillHeight)

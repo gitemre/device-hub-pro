@@ -124,6 +124,12 @@ final class SimulatorLifecycleController {
     /// has it off; it ends with the operation, whose last step re-reads the
     /// list.
     private var transitions: [String: DeviceRunState] = [:]
+    /// The boot each simulator's readiness settled in (simctl's
+    /// `lastUsedAt`, the moment it booted).
+    @ObservationIgnored private var settledBoots: [String: Date] = [:]
+    /// The boot of each simulator whose live session saw it go away
+    /// (`noteWentAway`), until a listing shows it off or in another boot.
+    @ObservationIgnored private var endedBoots: [String: Date] = [:]
 
     /// simctl on the listed set; nil without Apple tooling.
     @ObservationIgnored var simctlSource: @MainActor () -> SimctlClient? = { nil }
@@ -441,20 +447,50 @@ final class SimulatorLifecycleController {
             }
             switch entry.state {
             case .booted, .booting:
+                forgetEndedBoot(entry)
                 if readiness[entry.udid] == nil, readinessWaits[entry.udid] == nil {
                     followExternalBoot(entry.udid)
                 }
             case .shutdown:
                 cancelReadinessWait(entry.udid)
                 readiness[entry.udid] = nil
+                endedBoots[entry.udid] = nil
                 bootedByDeviceHubPro.remove(entry.udid)
             case .shuttingDown:
                 cancelReadinessWait(entry.udid)
                 readiness[entry.udid] = nil
+                endedBoots[entry.udid] = nil
             case .creating, .other:
                 break
             }
         }
+    }
+
+    /// The mirrored simulator's live session saw it go away, with no
+    /// operation of this controller on it: shut down elsewhere, it may boot
+    /// again before any listing shows it off (Device Hub shuts down the
+    /// simulators it started when it quits; one booted again 4 s later was
+    /// listed Booted throughout, and its stage kept "The live view is not
+    /// running" with its readiness of the boot that ended, 2026-10-14). The
+    /// list is read again; a listing that shows it booted in another boot
+    /// follows that boot to ready (`forgetEndedBoot`).
+    func noteWentAway(_ udid: String) {
+        guard !isStopped, operations[udid] == nil, let boot = settledBoots[udid] else { return }
+        endedBoots[udid] = boot
+        Task { [weak self] in await self?.reloadList() }
+    }
+
+    /// Drops the readiness (and the ownership) of the boot that ended for a
+    /// simulator a listing shows booted in another one since its session saw
+    /// it go away.
+    private func forgetEndedBoot(_ entry: SimulatorEntry) {
+        guard let ended = endedBoots[entry.udid], let boot = entry.lastUsedAt, boot != ended else { return }
+        endedBoots[entry.udid] = nil
+        cancelReadinessWait(entry.udid)
+        recheckCounts[entry.udid] = nil
+        readiness[entry.udid] = nil
+        // Booted again elsewhere: not Device Hub Pro's to shut down at quit.
+        bootedByDeviceHubPro.remove(entry.udid)
     }
 
     /// Follows every simulator that reads as not responding again, from the
@@ -539,6 +575,9 @@ final class SimulatorLifecycleController {
         nextClaim += 1
         claims[udid] = nextClaim
         operations[udid] = operation
+        // The operation decides the simulator's state from here: a boot
+        // that ended before it is not one to follow after it.
+        endedBoots[udid] = nil
         return nextClaim
     }
 
@@ -755,6 +794,16 @@ final class SimulatorLifecycleController {
         _ simctl: SimctlClient,
         display: UInt32? = nil
     ) async -> SimulatorReadiness.ScreenContent? {
+        await screenshotReading(udid, simctl, display: display)?.content
+    }
+
+    /// `screenshotContent` with the screenshot's brightness
+    /// (`SimulatorFold.litPanel`).
+    nonisolated static func screenshotReading(
+        _ udid: String,
+        _ simctl: SimctlClient,
+        display: UInt32? = nil
+    ) async -> SimulatorReadiness.ScreenReading? {
         let file = FileManager.default.temporaryDirectory
             .appendingPathComponent("DeviceHubPro-ready-\(UUID().uuidString).png")
         defer {
@@ -766,7 +815,7 @@ final class SimulatorLifecycleController {
         } catch {
             return nil
         }
-        return SimulatorReadiness.screenContent(imageAt: file)
+        return SimulatorReadiness.screenReading(imageAt: file)
     }
 
     /// A wait that ended on `error`: cancelled (nil, nothing recorded), the
@@ -792,6 +841,7 @@ final class SimulatorLifecycleController {
     private func settle(_ udid: String, _ outcome: Readiness, startedHere: Bool) -> Readiness? {
         guard !Task.isCancelled else { return nil }
         readiness[udid] = outcome
+        if let boot = entrySource(udid)?.lastUsedAt { settledBoots[udid] = boot }
         firstBoots.remove(udid)
         switch outcome {
         case .ready:
@@ -840,6 +890,8 @@ final class SimulatorLifecycleController {
         recheckCounts[udid] = nil
         readiness[udid] = nil
         transitions[udid] = nil
+        settledBoots[udid] = nil
+        endedBoots[udid] = nil
         firstBoots.remove(udid)
         bootedByDeviceHubPro.remove(udid)
     }

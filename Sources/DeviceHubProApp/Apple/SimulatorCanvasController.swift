@@ -97,11 +97,37 @@ final class SimulatorCanvasController {
     /// A live canvas started for the simulator (`SimulatorHardwareKeyboardController`
     /// connects its keyboard then, by default).
     @ObservationIgnored var onLiveCanvasStarted: (@MainActor (_ udid: String) -> Void)?
+    /// The mirrored simulator's session ended because the simulator went
+    /// away (shut down elsewhere): the lifecycle follows it if it boots
+    /// again before a listing shows it off (`SimulatorLifecycleController.noteWentAway`).
+    @ObservationIgnored var onSimulatorWentAway: (@MainActor (_ udid: String) -> Void)?
+    /// A lit-panel check is over for the simulator: the panel it read is the
+    /// one recorded (or it could not tell, and gave up retrying).
+    @ObservationIgnored var onLitPanelSettled: (@MainActor (_ udid: String) -> Void)?
     /// The simulator the last session started for, and the panel it shows.
     @ObservationIgnored private var startedPanel: (udid: String, panel: SimulatorSessionPanel)?
     /// Foldables whose lit panel is being read off their screenshots
     /// (`readLitPanel`).
     @ObservationIgnored private var readingLitPanel: Set<String> = []
+    /// The reads `checkLitPanel` asked for: one at a time for each
+    /// foldable, a request made meanwhile reads again afterwards, and an
+    /// inconclusive read is retried (`LitPanelCheckQueue`). Apart from
+    /// `readingLitPanel`, so the read a session start makes never swallows a
+    /// check.
+    @ObservationIgnored private var litChecks = LitPanelCheckQueue()
+    /// The foldable whose panels a hinge move left both dark, read after the
+    /// retries and once more `stuckScreensConfirmDelay` later: the stage
+    /// offers to lock and wake it (`lockAndWake`). A simulator whose
+    /// foreground app hung kept its fold's display change waiting for that
+    /// app, with both panels dark at 180° for half an hour, until Lock pressed
+    /// twice let it go (iOS 27.1, 2026-10-14). Nil once a read finds a lit
+    /// panel, or the banner is acted on or dismissed.
+    private(set) var stuckScreens: String?
+    /// How long after the retries gave up a second look waits.
+    @ObservationIgnored var stuckScreensConfirmDelay: Duration = .seconds(3)
+    @ObservationIgnored private var stuckScreensConfirm: [String: Task<Void, Never>] = [:]
+    /// The retry each foldable waits for, by UDID.
+    @ObservationIgnored private var litCheckRetries: [String: Task<Void, Never>] = [:]
     /// Whether dtuhidd was already connected in the simulator's boot when
     /// its live session last started, by UDID
     /// (`SimulatorCanvasMemory.dtuhiddWasActive`).
@@ -205,15 +231,111 @@ final class SimulatorCanvasController {
         let outerScreen = panels.profile(of: .outer).screenID
         let innerScreen = panels.profile(of: .inner).screenID
         Task { [weak self] in
-            async let outer = SimulatorLifecycleController.screenshotContent(udid, simctl, display: outerScreen)
-            async let inner = SimulatorLifecycleController.screenshotContent(udid, simctl, display: innerScreen)
-            let lit = await SimulatorFold.litPanel(outer: outer, inner: inner)
+            let reading = await Self.readLitPanel(udid, simctl, outerScreen: outerScreen, innerScreen: innerScreen)
+            let lit = reading.lit
             guard let self else { return }
+            self.lastLitReadings[udid] = reading
             self.readingLitPanel.remove(udid)
             // A fold made in the meantime is newer than the screenshots.
             guard let lit, self.simulators.folds.records[udid] == nil else { return }
             let angle = SimulatorFold.angle(for: lit == .inner ? .opened : .closed)
             if self.simulators.noteFold(udid: udid, angle: angle) { self.followFold(udid) }
+        }
+    }
+
+    /// Reads which panel the foldable `udid` lights now off its two panels'
+    /// screenshots and, when it is not the one recorded, records it and
+    /// moves the session there: the guest lights a panel by how the hinge
+    /// moved, not only by where it stopped. One read at a time for each
+    /// foldable: a request made while one is under way reads again as soon as
+    /// it ends, not never. Skipped when the hinge moved again while it read
+    /// (the next check reads that); when the screenshots do not tell (both
+    /// dark, both lit) it reads again after 0.5, 1 and 2 s, as the guest may
+    /// still be lighting the panel (`LitPanelCheckQueue`).
+    func checkLitPanel(_ udid: String, retriesWhenInconclusive: Bool = true) {
+        litCheckRetries.removeValue(forKey: udid)?.cancel()
+        guard litChecks.request(udid, retriesWhenInconclusive: retriesWhenInconclusive) else { return }
+        readLitPanelNow(udid)
+    }
+
+    private func readLitPanelNow(_ udid: String) {
+        guard let entry = simulators.entry(udid: udid), entry.state == .booted,
+              let panels = simulators.foldPanels(for: entry), let simctl = simulators.simctl
+        else {
+            litChecks.forget(udid)
+            return
+        }
+        let asked = simulators.folds.record(of: udid)
+        let outerScreen = panels.profile(of: .outer).screenID
+        let innerScreen = panels.profile(of: .inner).screenID
+        Task { [weak self] in
+            let reading = await Self.readLitPanel(udid, simctl, outerScreen: outerScreen, innerScreen: innerScreen)
+            self?.lastLitReadings[udid] = reading
+            self?.litPanelRead(udid, asked: asked, lit: reading.lit, bothDark: reading.bothDark)
+        }
+    }
+
+    /// A read of a foldable's two panels: what each screenshot showed and
+    /// the panel they say is lit (nil when they do not tell,
+    /// `SimulatorFold.litPanel`).
+    struct LitPanelReading {
+        var at = Date()
+        var outer: SimulatorReadiness.ScreenReading?
+        var inner: SimulatorReadiness.ScreenReading?
+        var lit: SimulatorFoldPanel?
+        var bothDark: Bool { outer?.content == .dark && inner?.content == .dark }
+    }
+
+    /// The last read of each foldable's panels (the problem report's).
+    @ObservationIgnored private(set) var lastLitReadings: [String: LitPanelReading] = [:]
+
+    private nonisolated static func readLitPanel(
+        _ udid: String, _ simctl: SimctlClient, outerScreen: UInt32?, innerScreen: UInt32?
+    ) async -> LitPanelReading {
+        async let outerReading = SimulatorLifecycleController.screenshotReading(udid, simctl, display: outerScreen)
+        async let innerReading = SimulatorLifecycleController.screenshotReading(udid, simctl, display: innerScreen)
+        let (outer, inner) = await (outerReading, innerReading)
+        return LitPanelReading(outer: outer, inner: inner, lit: SimulatorFold.litPanel(outer: outer, inner: inner))
+    }
+
+    /// The panel `udid`'s live view shows, while one does.
+    func shownPanel(of udid: String) -> SimulatorFoldPanel? {
+        guard let started = startedPanel, started.udid == udid, let session = session(for: udid), session.isRunning,
+              let entry = simulators.entry(udid: udid), let panels = simulators.foldPanels(for: entry)
+        else { return nil }
+        return started.panel == SimulatorSessionPanel.foldable(.inner, of: panels) ? .inner : .outer
+    }
+
+    /// A check's read ended with `lit` (nil when the screenshots did not
+    /// tell; `bothDark` when both panels were dark) for the fold `asked`
+    /// recorded when it began.
+    private func litPanelRead(_ udid: String, asked: SimulatorFoldRecord, lit: SimulatorFoldPanel?, bothDark: Bool) {
+        if lit != nil {
+            stuckScreensConfirm.removeValue(forKey: udid)?.cancel()
+            if stuckScreens == udid { stuckScreens = nil }
+        }
+        let now = simulators.folds.record(of: udid)
+        let outcome = LitPanelRead.outcome(asked: asked, now: now, lit: lit)
+        if let panel = outcome.switchTo, simulators.noteFold(udid: udid, angle: now.angle, panel: panel) {
+            followFold(udid)
+            // The read told the lit panel: the stage faces it as soon as the
+            // session moves there, not after a read queued behind this one
+            // (another 1.5 s, 2026-10-14).
+            onLitPanelSettled?(udid)
+        }
+        switch litChecks.finish(udid, conclusive: outcome.conclusive) {
+        case .done:
+            onLitPanelSettled?(udid)
+            if !outcome.conclusive, bothDark { confirmStuckScreens(udid) }
+        case .rerun:
+            readLitPanelNow(udid)
+        case .retry(let delay):
+            litCheckRetries[udid] = Task { [weak self] in
+                try? await Task.sleep(for: delay)
+                guard !Task.isCancelled, let self else { return }
+                self.litCheckRetries[udid] = nil
+                if self.litChecks.retryDue(udid) { self.readLitPanelNow(udid) }
+            }
         }
     }
 
@@ -468,6 +590,56 @@ final class SimulatorCanvasController {
         return min(delay, maximum)
     }
 
+    /// Both panels stayed dark after the retries: one more read
+    /// `stuckScreensConfirmDelay` later, and if they are still dark (a
+    /// booting simulator aside) the stage offers `lockAndWake`.
+    private func confirmStuckScreens(_ udid: String) {
+        stuckScreensConfirm.removeValue(forKey: udid)?.cancel()
+        stuckScreensConfirm[udid] = Task { [weak self] in
+            guard let delay = self?.stuckScreensConfirmDelay else { return }
+            try? await Task.sleep(for: delay)
+            guard !Task.isCancelled, let self, self.activeDevice() == .apple(udid), !self.followingBoot.contains(udid),
+                  let entry = self.simulators.entry(udid: udid), entry.state == .booted,
+                  let panels = self.simulators.foldPanels(for: entry), let simctl = self.simulators.simctl
+            else { return }
+            let reading = await Self.readLitPanel(
+                udid, simctl,
+                outerScreen: panels.profile(of: .outer).screenID,
+                innerScreen: panels.profile(of: .inner).screenID
+            )
+            guard !Task.isCancelled else { return }
+            self.lastLitReadings[udid] = reading
+            self.stuckScreensConfirm[udid] = nil
+            if reading.lit == nil, reading.bothDark, self.activeDevice() == .apple(udid) { self.stuckScreens = udid }
+        }
+    }
+
+    /// The stuck-screens banner's action: Lock pressed twice, as a person
+    /// would (the device sleeps and wakes; a display change the guest kept
+    /// waiting goes ahead), then the lit panel read again.
+    func lockAndWake() {
+        guard let udid = stuckScreens, let session = liveSession, session.udid == udid else { return }
+        stuckScreens = nil
+        session.press(.side)
+        Task { [weak self] in
+            try? await Task.sleep(for: Self.lockWakeGap)
+            guard let self, let session = self.liveSession, session.udid == udid else { return }
+            session.press(.side)
+            try? await Task.sleep(for: Self.lockWakeSettle)
+            self.checkLitPanel(udid)
+        }
+    }
+
+    /// Between the two presses of `lockAndWake`, and from the second to the
+    /// read (the recovery on 2026-10-14 woke the panel within 2 s).
+    static let lockWakeGap: Duration = .milliseconds(1200)
+    static let lockWakeSettle: Duration = .seconds(2)
+
+    /// The stuck-screens banner was dismissed.
+    func dismissStuckScreens() {
+        stuckScreens = nil
+    }
+
     /// What `udid`'s screen shows, read from the live canvas's current frame
     /// (`SimulatorReadiness.screenContent`, off the main actor); nil when no
     /// live canvas of `udid` runs or it has no frame yet, and the readiness
@@ -488,7 +660,7 @@ final class SimulatorCanvasController {
         guard activeDevice() == .apple(udid), let entry = simulators.entry(udid: udid) else { return }
         let canvas = canvas(for: entry)
         guard canvas.isLive else { return }
-        start(entry, canvas: canvas)
+        start(entry, canvas: canvas, followingFold: true)
     }
 
     /// Clears the live canvas's failure for `udid` and starts its session
@@ -502,7 +674,9 @@ final class SimulatorCanvasController {
     /// `awaitingBoot`: started by `followBootFrames` while the simulator
     /// boots; it has no smoke check (a first frame that has not come is the
     /// boot, not a failure) and `followBootFrames` reads its first frame.
-    private func start(_ entry: SimulatorEntry, canvas: Canvas, awaitingBoot: Bool = false) {
+    /// `followingFold`: started because the device folded onto another
+    /// panel; it takes the input channel the previous session parked.
+    private func start(_ entry: SimulatorEntry, canvas: Canvas, awaitingBoot: Bool = false, followingFold: Bool = false) {
         guard let simctl = simulators.simctl else { return }
         attaching = entry.udid
         defer { attaching = nil }
@@ -535,6 +709,11 @@ final class SimulatorCanvasController {
         guard canvas.isLive else { return }
         onLiveCanvasStarted?(entry.udid)
         readInputFlag(entry.udid, simctl: simctl)
+        // A foldable's first tap after a fold goes through the channel this
+        // session opens at rest and hands on (`SimulatorInputPool`).
+        if !awaitingBoot, !followingFold, simulators.foldPanels(for: entry) != nil {
+            (session as? SimulatorMirrorSession)?.prepareInput()
+        }
         guard !awaitingBoot else { return }
         smokeTask = Task { [weak self] in
             await self?.smokeCheck(entry.udid, session: session)
@@ -681,6 +860,12 @@ final class SimulatorCanvasController {
         }
         if error == SimulatorMirrorSession.shutDownMessage {
             tearDownSession(.disconnected)
+            // A channel parked before the session saw the device go would
+            // take the next boot's first send.
+            if let bridge = simulators.bridge {
+                bridge.inputPool?.discard(for: SimulatorAddress(udid: session.udid, deviceSetPath: simulators.deviceSet?.path))
+            }
+            onSimulatorWentAway?(session.udid)
             return
         }
         if session.isLiveCanvas {
@@ -703,6 +888,7 @@ final class SimulatorCanvasController {
         // Slow Animations lasts one boot: a simulator no longer booted has
         // lost it, so its checkmark must not survive into the next boot.
         slowAnimationUDIDs.formIntersection(booted)
+        if let stuck = stuckScreens, !booted.contains(stuck) { stuckScreens = nil }
         if let device = activeDevice(), device.platform == .apple, !booted.contains(device.id),
            activeSession() is any SimulatorSessionControlling {
             tearDownSession(.disconnected)

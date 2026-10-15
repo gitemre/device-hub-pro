@@ -321,6 +321,10 @@ enum SystemDeviceIcon {
             conformingTo: nil
         ), type.isDeclared else { return nil }
         let icon = NSWorkspace.shared.icon(for: type)
+        // A model macOS declares before it ships its picture (iPhone Duo,
+        // `com.apple.iphone-v68`, on macOS 27.0.1) gets the blank document
+        // icon: no picture, so the Apple chrome stands in.
+        guard !isGenericDocumentIcon(icon) else { return nil }
         var rect = NSRect(x: 0, y: 0, width: 1024, height: 1024)
         guard let full = icon.cgImage(forProposedRect: &rect, context: nil, hints: nil),
               let box = contentBounds(of: full),
@@ -336,6 +340,35 @@ enum SystemDeviceIcon {
     /// a crop that stops earlier (it stopped at alpha 8) leaves a hard edge
     /// under the picture. Device Hub draws the whole icon: the iPhone's is
     /// 183.5 × 200 pt, this crop at the same height.
+    /// Whether `icon` is a blank page rather than a device: macOS gives a
+    /// model it declares without a picture a document icon (white paper,
+    /// a curled corner), while every device picture has dark parts (its rim,
+    /// its screen, a set-top box). True when no visible pixel is darker than
+    /// mid grey, drawn at 64 x 64.
+    nonisolated static func isGenericDocumentIcon(_ icon: NSImage) -> Bool {
+        let side = 64
+        var data = [UInt8](repeating: 0, count: side * side * 4)
+        var rect = NSRect(x: 0, y: 0, width: side, height: side)
+        guard let cg = icon.cgImage(forProposedRect: &rect, context: nil, hints: nil) else { return false }
+        let drawn = data.withUnsafeMutableBytes { buffer -> Bool in
+            guard let context = CGContext(
+                data: buffer.baseAddress, width: side, height: side, bitsPerComponent: 8, bytesPerRow: side * 4,
+                space: CGColorSpaceCreateDeviceRGB(), bitmapInfo: CGImageAlphaInfo.premultipliedLast.rawValue
+            ) else { return false }
+            context.draw(cg, in: CGRect(x: 0, y: 0, width: side, height: side))
+            return true
+        }
+        guard drawn else { return false }
+        for index in stride(from: 0, to: data.count, by: 4) {
+            let alpha = Int(data[index + 3])
+            // Only the opaque body counts, not the soft contact shadow.
+            guard alpha > 200 else { continue }
+            let luminance = (Int(data[index]) * 299 + Int(data[index + 1]) * 587 + Int(data[index + 2]) * 114) / 1000
+            if luminance * 255 / alpha < 128 { return false }
+        }
+        return true
+    }
+
     nonisolated static func contentBounds(of image: CGImage) -> CGRect? {
         let width = image.width, height = image.height
         guard width > 0, height > 0 else { return nil }

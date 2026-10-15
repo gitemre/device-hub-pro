@@ -117,7 +117,34 @@ struct ZoomHintBanner: View {
     }
 }
 
-/// The banners over the stage's pill: the screenshot's, else the zoom hint.
+/// "Screens Not Responding / Click to lock and wake the simulator." when a
+/// foldable's panels stayed dark after a fold (`SimulatorCanvasController.stuckScreens`).
+struct StuckScreensBanner: View {
+    let lockAndWake: () -> Void
+    let dismiss: () -> Void
+
+    var body: some View {
+        StageBanner(
+            title: "Screens Not Responding",
+            subtitle: "Click to lock and wake the simulator.",
+            trailingSymbol: "xmark",
+            trailingLabel: "Dismiss",
+            cardAction: lockAndWake,
+            trailingAction: dismiss
+        ) {
+            Image(systemName: "lock.rotation")
+                .font(.system(size: 17, weight: .medium))
+                .foregroundStyle(Color.blue)
+                .frame(width: ParityMetrics.stageBannerThumbnail)
+                .accessibilityHidden(true)
+        }
+        .accessibilityAction(named: Text("Lock and Wake"), lockAndWake)
+        .accessibilityIdentifier("stage.stuckScreensBanner")
+    }
+}
+
+/// The banners over the stage's pill: the screenshot's, else the stuck
+/// screens', else the zoom hint.
 /// Sized to the banner and laid over the stage with `.overlay(alignment: .bottom)`,
 /// so nothing else of the stage stops taking clicks.
 struct StageBannerHost: View {
@@ -135,6 +162,12 @@ struct StageBannerHost: View {
                 )
                 .id(shot.id)
                 .transition(transition)
+            } else if showsStuckScreens {
+                StuckScreensBanner(
+                    lockAndWake: { workspace.simulatorCanvas.lockAndWake() },
+                    dismiss: { workspace.simulatorCanvas.dismissStuckScreens() }
+                )
+                .transition(transition)
             } else if showsZoomHint {
                 ZoomHintBanner { model.preferences.setZoomHintDismissed(true) }
                     .transition(transition)
@@ -142,7 +175,14 @@ struct StageBannerHost: View {
         }
         .animation(reduceMotion ? nil : MotionMetrics.banner, value: workspace.capture.savedScreenshot)
         .animation(reduceMotion ? nil : MotionMetrics.banner, value: showsZoomHint)
+        .animation(reduceMotion ? nil : MotionMetrics.banner, value: showsStuckScreens)
         .padding(.bottom, ParityMetrics.stageBannerBottomInset)
+    }
+
+    /// The mirrored simulator's panels are stuck dark.
+    private var showsStuckScreens: Bool {
+        guard let device = workspace.context.device, device.platform == .apple else { return false }
+        return workspace.simulatorCanvas.stuckScreens == device.id
     }
 
     private var showsZoomHint: Bool {
