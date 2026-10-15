@@ -105,6 +105,7 @@ Tests/DeviceHubProAppTests/  app and model unit tests
 android/verifier/            on-device Controls verification app (Kotlin, Gradle)
 ios/verifier/                its iOS twin for the simulator (SwiftUI, built by build.sh)
 ios/agent/                   the XCTest input runner for a physical iPhone
+ios/duo/                     Daybreak, an iPhone Duo showcase (SwiftUI, built by build.sh)
 fastinput/                   the vendored fast-input helper (see its PROVENANCE.md)
 controls-rows.json           the Controls rows per platform, shared by the verifiers' tests
 Scripts/                     packaging, release, pixel-parity, performance and motion tools
