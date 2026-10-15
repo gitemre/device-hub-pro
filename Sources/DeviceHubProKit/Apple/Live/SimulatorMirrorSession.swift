@@ -22,7 +22,9 @@ import Synchronization
 /// callback that arrives while a copy is already scheduled is coalesced
 /// (`MirrorStats.dropped`); the scheduled copy reads the surface when it
 /// runs, so the last frame of a burst is always published. An idle screen
-/// sends no callbacks and costs nothing.
+/// sends no callbacks and costs nothing. The interval is counted from the
+/// slot a paced copy was due in, not from when its timer fired, so a timer's
+/// lateness does not add up: a 60 Hz screen is published 60 times a second.
 ///
 /// **Input** maps displayed-frame pixels back to the native portrait ratios
 /// dtuhidd takes, through the rotation of the frame the user was looking at
@@ -61,7 +63,8 @@ public final class SimulatorMirrorSession: MirrorSessionProtocol, SimulatorButto
     public let frames = FrameStore()
     public var transport: MirrorTransport { .simulatorSurface }
 
-    /// The shortest gap between two publishes: 60 frames per second.
+    /// The slot length between two publishes: at most 60 a second (after a
+    /// late publish the next one can come a little sooner).
     public static let defaultMinimumPublishInterval: Duration = .nanoseconds(16_666_667)
     /// Between two pastes, so the app reads one paste's text before the next
     /// `pbcopy` replaces it.
@@ -107,7 +110,9 @@ public final class SimulatorMirrorSession: MirrorSessionProtocol, SimulatorButto
         var propertiesUpdates: UInt64 = 0
 
         var publishScheduled = false
-        var lastPublishStart: UInt64 = 0
+        /// The slot the last publish counts as: when a paced one was due
+        /// (`publishSlot`), else when its copy started.
+        var lastPublishSlot: UInt64 = 0
         /// When the oldest frame callback not yet published arrived.
         var pendingSince: UInt64?
         var published: DisplayGeometry?
@@ -457,7 +462,7 @@ public final class SimulatorMirrorSession: MirrorSessionProtocol, SimulatorButto
                 return nil
             }
             state.publishScheduled = true
-            let due = state.lastPublishStart &+ interval
+            let due = state.lastPublishSlot &+ interval
             return due > now ? due - now : 0
         }
         guard let delay else { return }
@@ -472,6 +477,17 @@ public final class SimulatorMirrorSession: MirrorSessionProtocol, SimulatorButto
                 self?.publish(generation: generation, scheduled: true)
             }
         }
+    }
+
+    /// The slot a publish that started at `started` counts the next interval
+    /// from: the one it was due in, for a paced publish less than an interval
+    /// late; else its start (a resync, the first copy after an idle screen).
+    /// `asyncAfter` fires up to a millisecond past its deadline (GCD's leeway),
+    /// and counting from that late start put each publish later than the last:
+    /// one every 17.5 ms against the simulator's 60 Hz, 57 a second, every
+    /// 21st frame merged (measured 2026-10-15).
+    static func publishSlot(due: UInt64, started: UInt64, interval: UInt64, paced: Bool) -> UInt64 {
+        paced && started >= due && started - due < interval ? due : started
     }
 
     private enum PublishStep {
@@ -491,16 +507,16 @@ public final class SimulatorMirrorSession: MirrorSessionProtocol, SimulatorButto
         let interval = minimumPublishInterval
         let step = state.withLock { state -> PublishStep in
             guard state.running, state.generation == generation else { return .none }
+            let due = state.lastPublishSlot &+ interval
             if scheduled {
                 guard state.pendingSince != nil else {
                     state.publishScheduled = false
                     return .none
                 }
-                let due = state.lastPublishStart &+ interval
                 if due > started { return .wait(due - started) }
                 state.publishScheduled = false
             }
-            state.lastPublishStart = started
+            state.lastPublishSlot = Self.publishSlot(due: due, started: started, interval: interval, paced: scheduled)
             let since = state.pendingSince
             state.pendingSince = nil
             guard let surface = state.surface else { return .none }

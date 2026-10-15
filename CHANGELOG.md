@@ -6,6 +6,10 @@ All notable changes to Device Hub Pro are recorded here. The format follows
 
 ## [Unreleased]
 
+### Fixed
+
+- A simulator's live view showed 57 frames a second and skipped one in 21. Now it shows all 60.
+
 ## [1.1.3] - 2026-10-15
 
 ### Added

@@ -171,6 +171,34 @@ final class SimulatorMirrorSessionTests: XCTestCase {
         XCTAssertGreaterThanOrEqual(published, 2)
     }
 
+    /// A paced publish that ran a little late counts the next interval from
+    /// the slot it was due in, so the timer's lateness does not add up; a
+    /// resync, or a publish an interval or more late, starts a new slot.
+    func testAPacedPublishCountsFromItsSlot() {
+        let interval: UInt64 = 16_666_667
+        let due: UInt64 = 1_000_000_000
+        XCTAssertEqual(SimulatorMirrorSession.publishSlot(due: due, started: due + 900_000, interval: interval, paced: true), due)
+        XCTAssertEqual(SimulatorMirrorSession.publishSlot(due: due, started: due, interval: interval, paced: true), due)
+        XCTAssertEqual(
+            SimulatorMirrorSession.publishSlot(due: due, started: due + interval, interval: interval, paced: true),
+            due + interval, "an interval late: a new slot"
+        )
+        XCTAssertEqual(
+            SimulatorMirrorSession.publishSlot(due: due, started: due + 900_000, interval: interval, paced: false),
+            due + 900_000, "a resync: its own start"
+        )
+        // The first publish: nothing was due yet.
+        XCTAssertEqual(SimulatorMirrorSession.publishSlot(due: interval, started: due, interval: interval, paced: true), due)
+
+        // Sixty timer firings each 0.85 ms late stay on the 60 Hz grid.
+        var slot: UInt64 = due
+        for _ in 0..<60 {
+            let next = slot + interval
+            slot = SimulatorMirrorSession.publishSlot(due: next, started: next + 850_000, interval: interval, paced: true)
+        }
+        XCTAssertEqual(slot, due + 60 * interval)
+    }
+
     /// A write during the first copy is copied again; writes during both
     /// count as torn, and the session copies once more.
     func testTheSeedRetryAndTheTornCount() throws {
