@@ -6,6 +6,8 @@ All notable changes to Device Hub Pro are recorded here. The format follows
 
 ## [Unreleased]
 
+## [1.1.3] - 2026-10-15
+
 ### Added
 
 - A problem report describes a foldable simulator a window shows: the hinge angle, posture and
