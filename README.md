@@ -20,6 +20,8 @@
   <sub>iPhone Duo in 3D: drag the hinge and the app follows. The app is Daybreak, a sample in <a href="ios/duo">ios/duo</a>.</sub>
 </p>
 
+https://github.com/user-attachments/assets/ce1dfe54-e4f0-4af9-82fc-6a27585b85fb
+
 <p align="center">
   <img src="docs/assets/hero.png" alt="Two Device Hub Pro windows: a Pixel emulator with the Controls panel, and an iPhone simulator in dark mode" width="900">
 </p>
