@@ -118,6 +118,16 @@ let package = Package(
             exclude: ["App", "Info.plist", "build.sh", "README.md"],
             sources: ["Shared", "RegistryTests"]
         ),
+        // Daybreak, the iPhone Duo showcase: its UIKit-free day cycle, palette,
+        // fold layout, ridges, hinge rules and control areas, checked on the Mac
+        // against the regions the Duo simulator reported; the app itself (App/)
+        // is built for the simulator by ios/duo/build.sh, never by SwiftPM.
+        .testTarget(
+            name: "DaybreakTests",
+            path: "ios/duo",
+            exclude: ["App", "Assets.xcassets", "Icon", "Info.plist", "build.sh", "README.md"],
+            sources: ["Shared", "Tests"]
+        ),
         // Debug tool for the simulator bridge (Scripts/ios-bridge-smoke.sh);
         // never packaged.
         .executableTarget(
