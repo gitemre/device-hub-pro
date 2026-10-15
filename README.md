@@ -16,6 +16,11 @@
 </p>
 
 <p align="center">
+  <img src="docs/assets/iphone-duo-3d.gif" alt="An iPhone Duo simulator in 3D: dragging the hinge slider opens it from golden hour to noon and folds it back to sunrise, in a sample app whose sky follows the hinge" width="680"><br>
+  <sub>iPhone Duo in 3D: drag the hinge and the app follows. The app is Daybreak, a sample in <a href="ios/duo">ios/duo</a>.</sub>
+</p>
+
+<p align="center">
   <img src="docs/assets/hero.png" alt="Two Device Hub Pro windows: a Pixel emulator with the Controls panel, and an iPhone simulator in dark mode" width="900">
 </p>
 
