@@ -1,0 +1,4 @@
+User-agent: *
+Allow: /
+
+Sitemap: https://gitemre.github.io/device-hub-pro/sitemap.xml

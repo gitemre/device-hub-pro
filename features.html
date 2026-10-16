@@ -1,0 +1,240 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <title>All features · Device Hub Pro for Android emulators, phones and iOS simulators</title>
+  <meta name="description" content="Everything Device Hub Pro does on a Mac: mirror and control Android emulators, phones, iOS simulators and iPhones; change dark mode, language, location, network and battery; capture, install apps, read logcat, fold foldables.">
+  <link rel="canonical" href="https://gitemre.github.io/device-hub-pro/features.html">
+  <link rel="icon" type="image/png" sizes="64x64" href="assets/icon-64.png">
+  <link rel="apple-touch-icon" href="assets/apple-touch-icon.png">
+  <meta property="og:type" content="article">
+  <meta property="og:site_name" content="Device Hub Pro">
+  <meta property="og:title" content="Device Hub Pro: all features">
+  <meta property="og:description" content="Mirror, control, change settings, capture, install apps and read logs on Android and iOS devices from one Mac window.">
+  <meta property="og:url" content="https://gitemre.github.io/device-hub-pro/features.html">
+  <meta property="og:image" content="https://gitemre.github.io/device-hub-pro/assets/social-preview.png">
+  <meta name="twitter:card" content="summary_large_image">
+  <link rel="preload" href="fonts/archivo-var-latin.woff2" as="font" type="font/woff2" crossorigin>
+  <link rel="preload" href="fonts/ibm-plex-sans-var-latin.woff2" as="font" type="font/woff2" crossorigin>
+  <link rel="stylesheet" href="fonts.css">
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <a class="skip" href="#main">Skip to content</a>
+
+  <header class="site-header">
+    <div class="wrap">
+      <a class="brand" href="./"><img src="assets/icon-64.png" alt="" width="26" height="26">Device Hub Pro</a>
+      <nav class="nav" aria-label="Main">
+        <a class="wide" href="features.html" aria-current="page">Features</a>
+        <a class="wide" href="./#settings">Device settings</a>
+        <a href="iphone-duo.html">iPhone Duo</a>
+        <a class="wide" href="https://github.com/gitemre/device-hub-pro">GitHub</a>
+        <a class="btn btn-primary btn-sm" href="https://github.com/gitemre/device-hub-pro">Download</a>
+      </nav>
+    </div>
+  </header>
+
+  <main id="main">
+    <div class="wrap doc-head">
+      <span class="label">Feature reference</span>
+      <h1>Everything Device Hub Pro does</h1>
+      <p class="lede">A Mac app for the Android and iOS devices you test on. This page lists what it does, grouped the way you meet it in the window. Menu paths are written like <span class="mono">Device ▸ Shut Down</span>.</p>
+    </div>
+
+    <div class="wrap doc">
+      <nav class="toc" aria-label="On this page">
+        <span class="label">On this page</span>
+        <ol>
+          <li><a href="#devices">Devices and emulators</a></li>
+          <li><a href="#mirroring">Mirroring and input</a></li>
+          <li><a href="#settings">Device settings</a></li>
+          <li><a href="#conditions">Network and app conditions</a></li>
+          <li><a href="#location">Location</a></li>
+          <li><a href="#capture">Screenshots and recording</a></li>
+          <li><a href="#apps">Apps, links and push</a></li>
+          <li><a href="#logs">Logs and diagnostics</a></li>
+          <li><a href="#foldables">Foldables</a></li>
+          <li><a href="#iphone">Physical iPhones</a></li>
+          <li><a href="#many">Many devices at once</a></li>
+          <li><a href="#window">Window and shortcuts</a></li>
+          <li><a href="#setup">Setup, updates and privacy</a></li>
+        </ol>
+      </nav>
+
+      <article class="prose">
+        <h2 id="devices">Devices and emulators</h2>
+        <p>One sidebar lists every device the Mac can reach.</p>
+        <ul>
+          <li><strong>Android emulators, Android phones, iOS simulators and iPhones</strong> in one list. Sort by availability, recent use, name, platform or OS version, and filter to simulators or physical devices.</li>
+          <li><strong>Create emulators from the Pixel catalog:</strong> phones, tablets and foldables, plus Wear OS, TV and Automotive. The app picks a system image that fits the device and downloads it in the background, with progress and Cancel on the sidebar row.</li>
+          <li><strong>Manage emulators:</strong> rename, reset content and settings, remove (to the Trash) or show in Finder. Remove system images you no longer need from Settings, with the space it frees.</li>
+          <li><strong>Quick Boot</strong> from the emulator's snapshot, as in Android Studio. Shut Down (<kbd>⌘.</kbd>) saves the snapshot first.</li>
+          <li><strong>Hot-plug:</strong> a pulled cable leaves a "disconnected" row and the phone comes back on its own when you plug it in again.</li>
+          <li><strong>Wireless pairing</strong> for Android 11 and later: <span class="mono">File ▸ Pair Nearby Device…</span>, by QR code or pairing code.</li>
+          <li><strong>Port forwarding and a device shell</strong> for Android: list, add and remove forward and reverse rules, and run shell commands with history.</li>
+        </ul>
+
+        <h2 id="mirroring">Mirroring and input</h2>
+        <p>The device's screen, live, inside its own device frame.</p>
+        <ul>
+          <li><strong>Up to 60 fps.</strong> Emulators stream through the emulator's own interface, through shared memory on emulator 37.2.3 and later. Phones stream with scrcpy's server, decoded by the Mac's hardware video decoder.</li>
+          <li><strong>Click, drag, scroll and type</strong> on the device, with multi-touch on emulators and phones. Right-click is Back on a phone.</li>
+          <li><strong>Any language:</strong> text with accented letters, Turkish letters or emoji arrives intact.</li>
+          <li><strong>Keyboard Capture</strong> (<kbd>⌘K</kbd>) sends your Mac keyboard to the device. Settings can send ⌘ shortcuts to a simulator and turn on secure keyboard entry, as in Xcode's Device Hub.</li>
+          <li><strong>Hardware buttons:</strong> Home, Back, Recents, power and lock, volume, Siri and Assistant, Shake, and the Action button where the device has one.</li>
+          <li><strong>Device frames</strong> from the emulator's own skin or Apple's simulator chrome, following rotation and folds.</li>
+          <li><strong>Scale modes:</strong> Physical Size, Point Accurate, Pixel Accurate and Fit Screen (<kbd>⌘1</kbd>–<kbd>⌘4</kbd>), the same four as Simulator.app.</li>
+          <li><strong>Clipboard:</strong> send the Mac's clipboard to the device, get the device's, or keep them in sync.</li>
+          <li><strong>Resizable emulators</strong> switch between their display presets from the toolbar.</li>
+        </ul>
+
+        <h2 id="settings">Device settings</h2>
+        <p>The Controls panel changes the device's own settings and reads each one back from the device. A setting the device can't take is not shown.</p>
+        <h3>Display</h3>
+        <ul>
+          <li>Dark or light appearance (<kbd>⇧⌘A</kbd>) and text size (<kbd>⌥⌘+</kbd> / <kbd>⌥⌘−</kbd>) on every platform.</li>
+          <li>Reduce motion and show borders on every platform.</li>
+          <li>Liquid Glass and reduce transparency on iOS simulators and iPhones.</li>
+          <li>Clean status bar for store screenshots: 9:41, full signal, full battery, on Android and iOS simulators. Apps still see the real time and battery.</li>
+        </ul>
+        <h3>Accessibility</h3>
+        <ul>
+          <li>TalkBack on Android, VoiceOver on simulators and iPhones.</li>
+          <li>Color filters: grayscale, red/green, green/red and blue/yellow, the same choices as Xcode's Device Hub.</li>
+          <li>Increase contrast, and show taps on Android.</li>
+        </ul>
+        <h3>Network and power (Android)</h3>
+        <ul>
+          <li>Wi-Fi, Bluetooth, airplane mode, mobile data and Data Saver.</li>
+          <li>Battery level, charging and battery saver.</li>
+        </ul>
+        <h3>Language and time</h3>
+        <ul>
+          <li>Device language from a searchable list, with Restore to put back the original list. Android and iOS simulators.</li>
+          <li>Time zone and 24-hour time on Android and iOS simulators; date and time and force right-to-left on Android.</li>
+        </ul>
+        <h3>Biometrics and security</h3>
+        <ul>
+          <li>Face ID and Touch ID match or non-match on simulators, sent when the app asks for it. Fingerprint touch on emulators.</li>
+          <li>Trust a root certificate or reset the keychain on a simulator.</li>
+        </ul>
+        <h3>Profiles</h3>
+        <ul>
+          <li>Apply a named set of settings (appearance, text size, reduce motion, contrast, borders, screen reader, location, language, 24-hour time, clean status bar) in one step: <span class="mono">Device ▸ Apply Profile</span>.</li>
+          <li>Built in: Screenshots, Dark Mode, Accessibility Stress and Defaults. Save a device's current settings as your own profile.</li>
+          <li>Every setting is also in the Device menu, so each has a menu path and, where there is one, a shortcut.</li>
+        </ul>
+
+        <h2 id="conditions">Network and app conditions</h2>
+        <p>Test how your app behaves when things get worse.</p>
+        <ul>
+          <li><strong>Network speed</strong> on emulators, from GSM and EDGE to LTE, and <strong>connection latency</strong> presets or a custom range. Both apply to the traffic itself, in both directions, and follow the connection when it moves between Wi-Fi and mobile data.</li>
+          <li><strong>Metered mobile data</strong>, and Reset conditions to put everything back. Quitting or disconnecting also puts back what the app changed.</li>
+          <li><strong>Simulate low memory</strong> on Android and a <strong>memory warning</strong> on simulators, sent to the app you choose.</li>
+          <li><strong>Kill a background process</strong> on Android, confirmed by Android's own exit record.</li>
+          <li><strong>App permissions</strong> on simulators: grant, deny or reset them without the Settings app.</li>
+        </ul>
+
+        <h2 id="location">Location</h2>
+        <ul>
+          <li>One Location menu on emulators and simulators: fourteen places, a custom coordinate, or a route between two points at a speed you choose.</li>
+          <li>Trips: City Run, City Bicycle Ride and Freeway Drive, on emulators and simulators.</li>
+          <li>Physical iPhones take places and coordinates and keep them until you choose None.</li>
+        </ul>
+
+        <h2 id="capture">Screenshots and recording</h2>
+        <ul>
+          <li><strong>Screenshot</strong> with <kbd>⇧⌘S</kbd>, saved at once to your screenshot folder. Drag the thumbnail straight into Finder, Mail or a chat.</li>
+          <li><strong>Annotate:</strong> arrows, boxes, text and redaction before saving.</li>
+          <li><strong>Copy screenshot</strong> (<kbd>⇧⌘C</kbd>), with or without the device frame.</li>
+          <li><strong>Screen recording</strong> (<kbd>⇧⌘R</kbd>) with no length limit, for emulators, phones and simulators. A crash keeps what was recorded.</li>
+          <li><strong>Replay:</strong> save the last 15, 30 or 60 seconds after something happened (<kbd>⌥⌘R</kbd>).</li>
+          <li><strong>Screenshot every selected device</strong> into one folder (<kbd>⌥⇧⌘S</kbd>).</li>
+        </ul>
+
+        <h2 id="apps">Apps, links and push</h2>
+        <ul>
+          <li><strong>Apps list</strong> with real icons: launch, force stop, clear data, App Info and uninstall.</li>
+          <li><strong>Install by dropping</strong> an APK, an app bundle set (.apks) or a folder of split APKs on the device. On an iPhone, drop a .app or .ipa.</li>
+          <li><strong>Open a link or deep link</strong> on any device. On Android the app shows which app will open it and what Android did with it. Keep saved links grouped by app.</li>
+          <li><strong>Push notifications</strong> on simulators: drop an .apns file, use the built-in templates or keep a library of payloads. Resend the last push from the menu.</li>
+          <li><strong>Launch with options</strong> on simulators: arguments, environment variables and wait for the debugger.</li>
+          <li><strong>Send Files</strong> (<kbd>⇧⌘U</kbd>) to Android's Downloads, a simulator's Photos or Files, or an app's Documents.</li>
+        </ul>
+
+        <h2 id="logs">Logs and diagnostics</h2>
+        <ul>
+          <li><strong>Live logcat and simulator logs</strong> next to the device. Follow one app across restarts, filter by level or text, and see crashes highlighted.</li>
+          <li><strong>Log focus</strong> (<kbd>⌥⌘L</kbd>): the phone on the left, a wide log on the right, built for thousands of long lines.</li>
+          <li><strong>Simulator crash reports</strong>, newest first, with "My app only".</li>
+          <li><strong>Diagnostics bundle</strong> for Android: recent logcat, battery and memory dumps and device properties in one zip.</li>
+          <li><strong>Report a Problem</strong> (Help menu): checks the Mac for known causes and shows each fix, then writes a report for a GitHub issue with personal details left out. Nothing is sent by the app.</li>
+          <li><strong>A stuck emulator screen</strong> offers Restart Emulator and Retry.</li>
+        </ul>
+
+        <h2 id="foldables">Foldables</h2>
+        <ul>
+          <li><strong>Foldable emulators</strong> get posture presets and a 0–180° hinge slider that moves the device while you drag.</li>
+          <li><strong>iPhone Duo simulator</strong> (Xcode 27.1): Closed, Tent, Laptop, Partially Open and Open, any hinge angle, six held orientations, and a turnable 3D model read from your Xcode. <a href="iphone-duo.html">All about iPhone Duo →</a></li>
+        </ul>
+
+        <h2 id="iphone">Physical iPhones</h2>
+        <p>Off by default. Turn on "Show physical Apple devices" in Settings, then choose Use This Device… for each iPhone. Pairing and Developer Mode stay your own steps in Xcode.</p>
+        <ul>
+          <li><strong>Live screen</strong> over USB, or a screenshot preview that refreshes on its own.</li>
+          <li><strong>Control:</strong> mouse, keyboard and the Home and volume buttons reach the phone, with a touch dot under the pointer.</li>
+          <li><strong>Apps:</strong> list with icons, launch, terminate, browse a development build's files, uninstall, and install by dropping a .app or .ipa.</li>
+          <li><strong>Controls</strong> the phone allows: appearance, Liquid Glass, text size, reduce motion, show borders, reduce transparency, VoiceOver, color filter, increase contrast and location.</li>
+          <li><strong>Reports, Info and logs:</strong> the phone's report files, its details, and one app's console streamed into the log pane.</li>
+          <li><strong>Manage:</strong> restart, rename, collect a sysdiagnose and unpair, each confirmed.</li>
+        </ul>
+        <p class="note">The live view and fast input use private Apple interfaces. Each can be turned off in Settings, and a macOS or Xcode update may break them for a while.</p>
+
+        <h2 id="many">Many devices at once</h2>
+        <ul>
+          <li>Select several devices with <kbd>⌘</kbd>-click or <kbd>⇧</kbd>-click, Android and iOS mixed.</li>
+          <li><span class="mono">Device ▸ Apply to Selected</span>: appearance, text size, language, a saved location or a clean status bar on all of them, open a link, or install a build.</li>
+          <li>A device that can't take the action is skipped, and the result says why.</li>
+        </ul>
+
+        <h2 id="window">Window and shortcuts</h2>
+        <ul>
+          <li><strong>The layout of Xcode's Device Hub:</strong> sidebar, toolbar, the device stage with its bar of buttons, and an inspector with Settings, Reports and Info.</li>
+          <li><strong>Compact window</strong> with just the device, and Stay on Top for any window.</li>
+          <li><strong>Tabs and windows:</strong> <kbd>⌘T</kbd> and <kbd>⇧⌘N</kbd>, or open a device in a new tab from its row.</li>
+          <li><strong>The same key for the same job</strong> on Android and iOS: <kbd>⇧⌘H</kbd> Home, <kbd>⌘L</kbd> lock or power, <kbd>⌘←</kbd> <kbd>⌘→</kbd> rotate, <kbd>⌘↑</kbd> <kbd>⌘↓</kbd> volume, <kbd>⌃⌘Z</kbd> shake.</li>
+          <li><strong>Keyboard navigation</strong> through the sidebar, the Apps list and the device bar.</li>
+        </ul>
+
+        <h2 id="setup">Setup, updates and privacy</h2>
+        <ul>
+          <li><strong>No Android Studio needed.</strong> Without an Android SDK, the first launch offers to install Google's command-line tools, platform-tools and emulator into the folder Android Studio uses. No administrator password. If Java is missing, it offers to download it into the app's own folder.</li>
+          <li><strong>Use the SDK you have:</strong> Locate SDK… points the app at an existing folder.</li>
+          <li><strong>Updates</strong> arrive inside the app, and you can turn automatic checks off.</li>
+          <li><strong>Simulators on quit:</strong> shut down the ones it started, or leave them running. A simulator it did not start is never shut down.</li>
+          <li><strong>No tracking:</strong> no accounts, analytics or telemetry. macOS asks for Local Network only when you pair a wireless phone, and for Camera and Microphone only for the standard iPhone live view.</li>
+        </ul>
+
+        <p style="margin-top:56px"><a class="btn btn-primary" href="https://github.com/gitemre/device-hub-pro">Download for Mac</a></p>
+      </article>
+    </div>
+  </main>
+
+  <footer class="site-footer">
+    <div class="wrap">
+      <span>MIT License · © 2026 Emre Özturk and contributors · Not affiliated with Apple or Google.</span>
+      <nav aria-label="Footer">
+        <a href="./">Home</a>
+        <a href="iphone-duo.html">iPhone Duo</a>
+        <a href="https://github.com/gitemre/device-hub-pro">GitHub</a>
+        <a href="https://github.com/gitemre/device-hub-pro/blob/main/CHANGELOG.md">Changelog</a>
+        <a href="https://github.com/gitemre/device-hub-pro/blob/main/docs/troubleshooting.md">Help</a>
+      </nav>
+    </div>
+  </footer>
+
+  <script src="site.js" defer></script>
+</body>
+</html>
