@@ -93,18 +93,18 @@ final class SimulatorFoldVerifierLiveTests: XCTestCase {
         XCTAssertEqual(back, "active", "opened again")
 
         // On its side: a laptop shows the inner panel, a tent the outer one
-        // from the device's other face, so each is held its own way round.
-        // UIDevice reads both landscape right (a tent held as a laptop read
-        // landscape left on its outer panel, its interface upside down under
-        // the hinge).
+        // from the device's other face. Both are held landscape left
+        // (`SimulatorHeldPosture.orientation`); UIDevice reads the tent's
+        // outer panel landscape right and the laptop's inner one landscape
+        // left, its camera half standing up as the lid.
         fold.send(SimulatorHeldPosture.tent.steps(from: .outer, angle: 0), to: address)
         _ = try await expect("closed", on: outer, "Tent")
         let tent = try await verifier.wait(for: "sensors.orientation", bound: .seconds(10)) { $0 == "landscapeRight" }
         XCTAssertEqual(tent, "landscapeRight", "a tent")
         fold.send(SimulatorHeldPosture.laptop.steps(from: .outer, angle: 70), to: address)
         _ = try await expect("partiallyOpen", on: inner, "Laptop")
-        let laptop = try await verifier.wait(for: "sensors.orientation", bound: .seconds(10)) { $0 == "landscapeRight" }
-        XCTAssertEqual(laptop, "landscapeRight", "a laptop")
+        let laptop = try await verifier.wait(for: "sensors.orientation", bound: .seconds(10)) { $0 == "landscapeLeft" }
+        XCTAssertEqual(laptop, "landscapeLeft", "a laptop")
         Self.report("held: tent \(tent ?? "nothing"), laptop \(laptop ?? "nothing")")
         try? await simctl.terminate(udid: udid, bundleIdentifier: IOSVerifierLiveTests.bundle)
     }
