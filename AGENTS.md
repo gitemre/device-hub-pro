@@ -16,6 +16,7 @@ people and coding agents alike.
 | Read a problem report | `swift run dhp-report issue <n>` (or `analyze <file\|->`) |
 | Pixel-parity harness | `bash Scripts/parity-check.sh` (app must be running; see `Scripts/README.md`) |
 | Performance harness | `bash Scripts/perf-check.sh` (app must be running; see `docs/performance.md`) |
+| Publish the website (`site/`, from `main`) | `bash Scripts/publish-site.sh` |
 | Rebuild the Xcode product | `xcodebuild -quiet -scheme DeviceHubPro -configuration Debug -destination 'platform=macOS' build` |
 
 ## Project rules
