@@ -1,0 +1,342 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <title>Device Hub Pro: Android emulators, phones and iOS simulators on your Mac</title>
+  <meta name="description" content="Free, open-source Mac app that mirrors and controls Android emulators, Android phones, iOS simulators and iPhones in one window. Change device settings, capture screenshots and video, read logs. No Android Studio needed.">
+  <link rel="canonical" href="https://gitemre.github.io/device-hub-pro/">
+  <link rel="icon" type="image/png" sizes="64x64" href="assets/icon-64.png">
+  <link rel="apple-touch-icon" href="assets/apple-touch-icon.png">
+  <meta property="og:type" content="website">
+  <meta property="og:site_name" content="Device Hub Pro">
+  <meta property="og:title" content="Device Hub Pro: Android and iOS devices, side by side on your Mac">
+  <meta property="og:description" content="Mirror, control, change settings and capture on Android emulators, phones, iOS simulators and iPhones. Free and open source.">
+  <meta property="og:url" content="https://gitemre.github.io/device-hub-pro/">
+  <meta property="og:image" content="https://gitemre.github.io/device-hub-pro/assets/social-preview.png">
+  <meta property="og:image:width" content="1280">
+  <meta property="og:image:height" content="640">
+  <meta property="og:image:alt" content="Device Hub Pro showing a Pixel emulator and an iPhone simulator side by side">
+  <meta name="twitter:card" content="summary_large_image">
+  <link rel="preload" href="fonts/archivo-var-latin.woff2" as="font" type="font/woff2" crossorigin>
+  <link rel="preload" href="fonts/ibm-plex-sans-var-latin.woff2" as="font" type="font/woff2" crossorigin>
+  <link rel="stylesheet" href="fonts.css">
+  <link rel="stylesheet" href="style.css">
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "SoftwareApplication",
+    "name": "Device Hub Pro",
+    "description": "Free, open-source Mac app that mirrors and controls Android emulators, Android phones, iOS simulators and iPhones in one window.",
+    "applicationCategory": "DeveloperApplication",
+    "operatingSystem": "macOS 26 or later (Apple silicon)",
+    "url": "https://gitemre.github.io/device-hub-pro/",
+    "downloadUrl": "https://github.com/gitemre/device-hub-pro",
+    "image": "https://gitemre.github.io/device-hub-pro/assets/social-preview.png",
+    "screenshot": "https://gitemre.github.io/device-hub-pro/assets/hero.webp",
+    "license": "https://opensource.org/licenses/MIT",
+    "isAccessibleForFree": true,
+    "offers": { "@type": "Offer", "price": "0", "priceCurrency": "USD" },
+    "sameAs": ["https://github.com/gitemre/device-hub-pro"],
+    "author": { "@type": "Person", "name": "Emre Özturk", "url": "https://github.com/gitemre" }
+  }
+  </script>
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "FAQPage",
+    "mainEntity": [
+      { "@type": "Question", "name": "Is Device Hub Pro free?",
+        "acceptedAnswer": { "@type": "Answer", "text": "Yes. It is free and open source under the MIT license. It has no accounts, no analytics and no telemetry." } },
+      { "@type": "Question", "name": "Do I need Android Studio to run Android emulators on my Mac?",
+        "acceptedAnswer": { "@type": "Answer", "text": "No. On first launch Device Hub Pro installs Google's official command-line tools, platform-tools and emulator for you, in the folder Android Studio uses, so Studio can share them later. It needs no administrator password." } },
+      { "@type": "Question", "name": "Is it a scrcpy alternative for Mac?",
+        "acceptedAnswer": { "@type": "Answer", "text": "For Android phones, yes. Phones are mirrored and controlled through scrcpy's server over adb, by cable or Wi-Fi, and decoded by the Mac's hardware video decoder. The same window also shows emulators, iOS simulators and iPhones, with device settings, logs and capture next to the screen." } },
+      { "@type": "Question", "name": "Does it replace Xcode's Device Hub?",
+        "acceptedAnswer": { "@type": "Answer", "text": "It is inspired by Xcode's Device Hub and works alongside it, with the same layout and shortcuts plus Android devices in the same window. iOS simulators need Xcode installed. Device Hub Pro is an independent project, not affiliated with Apple." } },
+      { "@type": "Question", "name": "Can I see and control a real iPhone?",
+        "acceptedAnswer": { "@type": "Answer", "text": "Yes, after you turn on physical Apple devices in Settings and enable the iPhone. Over USB you see its live screen, and the mouse and keyboard reach the phone. Pairing and Developer Mode are set up in Xcode. The live view and fast input use private Apple interfaces and can be turned off." } },
+      { "@type": "Question", "name": "Does it support the iPhone Duo simulator?",
+        "acceptedAnswer": { "@type": "Answer", "text": "Yes. With Xcode 27.1 the iPhone Duo simulator folds from the window: Closed, Tent, Laptop, Partially Open and Open, or any angle on the hinge slider. Where your Xcode ships Apple's 3D model of the device, Device Hub Pro draws it in 3D and you can turn it around." } },
+      { "@type": "Question", "name": "Which Macs does it run on?",
+        "acceptedAnswer": { "@type": "Answer", "text": "macOS 26 or later on an Apple silicon Mac." } },
+      { "@type": "Question", "name": "Can I change settings on several devices at once?",
+        "acceptedAnswer": { "@type": "Answer", "text": "Yes. Select several devices, Android and iOS mixed, and set the appearance, text size, language, location or a clean status bar on all of them, or apply a saved settings profile." } }
+    ]
+  }
+  </script>
+</head>
+<body>
+  <a class="skip" href="#main">Skip to content</a>
+
+  <header class="site-header">
+    <div class="wrap">
+      <a class="brand" href="./"><img src="assets/icon-64.png" alt="" width="26" height="26">Device Hub Pro</a>
+      <nav class="nav" aria-label="Main">
+        <a class="wide" href="features.html">Features</a>
+        <a class="wide" href="#settings">Device settings</a>
+        <a href="iphone-duo.html">iPhone Duo</a>
+        <a class="wide" href="https://github.com/gitemre/device-hub-pro">GitHub</a>
+        <a class="btn btn-primary btn-sm" href="https://github.com/gitemre/device-hub-pro">Download</a>
+      </nav>
+    </div>
+  </header>
+
+  <main id="main">
+    <div class="hero">
+      <div class="wrap">
+        <div class="hero-grid">
+          <a class="announce" href="iphone-duo.html"><b>New</b> iPhone Duo simulator, folded in 3D <span aria-hidden="true">→</span></a>
+          <span class="label">Free · Open source · macOS 26+</span>
+          <h1>Android and iOS devices, side by side on your Mac.</h1>
+          <div class="hero-sub">
+            <p class="lede">Mirror and control Android emulators, Android phones, iOS simulators and iPhones in one window. Change their settings, capture them and read their logs without leaving it.</p>
+            <div>
+              <div class="cta">
+                <a class="btn btn-primary" href="https://github.com/gitemre/device-hub-pro">Download for Mac</a>
+                <a class="btn btn-ghost" href="https://github.com/gitemre/device-hub-pro">
+                  <svg viewBox="0 0 16 16" aria-hidden="true"><path d="M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38 0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13-.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82.64-.18 1.32-.27 2-.27.68 0 1.36.09 2 .27 1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48 0 1.07-.01 1.93-.01 2.2 0 .21.15.46.55.38A8.013 8.013 0 0016 8c0-4.42-3.58-8-8-8z"/></svg>
+                  Source on GitHub
+                </a>
+              </div>
+              <div class="cta-meta"><span class="label">Apple silicon</span><span class="label">MIT license</span><span class="label">No tracking</span></div>
+            </div>
+          </div>
+          <div class="hero-shot">
+            <img src="assets/hero.webp" srcset="assets/hero-1000.webp 1000w, assets/hero.webp 2000w" sizes="(min-width: 1180px) 1100px, 100vw" width="2000" height="1057" fetchpriority="high"
+              alt="Two Device Hub Pro windows: a Pixel emulator with the Controls panel, and an iPhone simulator in dark mode">
+          </div>
+        </div>
+      </div>
+      <div class="wrap">
+        <div class="roster" aria-label="Devices it works with">
+          <ul>
+            <li><b>Android emulators</b><span>emulator-5554 · Pixel catalog</span></li>
+            <li><b>Android phones</b><span>USB or Wi-Fi · QR pairing</span></li>
+            <li><b>iOS simulators</b><span>from your Xcode</span></li>
+            <li><b>iPhones</b><span>opt-in · USB live view</span></li>
+            <li><b>Foldables</b><span>Pixel Fold · iPhone Duo</span></li>
+            <li><b>Wear OS, TV, Auto</b><span>emulators</span></li>
+          </ul>
+        </div>
+      </div>
+    </div>
+
+    <section class="stage" aria-labelledby="duo-title">
+      <div class="wrap split flip">
+        <figure style="margin:0">
+          <div class="frame">
+            <video src="assets/iphone-duo-3d.mp4" poster="assets/iphone-duo-3d-poster.webp" width="680" height="476" autoplay muted loop playsinline preload="metadata"
+              aria-label="An iPhone Duo simulator in 3D: dragging the hinge slider opens and folds it while a sample app follows the hinge"></video>
+          </div>
+        </figure>
+        <div>
+          <div class="section-head" style="margin-bottom:0">
+            <span class="label">New in Xcode 27.1</span>
+            <h2 id="duo-title">Fold the iPhone Duo simulator, in 3D.</h2>
+            <p>Pick a posture or drag the hinge to any angle. Your app sees a real fold, not a jump, and the 3D model turns with the lit panel facing you.</p>
+          </div>
+          <div class="hinge-mini">
+            <svg viewBox="0 0 400 200" role="img" aria-labelledby="hinge-fig-title">
+              <title id="hinge-fig-title">Side view of the iPhone Duo hinge</title>
+              <line x1="20" y1="190" x2="380" y2="190" stroke="var(--stage-rule)" stroke-width="1" stroke-dasharray="3 5"></line>
+              <path id="hinge-arc" d="" fill="none" stroke="var(--hinge)" stroke-width="1.5"></path>
+              <line x1="200" y1="190" x2="50" y2="190" stroke="var(--stage-muted)" stroke-width="9" stroke-linecap="round"></line>
+              <line id="hinge-lid" x1="200" y1="190" x2="50" y2="190" stroke="var(--stage-ink)" stroke-width="9" stroke-linecap="round"></line>
+              <circle cx="200" cy="190" r="6" fill="var(--hinge)"></circle>
+            </svg>
+            <dl class="readout">
+              <div><dt>Hinge angle</dt><dd id="out-angle" aria-live="polite">127.8°</dd></div>
+              <div><dt>Posture</dt><dd id="out-posture">Partially Open</dd></div>
+            </dl>
+            <label class="label" for="hinge" style="display:block; margin-top:22px">Try the hinge</label>
+            <input class="hinge-input" id="hinge" type="range" min="0" max="180" step="0.1" value="127.8">
+            <div class="presets" role="group" aria-label="Postures">
+              <button type="button" data-angle="0">Closed 0°</button>
+              <button type="button" data-angle="71.1">Tent 71.1°</button>
+              <button type="button" data-angle="104.2">Laptop 104.2°</button>
+              <button type="button" data-angle="127.8">Partially Open 127.8°</button>
+              <button type="button" data-angle="180">Open 180°</button>
+            </div>
+          </div>
+          <p style="margin-top:28px"><a class="btn btn-ghost" href="iphone-duo.html">iPhone Duo in Device Hub Pro →</a></p>
+        </div>
+      </div>
+    </section>
+
+    <section class="section" aria-labelledby="demo-title">
+      <div class="wrap split">
+        <div class="section-head" style="margin:0">
+          <span class="label">One sidebar</span>
+          <h2 id="demo-title">Pick a device. Change a setting. See it on the device.</h2>
+          <p>Every device you have sits in one list. Switch from a Pixel emulator to an iPhone simulator and keep the same tools, menus and shortcuts.</p>
+        </div>
+        <figure style="margin:0">
+          <div class="frame">
+            <video src="assets/demo.mp4" poster="assets/demo-poster.webp" width="1100" height="746" autoplay muted loop playsinline preload="metadata"
+              aria-label="Switching from a Pixel emulator to an iPhone simulator and turning on dark mode from the Controls panel"></video>
+          </div>
+        </figure>
+      </div>
+    </section>
+
+    <section class="section" aria-labelledby="tools-title">
+      <div class="wrap">
+        <div class="section-head">
+          <span class="label">Next to the screen</span>
+          <h2 id="tools-title">The tools you reach for while testing</h2>
+        </div>
+        <div class="tiles">
+          <article class="tile">
+            <div class="frame"><img src="assets/card-controls.webp" width="1200" height="750" loading="lazy" alt="The Controls panel next to a Pixel emulator"></div>
+            <div><h3>Controls</h3><p>Network, battery, location, dark mode, text size, language and accessibility. Each change is read back from the device, so the panel shows what the device really did.</p></div>
+          </article>
+          <article class="tile">
+            <div class="frame"><img src="assets/card-logs.webp" width="1200" height="750" loading="lazy" alt="Live logs next to the device"></div>
+            <div><h3>Logs</h3><p>Logcat and simulator logs, filtered by app, level or text, with crashes highlighted. Log focus (<kbd>⌥⌘L</kbd>) puts the phone and a wide log side by side.</p></div>
+          </article>
+          <article class="tile">
+            <div class="frame"><img src="assets/card-catalog.webp" width="1200" height="750" loading="lazy" alt="The Pixel device catalog"></div>
+            <div><h3>Emulators without Android Studio</h3><p>Create any Pixel phone, tablet or foldable, or a Wear OS, TV or Automotive emulator. System images download in the background while you keep working.</p></div>
+          </article>
+          <article class="tile">
+            <div class="frame"><img src="assets/card-pair.webp" width="1200" height="750" loading="lazy" alt="Pairing an Android phone with a QR code"></div>
+            <div><h3>Wireless phones</h3><p>Pair an Android phone by QR code or pairing code. It stays on Wi-Fi and mirrors like a cabled one.</p></div>
+          </article>
+        </div>
+      </div>
+    </section>
+
+    <section id="settings" class="section" aria-labelledby="settings-title">
+      <div class="wrap">
+        <div class="section-head">
+          <span class="label">Controls panel</span>
+          <h2 id="settings-title">Device settings, without opening Settings on the device</h2>
+          <p>Each row changes the device's own setting and shows what the device reports back. Rows a device can't take are not shown.</p>
+        </div>
+        <div class="matrix-wrap">
+          <table class="matrix">
+            <thead>
+              <tr><th scope="col">Setting</th><th class="c" scope="col">Android</th><th class="c" scope="col">iOS Simulator</th><th class="c" scope="col">iPhone</th></tr>
+            </thead>
+            <tbody>
+              <tr class="group"><th colspan="4" scope="colgroup">Display</th></tr>
+              <tr><th scope="row">Dark or light appearance</th><td class="c"><span class="yes" role="img" aria-label="Yes"></span></td><td class="c"><span class="yes" role="img" aria-label="Yes"></span></td><td class="c"><span class="yes" role="img" aria-label="Yes"></span></td></tr>
+              <tr><th scope="row">Text size</th><td class="c"><span class="yes" role="img" aria-label="Yes"></span></td><td class="c"><span class="yes" role="img" aria-label="Yes"></span></td><td class="c"><span class="yes" role="img" aria-label="Yes"></span></td></tr>
+              <tr><th scope="row">Reduce motion, show borders</th><td class="c"><span class="yes" role="img" aria-label="Yes"></span></td><td class="c"><span class="yes" role="img" aria-label="Yes"></span></td><td class="c"><span class="yes" role="img" aria-label="Yes"></span></td></tr>
+              <tr><th scope="row">Liquid Glass, reduce transparency</th><td class="c"><span class="no">–</span></td><td class="c"><span class="yes" role="img" aria-label="Yes"></span></td><td class="c"><span class="yes" role="img" aria-label="Yes"></span></td></tr>
+              <tr><th scope="row">Clean status bar for store screenshots</th><td class="c"><span class="yes" role="img" aria-label="Yes"></span></td><td class="c"><span class="yes" role="img" aria-label="Yes"></span></td><td class="c"><span class="no">–</span></td></tr>
+              <tr class="group"><th colspan="4" scope="colgroup">Accessibility</th></tr>
+              <tr><th scope="row">TalkBack / VoiceOver</th><td class="c"><span class="yes" role="img" aria-label="Yes"></span></td><td class="c"><span class="yes" role="img" aria-label="Yes"></span></td><td class="c"><span class="yes" role="img" aria-label="Yes"></span></td></tr>
+              <tr><th scope="row">Color filters for color blindness</th><td class="c"><span class="yes" role="img" aria-label="Yes"></span></td><td class="c"><span class="yes" role="img" aria-label="Yes"></span></td><td class="c"><span class="yes" role="img" aria-label="Yes"></span></td></tr>
+              <tr><th scope="row">Increase contrast</th><td class="c"><span class="yes" role="img" aria-label="Yes"></span></td><td class="c"><span class="yes" role="img" aria-label="Yes"></span></td><td class="c"><span class="yes" role="img" aria-label="Yes"></span></td></tr>
+              <tr class="group"><th colspan="4" scope="colgroup">Network and power</th></tr>
+              <tr><th scope="row">Wi-Fi, Bluetooth, airplane mode, mobile data</th><td class="c"><span class="yes" role="img" aria-label="Yes"></span></td><td class="c"><span class="no">–</span></td><td class="c"><span class="no">–</span></td></tr>
+              <tr><th scope="row">Network speed and latency</th><td class="c"><span class="part">emulator</span></td><td class="c"><span class="no">–</span></td><td class="c"><span class="no">–</span></td></tr>
+              <tr><th scope="row">Battery level, charging, battery saver</th><td class="c"><span class="yes" role="img" aria-label="Yes"></span></td><td class="c"><span class="no">–</span></td><td class="c"><span class="no">–</span></td></tr>
+              <tr class="group"><th colspan="4" scope="colgroup">Location, language and time</th></tr>
+              <tr><th scope="row">Simulated location</th><td class="c"><span class="yes" role="img" aria-label="Yes"></span></td><td class="c"><span class="yes" role="img" aria-label="Yes"></span></td><td class="c"><span class="yes" role="img" aria-label="Yes"></span></td></tr>
+              <tr><th scope="row">Routes: city run, bike ride, freeway drive</th><td class="c"><span class="part">emulator</span></td><td class="c"><span class="yes" role="img" aria-label="Yes"></span></td><td class="c"><span class="no">–</span></td></tr>
+              <tr><th scope="row">Device language</th><td class="c"><span class="yes" role="img" aria-label="Yes"></span></td><td class="c"><span class="yes" role="img" aria-label="Yes"></span></td><td class="c"><span class="no">–</span></td></tr>
+              <tr><th scope="row">Time zone, 24-hour time</th><td class="c"><span class="yes" role="img" aria-label="Yes"></span></td><td class="c"><span class="yes" role="img" aria-label="Yes"></span></td><td class="c"><span class="no">–</span></td></tr>
+              <tr><th scope="row">Date and time, force right-to-left</th><td class="c"><span class="yes" role="img" aria-label="Yes"></span></td><td class="c"><span class="no">–</span></td><td class="c"><span class="no">–</span></td></tr>
+              <tr class="group"><th colspan="4" scope="colgroup">App testing</th></tr>
+              <tr><th scope="row">Open a link or deep link</th><td class="c"><span class="yes" role="img" aria-label="Yes"></span></td><td class="c"><span class="yes" role="img" aria-label="Yes"></span></td><td class="c"><span class="yes" role="img" aria-label="Yes"></span></td></tr>
+              <tr><th scope="row">Low memory / memory warning</th><td class="c"><span class="yes" role="img" aria-label="Yes"></span></td><td class="c"><span class="yes" role="img" aria-label="Yes"></span></td><td class="c"><span class="no">–</span></td></tr>
+              <tr><th scope="row">Kill a background process</th><td class="c"><span class="yes" role="img" aria-label="Yes"></span></td><td class="c"><span class="no">–</span></td><td class="c"><span class="no">–</span></td></tr>
+              <tr><th scope="row">Push notifications, app permissions</th><td class="c"><span class="no">–</span></td><td class="c"><span class="yes" role="img" aria-label="Yes"></span></td><td class="c"><span class="no">–</span></td></tr>
+              <tr><th scope="row">Fingerprint / Face ID and Touch ID</th><td class="c"><span class="part">emulator</span></td><td class="c"><span class="yes" role="img" aria-label="Yes"></span></td><td class="c"><span class="no">–</span></td></tr>
+              <tr><th scope="row">Root certificates, keychain reset</th><td class="c"><span class="no">–</span></td><td class="c"><span class="yes" role="img" aria-label="Yes"></span></td><td class="c"><span class="no">–</span></td></tr>
+            </tbody>
+          </table>
+        </div>
+        <p class="matrix-note">Save a set of settings as a profile (Screenshots, Dark Mode, Accessibility Stress, Defaults) and apply it to several devices at once. <a href="features.html#settings">Every setting in detail →</a></p>
+      </div>
+    </section>
+
+    <section class="section" aria-labelledby="more-title">
+      <div class="wrap">
+        <div class="section-head">
+          <span class="label">And more</span>
+          <h2 id="more-title">What else it does</h2>
+        </div>
+        <dl class="more">
+          <div><dt>Mirror and control</dt><dd>Up to 60 fps. Click, scroll, type, rotate and press hardware buttons, with multi-touch on emulators and phones.</dd></div>
+          <div><dt>Capture</dt><dd>Screenshots with <kbd>⇧⌘S</kbd>, annotated screenshots, recordings with no length limit, and a replay of the last 15 to 60 seconds.</dd></div>
+          <div><dt>Apps</dt><dd>Drop an APK, an app bundle set or a folder of split APKs to install. Launch, stop, clear data, uninstall.</dd></div>
+          <div><dt>Many devices at once</dt><dd>Select several devices, Android and iOS mixed, then change a setting, open a link, install a build or take one screenshot each.</dd></div>
+          <div><dt>Push and deep links</dt><dd>Drag a <span class="mono">.apns</span> file onto a simulator, keep a library of payloads and saved links, launch apps with arguments.</dd></div>
+          <div><dt>Real iPhones, opt-in</dt><dd>Live screen over USB, mouse and keyboard control, apps, reports and the Controls the phone allows.</dd></div>
+          <div><dt>Crash reports</dt><dd>Simulator crash reports in the window, newest first, with the app's own crashes one click away.</dd></div>
+          <div><dt>Report a problem</dt><dd>Checks your Mac for known causes and writes a report for a GitHub issue, with personal details left out.</dd></div>
+        </dl>
+        <p style="margin-top:32px"><a class="btn btn-ghost" href="features.html">See all features →</a></p>
+      </div>
+    </section>
+
+    <section id="faq" class="section" aria-labelledby="faq-title">
+      <div class="wrap">
+        <div class="section-head"><span class="label">FAQ</span><h2 id="faq-title">Questions</h2></div>
+        <div class="faq">
+          <details><summary>Is Device Hub Pro free?</summary>
+            <p>Yes. It is free and open source under the MIT license. It has no accounts, no analytics and no telemetry.</p></details>
+          <details><summary>Do I need Android Studio to run Android emulators on my Mac?</summary>
+            <p>No. On first launch Device Hub Pro installs Google's official command-line tools, platform-tools and emulator for you, in the folder Android Studio uses, so Studio can share them later. It needs no administrator password.</p></details>
+          <details><summary>Is it a scrcpy alternative for Mac?</summary>
+            <p>For Android phones, yes. Phones are mirrored and controlled through scrcpy's server over adb, by cable or Wi-Fi, and decoded by the Mac's hardware video decoder. The same window also shows emulators, iOS simulators and iPhones, with device settings, logs and capture next to the screen.</p></details>
+          <details><summary>Does it replace Xcode's Device Hub?</summary>
+            <p>It is inspired by Xcode's Device Hub and works alongside it, with the same layout and shortcuts plus Android devices in the same window. iOS simulators need Xcode installed. Device Hub Pro is an independent project, not affiliated with Apple.</p></details>
+          <details><summary>Can I see and control a real iPhone?</summary>
+            <p>Yes, after you turn on physical Apple devices in Settings and enable the iPhone. Over USB you see its live screen, and the mouse and keyboard reach the phone. Pairing and Developer Mode are set up in Xcode. The live view and fast input use private Apple interfaces and can be turned off.</p></details>
+          <details><summary>Does it support the iPhone Duo simulator?</summary>
+            <p>Yes. With Xcode 27.1 the iPhone Duo simulator folds from the window: Closed, Tent, Laptop, Partially Open and Open, or any angle on the hinge slider. Where your Xcode ships Apple's 3D model of the device, Device Hub Pro draws it in 3D and you can turn it around. <a href="iphone-duo.html">More about iPhone Duo</a>.</p></details>
+          <details><summary>Which Macs does it run on?</summary>
+            <p>macOS 26 or later on an Apple silicon Mac.</p></details>
+          <details><summary>Can I change settings on several devices at once?</summary>
+            <p>Yes. Select several devices, Android and iOS mixed, and set the appearance, text size, language, location or a clean status bar on all of them, or apply a saved settings profile.</p></details>
+        </div>
+      </div>
+    </section>
+
+    <section id="install" class="section" aria-labelledby="install-title">
+      <div class="wrap install">
+        <div>
+          <div class="section-head" style="margin-bottom:24px"><span class="label">Install</span><h2 id="install-title">Running in a minute</h2></div>
+          <ol class="steps">
+            <li><span>Open the <a href="https://github.com/gitemre/device-hub-pro">GitHub page</a> and download the latest .dmg under Releases.</span></li>
+            <li><span>Drag Device Hub Pro to Applications.</span></li>
+            <li><span>Open it. Updates arrive inside the app.</span></li>
+          </ol>
+          <div class="cta" style="margin-top:28px"><a class="btn btn-primary" href="https://github.com/gitemre/device-hub-pro">Download for Mac</a></div>
+        </div>
+        <div>
+          <span class="label">Requirements</span>
+          <ul class="reqs" style="margin-top:14px">
+            <li><b>Mac</b> · macOS 26 or later, Apple silicon</li>
+            <li><b>Android</b> · nothing, the first launch sets it up</li>
+            <li><b>iOS simulators</b> · Xcode</li>
+            <li><b>iPhone Duo</b> · Xcode 27.1</li>
+            <li><b>iPhone</b> · optional: turn it on in Settings, pair the phone in Xcode and switch on Developer Mode</li>
+          </ul>
+          <p class="fine">Some iOS features (simulator touch, iPhone fast input and live view) use private Apple interfaces. Each can be turned off, and a macOS or Xcode update may break them for a while.</p>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <footer class="site-footer">
+    <div class="wrap">
+      <span>MIT License · © 2026 Emre Özturk and contributors · Not affiliated with Apple or Google.</span>
+      <nav aria-label="Footer">
+        <a href="features.html">Features</a>
+        <a href="iphone-duo.html">iPhone Duo</a>
+        <a href="https://github.com/gitemre/device-hub-pro">GitHub</a>
+        <a href="https://github.com/gitemre/device-hub-pro/blob/main/CHANGELOG.md">Changelog</a>
+        <a href="https://github.com/gitemre/device-hub-pro/blob/main/docs/troubleshooting.md">Help</a>
+      </nav>
+    </div>
+  </footer>
+
+  <script src="site.js" defer></script>
+</body>
+</html>

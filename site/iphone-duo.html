@@ -1,0 +1,198 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <title>iPhone Duo simulator on Mac: fold it and see it in 3D · Device Hub Pro</title>
+  <meta name="description" content="Fold the iPhone Duo simulator from your Mac: Closed, Tent, Laptop, Partially Open and Open, or any hinge angle. See it as a 3D model, keep both panels live and test how your app follows the fold. Free and open source.">
+  <link rel="canonical" href="https://gitemre.github.io/device-hub-pro/iphone-duo.html">
+  <link rel="icon" type="image/png" sizes="64x64" href="assets/icon-64.png">
+  <link rel="apple-touch-icon" href="assets/apple-touch-icon.png">
+  <meta property="og:type" content="article">
+  <meta property="og:site_name" content="Device Hub Pro">
+  <meta property="og:title" content="Fold the iPhone Duo simulator, in 3D">
+  <meta property="og:description" content="Postures, any hinge angle, a turnable 3D model and live panels for the iPhone Duo simulator in Xcode 27.1.">
+  <meta property="og:url" content="https://gitemre.github.io/device-hub-pro/iphone-duo.html">
+  <meta property="og:image" content="https://gitemre.github.io/device-hub-pro/assets/iphone-duo-og.jpg">
+  <meta property="og:image:width" content="680">
+  <meta property="og:image:height" content="476">
+  <meta property="og:image:alt" content="An iPhone Duo simulator drawn in 3D by Device Hub Pro">
+  <meta name="twitter:card" content="summary_large_image">
+  <link rel="preload" href="fonts/archivo-var-latin.woff2" as="font" type="font/woff2" crossorigin>
+  <link rel="preload" href="fonts/ibm-plex-sans-var-latin.woff2" as="font" type="font/woff2" crossorigin>
+  <link rel="stylesheet" href="fonts.css">
+  <link rel="stylesheet" href="style.css">
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "FAQPage",
+    "mainEntity": [
+      { "@type": "Question", "name": "How do I fold the iPhone Duo simulator on a Mac?",
+        "acceptedAnswer": { "@type": "Answer", "text": "Open the iPhone Duo simulator in Device Hub Pro and use the posture buttons under the device: Closed, Partially Open and Open, plus Laptop and Tent. The hinge slider at the end of the same bar sets any angle from 0 to 180 degrees. Device ▸ Fold / Unfold does the same from the menu." } },
+      { "@type": "Question", "name": "Can I see the iPhone Duo simulator in 3D?",
+        "acceptedAnswer": { "@type": "Answer", "text": "Yes, when your Xcode ships Apple's 3D model of the device. Device Hub Pro reads the model from your Xcode at runtime and draws it with the live panels on it. Drag to turn it, pinch to zoom, and use View ▸ Turn Around to see its back. Without the model, the device shows in its 2D frame." } },
+      { "@type": "Question", "name": "What do I need for the iPhone Duo simulator?",
+        "acceptedAnswer": { "@type": "Answer", "text": "Xcode 27.1 with the iOS 27.1 simulator runtime, on macOS 26 or later on an Apple silicon Mac, and Device Hub Pro." } }
+    ]
+  }
+  </script>
+</head>
+<body>
+  <a class="skip" href="#main">Skip to content</a>
+
+  <header class="site-header">
+    <div class="wrap">
+      <a class="brand" href="./"><img src="assets/icon-64.png" alt="" width="26" height="26">Device Hub Pro</a>
+      <nav class="nav" aria-label="Main">
+        <a class="wide" href="features.html">Features</a>
+        <a class="wide" href="./#settings">Device settings</a>
+        <a href="iphone-duo.html" aria-current="page">iPhone Duo</a>
+        <a class="wide" href="https://github.com/gitemre/device-hub-pro">GitHub</a>
+        <a class="btn btn-primary btn-sm" href="https://github.com/gitemre/device-hub-pro">Download</a>
+      </nav>
+    </div>
+  </header>
+
+  <main id="main">
+    <div class="stage" style="padding-block: clamp(40px, 7vw, 88px) clamp(56px, 8vw, 96px)">
+      <div class="wrap split even">
+        <div>
+          <span class="label">iPhone Duo · Xcode 27.1</span>
+          <h1 style="font: 800 clamp(38px, 5vw, 66px)/0.98 var(--display); font-stretch: 118%; letter-spacing: -0.025em; margin: 16px 0 22px; color: var(--stage-ink)">Fold the iPhone Duo simulator from your Mac.</h1>
+          <p style="font-size: 19px; max-width: 32em; margin: 0 0 28px">Pick a posture or drag the hinge to any angle. Watch it fold as a 3D model with both panels live, and see how your app follows the hinge.</p>
+          <div class="cta">
+            <a class="btn btn-primary" href="https://github.com/gitemre/device-hub-pro">Download for Mac</a>
+            <a class="btn btn-ghost" href="#hinge-title">Try the hinge</a>
+          </div>
+        </div>
+        <figure style="margin:0">
+          <div class="frame">
+            <video src="assets/iphone-duo-3d.mp4" poster="assets/iphone-duo-3d-poster.webp" width="680" height="476" autoplay muted loop playsinline preload="metadata"
+              aria-label="An iPhone Duo simulator in 3D: dragging the hinge slider opens it from golden hour to noon and folds it back to sunrise, in a sample app whose sky follows the hinge"></video>
+          </div>
+          <figcaption style="margin-top:12px; font-size:14px; color: var(--stage-muted)">Daybreak, the sample app in the repository: the hinge angle is the time of day.</figcaption>
+        </figure>
+      </div>
+    </div>
+
+    <section class="stage" style="border-top: 1px solid var(--stage-rule)" aria-labelledby="hinge-title">
+      <div class="wrap">
+        <div class="section-head">
+          <span class="label">The postures</span>
+          <h2 id="hinge-title">Five postures, and every angle between them</h2>
+          <p>These are the angles your app reads at each preset. A preset moves the hinge over about half a second, so the app sees a fold and not a jump. Try it here.</p>
+        </div>
+        <div class="hinge-lab">
+          <div class="hinge-fig">
+            <svg viewBox="0 0 400 230" role="img" aria-labelledby="hinge-fig-title">
+              <title id="hinge-fig-title">Side view of the iPhone Duo hinge</title>
+              <line x1="20" y1="190" x2="380" y2="190" stroke="var(--stage-rule)" stroke-width="1" stroke-dasharray="3 5"></line>
+              <path id="hinge-arc" d="" fill="none" stroke="var(--hinge)" stroke-width="1.5"></path>
+              <line x1="200" y1="190" x2="50" y2="190" stroke="var(--stage-muted)" stroke-width="9" stroke-linecap="round"></line>
+              <line id="hinge-lid" x1="200" y1="190" x2="50" y2="190" stroke="var(--stage-ink)" stroke-width="9" stroke-linecap="round"></line>
+              <circle cx="200" cy="190" r="6" fill="var(--hinge)"></circle>
+            </svg>
+          </div>
+          <div>
+            <dl class="readout">
+              <div><dt>Hinge angle</dt><dd id="out-angle" aria-live="polite">127.8°</dd></div>
+              <div><dt>Posture</dt><dd id="out-posture">Partially Open</dd></div>
+            </dl>
+            <label class="label" for="hinge" style="display:block; margin-top:28px">Hinge slider</label>
+            <input class="hinge-input" id="hinge" type="range" min="0" max="180" step="0.1" value="127.8">
+            <div class="scale-ends"><span>0° closed</span><span>180° open</span></div>
+            <div class="presets" role="group" aria-label="Postures">
+              <button type="button" data-angle="0">Closed 0°</button>
+              <button type="button" data-angle="71.1">Tent 71.1°</button>
+              <button type="button" data-angle="104.2">Laptop 104.2°</button>
+              <button type="button" data-angle="127.8">Partially Open 127.8°</button>
+              <button type="button" data-angle="180">Open 180°</button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section class="section" aria-labelledby="what-title">
+      <div class="wrap">
+        <div class="section-head">
+          <span class="label">In the app</span>
+          <h2 id="what-title">Everything the fold needs, in one bar</h2>
+          <p>The bar under the device holds Rotate, Closed, Partially Open and Open, then Laptop and Tent, the hinge slider and a 3D button.</p>
+        </div>
+        <dl class="more">
+          <div><dt>Any angle</dt><dd>The hinge slider sets any angle from 0° to 180°. <span class="mono">Device ▸ Fold / Unfold</span> does it from the menu too.</dd></div>
+          <div><dt>Hold it any way</dt><dd><span class="mono">Device ▸ Orientation</span> holds the device portrait, upside down, landscape left or right, face up or face down.</dd></div>
+          <div><dt>A 3D model you can turn</dt><dd>Drag to turn it, pinch or scroll to zoom, double-click to face it again. <span class="mono">View ▸ Turn Around</span> shows its back.</dd></div>
+          <div><dt>Live panels</dt><dd>The lit panel shows the simulator's own picture and takes clicks, drags and, with Keyboard Capture, typing. The stage follows it from the cover to the inside.</dd></div>
+          <div><dt>Buttons that move</dt><dd>The volume and side buttons press in under the pointer, held for as long as you click.</dd></div>
+          <div><dt>Two finishes</dt><dd>A dark finish by default. <span class="mono">View ▸ Device Color</span> picks the light one.</dd></div>
+          <div><dt>Compact window</dt><dd>The small window keeps the 3D model and keeps its size while the device folds and turns.</dd></div>
+          <div><dt>Capture the fold</dt><dd>Screenshots, recordings and a replay of the last seconds, from the panel that is lit.</dd></div>
+          <div><dt>Picks up where you left it</dt><dd>The fold is remembered while the simulator stays booted, and a simulator opened elsewhere is shown in the posture it is in.</dd></div>
+          <div><dt>Gets unstuck</dt><dd>If an app keeps both panels dark after a fold, a banner offers to lock and wake the simulator, which lets it go.</dd></div>
+        </dl>
+      </div>
+    </section>
+
+    <section class="section" aria-labelledby="model-title">
+      <div class="wrap split">
+        <div class="section-head" style="margin:0">
+          <span class="label">The 3D model</span>
+          <h2 id="model-title">Drawn from your own Xcode</h2>
+        </div>
+        <div class="prose">
+          <p>Xcode 27.1 ships Apple's 3D model of iPhone Duo. Device Hub Pro reads it from your Xcode while it runs and never copies it into the app or the repository. It draws it the way Xcode's Device Hub does: seen from the front, sized like Zoom to Fit and Physical Size, and the same size in every posture.</p>
+          <p>The hinge on screen follows the simulator's hinge frame by frame. If your Xcode has no model, or you turn the 3D view off, the device shows in its flat 2D frame and everything else keeps working.</p>
+        </div>
+      </div>
+    </section>
+
+    <section class="section" aria-labelledby="daybreak-title">
+      <div class="wrap split">
+        <div class="section-head" style="margin:0">
+          <span class="label">Sample app</span>
+          <h2 id="daybreak-title">Daybreak: open the phone and the sun rises</h2>
+        </div>
+        <div class="prose">
+          <p>Daybreak is a small open-source app for the iPhone Duo simulator, in <a href="https://github.com/gitemre/device-hub-pro/tree/main/ios/duo">ios/duo</a>. The hinge angle is the time of day: night on the closed cover, blue hour in Tent, sunrise in Laptop, golden hour in the half-open book and noon when it lies flat.</p>
+          <p>It reads the angle with <span class="mono">onHingeChange</span> and lays out around the fold from the window's division region. A Readings sheet shows the live hinge, window and region values, so it doubles as a check that your fold arrives the way your app expects.</p>
+          <p><a href="https://github.com/gitemre/device-hub-pro/blob/main/ios/duo/README.md">Build and run Daybreak →</a></p>
+        </div>
+      </div>
+    </section>
+
+    <section class="section" aria-labelledby="duo-faq-title">
+      <div class="wrap">
+        <div class="section-head"><span class="label">FAQ</span><h2 id="duo-faq-title">iPhone Duo questions</h2></div>
+        <div class="faq">
+          <details><summary>How do I fold the iPhone Duo simulator on a Mac?</summary>
+            <p>Open the iPhone Duo simulator in Device Hub Pro and use the posture buttons under the device: Closed, Partially Open and Open, plus Laptop and Tent. The hinge slider at the end of the same bar sets any angle from 0 to 180 degrees. <span class="mono">Device ▸ Fold / Unfold</span> does the same from the menu.</p></details>
+          <details><summary>Can I see the iPhone Duo simulator in 3D?</summary>
+            <p>Yes, when your Xcode ships Apple's 3D model of the device. Device Hub Pro reads the model from your Xcode at runtime and draws it with the live panels on it. Drag to turn it, pinch to zoom, and use <span class="mono">View ▸ Turn Around</span> to see its back. Without the model, the device shows in its 2D frame.</p></details>
+          <details><summary>What do I need for the iPhone Duo simulator?</summary>
+            <p>Xcode 27.1 with the iOS 27.1 simulator runtime, on macOS 26 or later on an Apple silicon Mac, and Device Hub Pro.</p></details>
+        </div>
+        <div class="cta" style="margin-top:40px">
+          <a class="btn btn-primary" href="https://github.com/gitemre/device-hub-pro">Download for Mac</a>
+          <a class="btn btn-ghost" href="features.html#foldables">Foldables in the feature list</a>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <footer class="site-footer">
+    <div class="wrap">
+      <span>MIT License · © 2026 Emre Özturk and contributors · Not affiliated with Apple or Google. iPhone is a trademark of Apple Inc.</span>
+      <nav aria-label="Footer">
+        <a href="./">Home</a>
+        <a href="features.html">Features</a>
+        <a href="https://github.com/gitemre/device-hub-pro">GitHub</a>
+        <a href="https://github.com/gitemre/device-hub-pro/blob/main/CHANGELOG.md">Changelog</a>
+      </nav>
+    </div>
+  </footer>
+
+  <script src="site.js" defer></script>
+</body>
+</html>
