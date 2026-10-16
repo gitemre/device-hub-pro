@@ -166,7 +166,8 @@ strong { font-weight: 600; }
 .section-head p { margin: 0; font-size: 19px; color: var(--ink-2); }
 
 .split { display: grid; gap: 36px; align-items: center; }
-@media (min-width: 900px) { .split { grid-template-columns: 4fr 7fr; gap: 64px; } .split.flip, .split.even { grid-template-columns: 5fr 6fr; } .split.flip > :first-child { order: 2; } }
+@media (min-width: 900px) { .split { grid-template-columns: 4fr 7fr; gap: 64px; } .split.flip, .split.even { grid-template-columns: 5fr 6fr; } }
+.split.flip > :first-child { order: 2; }
 .split > * { min-width: 0; }
 
 .frame { border-radius: 12px; overflow: hidden; border: 1px solid var(--rule); background: var(--surface); }
@@ -195,6 +196,7 @@ strong { font-weight: 600; }
 .stage .section-head p, .stage p { color: var(--stage-muted); }
 .stage .section-head h2 { color: var(--stage-ink); }
 .stage a { color: var(--hinge); }
+.stage a.btn-primary { color: var(--accent-ink); }
 .stage .frame { border-color: var(--stage-rule); background: var(--stage-2); }
 .stage .btn-ghost { background: transparent; color: var(--stage-ink); border-color: var(--stage-rule); }
 .stage .btn-ghost:hover { border-color: var(--stage-muted); }
@@ -229,7 +231,7 @@ strong { font-weight: 600; }
 .readout div { border-top: 1px solid var(--stage-rule); padding-top: 10px; min-width: 0; }
 .readout dt { font: 11px/1 var(--mono); text-transform: uppercase; letter-spacing: 0.08em; color: var(--stage-muted); }
 .readout dd { margin: 8px 0 0; font: 500 18px/1.2 var(--mono); color: var(--stage-ink); font-variant-numeric: tabular-nums; }
-.hinge-input { width: 100%; margin-top: 22px; accent-color: var(--hinge); }
+.hinge-input { width: 100%; height: 36px; margin-top: 14px; accent-color: var(--hinge); }
 .hinge-input + .scale-ends { margin-top: 4px; }
 .presets { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 18px; }
 .presets button {
@@ -249,6 +251,15 @@ strong { font-weight: 600; }
 .matrix tr.group th {
   font: 700 15px/1.2 var(--display); font-stretch: 108%; padding-top: 22px; color: var(--ink);
   background: var(--paper);
+}
+.short { display: none; }
+@media (max-width: 600px) {
+  .matrix { min-width: 0; font-size: 14.5px; }
+  .matrix th, .matrix td { padding: 10px 10px; }
+  .matrix td.c, .matrix th.c { width: 52px; padding-inline: 4px; }
+  .matrix thead th { font-size: 10.5px; letter-spacing: 0.04em; }
+  .long { display: none; }
+  .short { display: inline; }
 }
 .yes { display: inline-block; width: 10px; height: 10px; border-radius: 50%; background: var(--ink); }
 .part { font: 12px/1 var(--mono); color: var(--ink-2); }
