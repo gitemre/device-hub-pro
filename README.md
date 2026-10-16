@@ -11,6 +11,7 @@
 
 <p align="center">
   <a href="https://github.com/gitemre/device-hub-pro/releases/latest"><b>Download</b></a> ·
+  <a href="https://gitemre.github.io/device-hub-pro/">Website</a> ·
   <a href="docs/features.md">Features</a> ·
   <a href="docs/troubleshooting.md">Help</a>
 </p>
@@ -71,6 +72,6 @@ https://github.com/user-attachments/assets/ce1dfe54-e4f0-4af9-82fc-6a27585b85fb
 
 ## More
 
-[Features](docs/features.md) · [Troubleshooting](docs/troubleshooting.md) · [Changelog](CHANGELOG.md) · [Contributing](CONTRIBUTING.md) · [Security](SECURITY.md)
+[Website](https://gitemre.github.io/device-hub-pro/) · [Features](docs/features.md) · [Troubleshooting](docs/troubleshooting.md) · [Changelog](CHANGELOG.md) · [Contributing](CONTRIBUTING.md) · [Security](SECURITY.md)
 
 MIT License · © 2026 Emre Özturk and contributors
