@@ -161,14 +161,23 @@ struct CompactMirrorView: View {
         .toolbar(removing: .title)
         .toolbar {
             #if swift(>=6.2)
-            ToolbarItem(placement: .navigation) {
-                titleBlock(stage)
+            if #available(macOS 26, *) {
+                ToolbarItem(placement: .navigation) {
+                    titleBlock(stage)
+                }
+                .sharedBackgroundVisibility(.hidden)
+                ToolbarItem(placement: .primaryAction) {
+                    capsule
+                }
+                .sharedBackgroundVisibility(.hidden)
+            } else {
+                ToolbarItem(placement: .navigation) {
+                    titleBlock(stage)
+                }
+                ToolbarItem(placement: .primaryAction) {
+                    capsule
+                }
             }
-            .sharedBackgroundVisibility(.hidden)
-            ToolbarItem(placement: .primaryAction) {
-                capsule
-            }
-            .sharedBackgroundVisibility(.hidden)
             #else
             ToolbarItem(placement: .navigation) {
                 titleBlock(stage)

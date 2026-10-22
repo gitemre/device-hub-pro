@@ -45,7 +45,7 @@ jobs:
           echo "DEVELOPER_DIR=$best/Contents/Developer" >> "$GITHUB_ENV"
           echo "Selected $best (Xcode $best_version)"
 
-      # Package.swift links the app with `-platform_version macos 26.0 <sdk>`:
+      # Package.swift links the app with `-platform_version macos 15.0 <sdk>`:
       # the minimum must equal `platforms` and packaging/Info.plist's
       # LSMinimumSystemVersion (DeploymentTargetTests checks the three in
       # `swift test` below), and the SDK number is the SDK the app claims in

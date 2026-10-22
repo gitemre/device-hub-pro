@@ -1,6 +1,6 @@
 # Third-party notices
 
-Device Hub Pro is released under the MIT License (see `LICENSE`, Copyright (c) 2026 Emre Özturk and Device Hub Pro contributors). The Device Hub Pro app also contains the third-party components listed below. This file covers what ships inside `Device Hub Pro.app`: code linked into the executable and files in its resource bundles. The app uses the Swift runtime that macOS includes and bundles none. Build-time tools such as the protobuf and gRPC code generators do not ship. `Scripts/package-app.sh` turns this file into the Credits shown in **Device Hub Pro ▸ About Device Hub Pro**.
+Device Hub Pro is released under the MIT License (see `LICENSE`, Copyright (c) 2026 Emre Özturk and Device Hub Pro contributors). The Device Hub Pro app also contains the third-party components listed below. This file covers what ships inside `Device Hub Pro.app`: code linked into the executable, files in its resource bundles, and the Swift compatibility library in `Contents/Frameworks`. Build-time tools such as the protobuf and gRPC code generators do not ship. `Scripts/package-app.sh` turns this file into the Credits shown in **Device Hub Pro ▸ About Device Hub Pro**.
 
 <!--
   Keep this list in sync with Package.resolved. Scripts/package-app.sh
@@ -183,6 +183,14 @@ The versions are the ones pinned in `Package.resolved`.
 - License: MIT. Copyright: Andy Matuschak, Elgato Systems GmbH, Kornel Lesiński, Mayur Pawashe, C.W. Betts, Petroules Corporation, Big Nerd Ranch and the Sparkle contributors. Its `LICENSE` also carries the terms of the code Sparkle bundles (bsdiff and bspatch, sais-lite, ed25519 and SUSpiffy); the packaged copy is unchanged.
 - Embedded in `Contents/Frameworks` and used only when the build names an appcast (`Check for Updates…`, Settings ▸ Updates).
 - Source: [github.com/sparkle-project/Sparkle](https://github.com/sparkle-project/Sparkle)
+
+## Swift runtime
+
+### Swift compatibility library (`libswiftCompatibilitySpan.dylib`)
+
+- Where: `Contents/Frameworks`. The Swift toolchain provides it so that the app runs on macOS 15. macOS 26 and later include this library, and the app uses the system copy there.
+- License: Apache-2.0 with Runtime Library Exception. Copyright: Apple Inc. and the Swift project authors.
+- Source: [github.com/swiftlang/swift](https://github.com/swiftlang/swift)
 
 ## Resolved packages that do not ship
 

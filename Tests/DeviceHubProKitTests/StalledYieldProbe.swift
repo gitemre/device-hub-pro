@@ -15,6 +15,7 @@ import Foundation
 /// stalls. `stop` runs on a thread of its own, so a watcher that still waits
 /// fails the probe after `timeout` instead of hanging the test process: once
 /// the handler returns, the yield completes and so does `stop`.
+@available(macOS 26, *)
 enum StalledYieldProbe {
     /// Whether `stop` returns while an emission's `yield` to `stream`'s
     /// consumer is stalled on the consumer's status-record lock.

@@ -1,11 +1,10 @@
 import SwiftUI
 
 extension View {
-    /// Liquid glass surface. The app requires macOS 26, where the Glass API
-    /// always exists; the compiler gate keeps the repo building with a Swift
-    /// 6.1 toolchain (Xcode 16's SDK has no Glass API), which draws a
-    /// material instead. The same gate picks glass or its fallback in every
-    /// helper below.
+    /// Liquid glass surface on macOS 26 and later; macOS 15 has no Glass API
+    /// and draws a material instead. The compiler gate also keeps the repo
+    /// building with a Swift 6.1 toolchain (Xcode 16's SDK has no Glass API).
+    /// The same two gates pick glass or its fallback in every helper below.
     @ViewBuilder
     func liquidGlass(in shape: some InsettableShape = Capsule()) -> some View {
         liquidGlass(interactive: false, tint: nil, in: shape)
@@ -26,27 +25,36 @@ extension View {
         in shape: some InsettableShape = Capsule()
     ) -> some View {
         #if swift(>=6.2)
-        if let tint {
-            if interactive {
-                self.glassEffect(.regular.tint(tint).interactive(), in: shape)
+        if #available(macOS 26, *) {
+            if let tint {
+                if interactive {
+                    self.glassEffect(.regular.tint(tint).interactive(), in: shape)
+                } else {
+                    self.glassEffect(.regular.tint(tint), in: shape)
+                }
+            } else if interactive {
+                self.glassEffect(.regular.interactive(), in: shape)
             } else {
-                self.glassEffect(.regular.tint(tint), in: shape)
+                self.glassEffect(.regular, in: shape)
             }
-        } else if interactive {
-            self.glassEffect(.regular.interactive(), in: shape)
         } else {
-            self.glassEffect(.regular, in: shape)
+            self.background(.regularMaterial, in: shape)
         }
         #else
         self.background(.regularMaterial, in: shape)
         #endif
     }
 
-    /// Toolbar-adjacent controls: glass, bordered on the Swift 6.1 fallback.
+    /// Toolbar-adjacent controls: glass, bordered on macOS 15 and the Swift
+    /// 6.1 fallback.
     @ViewBuilder
     func glassButton() -> some View {
         #if swift(>=6.2)
-        self.buttonStyle(.glass)
+        if #available(macOS 26, *) {
+            self.buttonStyle(.glass)
+        } else {
+            self.buttonStyle(.bordered)
+        }
         #else
         self.buttonStyle(.bordered)
         #endif
@@ -54,12 +62,17 @@ extension View {
 
     /// Hairline edge light + soft shadow so the flat material fallback reads
     /// as glass even over flat backgrounds, Device Hub style. Real glass
-    /// draws its own edges, so this only applies on the fallback (Swift 6.1)
-    /// path — never hardcode edges over real glass.
+    /// draws its own edges, so this only applies on the fallback (macOS 15,
+    /// Swift 6.1) path — never hardcode edges over real glass.
     @ViewBuilder
     func glassHairline<S: InsettableShape>(in shape: S) -> some View {
         #if swift(>=6.2)
-        self
+        if #available(macOS 26, *) {
+            self
+        } else {
+            self.overlay(shape.strokeBorder(.white.opacity(0.5), lineWidth: 0.5))
+                .shadow(color: .black.opacity(0.1), radius: 6, x: 0, y: 2)
+        }
         #else
         self.overlay(shape.strokeBorder(.white.opacity(0.5), lineWidth: 0.5))
             .shadow(color: .black.opacity(0.1), radius: 6, x: 0, y: 2)
@@ -67,8 +80,8 @@ extension View {
     }
 
     /// Device Hub's toolbar control surface (TB-01…TB-04): the real Liquid
-    /// Glass (one glass surface per cluster), material + hairline on the
-    /// Swift 6.1 fallback. The system's *shared toolbar background* is hidden
+    /// Glass (one glass surface per cluster), material + hairline on macOS
+    /// 15 and the Swift 6.1 fallback. The system's *shared toolbar background* is hidden
     /// at the ToolbarItem level (`sharedBackgroundVisibility(.hidden)`) —
     /// that shared background was what drew a glass rim around every button
     /// inside the cluster; the glass below is DH's actual material.
@@ -104,12 +117,16 @@ extension View {
         modifier(GlassRim(shape: shape))
     }
 
-    /// Primary actions: glass prominent, bordered prominent on the Swift 6.1
-    /// fallback.
+    /// Primary actions: glass prominent, bordered prominent on macOS 15 and
+    /// the Swift 6.1 fallback.
     @ViewBuilder
     func glassProminentButton() -> some View {
         #if swift(>=6.2)
-        self.buttonStyle(.glassProminent)
+        if #available(macOS 26, *) {
+            self.buttonStyle(.glassProminent)
+        } else {
+            self.buttonStyle(.borderedProminent)
+        }
         #else
         self.buttonStyle(.borderedProminent)
         #endif

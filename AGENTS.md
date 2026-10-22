@@ -1,6 +1,6 @@
 # AGENTS.md
 
-Device Hub Pro is a macOS SwiftPM app (macOS 26+, Swift 6.1): an Android device manager
+Device Hub Pro is a macOS SwiftPM app (macOS 15+, Swift 6.1): an Android device manager
 inspired by Xcode's Device Hub that works alongside it. `Sources/DeviceHubProKit` is
 UI-free kit logic; `Sources/DeviceHubProApp` is the SwiftUI app. These rules apply to
 people and coding agents alike.
@@ -40,7 +40,7 @@ people and coding agents alike.
   the selected row's device only: gate it on `DeviceWorkspace.menuTargetSerial` (Android) or
   `contextIsSelection`, never on `workspace.context.serial` / `context.device` alone. The
   context keeps the last mirrored device while a stopped or other-tab row is selected.
-- Do not remove the `-platform_version macos 26.0 27.0` linker flag in `Package.swift`
+- Do not remove the `-platform_version macos 15.0 27.0` linker flag in `Package.swift`
   (LC_BUILD_VERSION would otherwise claim the deployment target as the SDK, not the SDK the app
   is built with). Keep the minimum equal to `platforms` and to `LSMinimumSystemVersion` in
   `packaging/Info.plist` (`DeploymentTargetTests` checks the three, and that this file and

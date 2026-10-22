@@ -795,7 +795,13 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
                 // it: the trio ran ≈14 pt into the inspector, collapsed into
                 // the overflow chevron at 1200 pt and kept the gap with the
                 // inspector hidden (TB-03).
-                if let inspectorIndex = toolbar.items.firstIndex(where: {
+                //
+                // macOS 15 only: the separator tracks no inspector there, so
+                // the two flexible spaces split the width and the trio sat in
+                // the middle of the stage. It gets neither, and the trio sits
+                // right-aligned beside the inspector capsule.
+                if #available(macOS 26, *),
+                   let inspectorIndex = toolbar.items.firstIndex(where: {
                     $0.itemIdentifier.rawValue == "inspector-capsule"
                 }), !toolbar.items.contains(where: { $0.itemIdentifier == .inspectorTrackingSeparator }) {
                     toolbar.insertItem(withItemIdentifier: .flexibleSpace, at: inspectorIndex)
