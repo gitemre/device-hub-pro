@@ -6,6 +6,14 @@ All notable changes to Device Hub Pro are recorded here. The format follows
 
 ## [Unreleased]
 
+## [1.2.0] - 2026-10-22
+
+### Added
+
+- New: Device Hub Pro runs on macOS 15 Sequoia. It needed macOS 26 before.
+- On macOS 15 the app uses the classic look instead of Liquid Glass.
+- iOS simulator touch input needs Xcode 27, and iPhone Duo needs Xcode 27.1. Both need macOS 26.6.
+
 ## [1.1.4] - 2026-10-16
 
 ### Fixed
