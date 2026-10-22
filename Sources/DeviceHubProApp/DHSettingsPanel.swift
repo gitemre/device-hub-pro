@@ -915,6 +915,20 @@ struct DHSlider: View {
     @ViewBuilder
     private var slider: some View {
         #if swift(>=6.2)
+        if #available(macOS 26, *) {
+            tickedSlider
+        } else {
+            plainSlider
+        }
+        #else
+        plainSlider
+        #endif
+    }
+
+    #if swift(>=6.2)
+    @available(macOS 26, *)
+    @ViewBuilder
+    private var tickedSlider: some View {
         if showsDots {
             Slider(
                 value: index,
@@ -939,7 +953,12 @@ struct DHSlider: View {
             Slider(value: index, in: range, onEditingChanged: editingChanged)
                 .labelsHidden()
         }
-        #else
+    }
+    #endif
+
+    /// macOS 15 and the Swift 6.1 fallback have no slider tick API.
+    @ViewBuilder
+    private var plainSlider: some View {
         if showsDots {
             Slider(value: index, in: range, step: 1, onEditingChanged: editingChanged)
                 .labelsHidden()
@@ -947,7 +966,6 @@ struct DHSlider: View {
             Slider(value: index, in: range, onEditingChanged: editingChanged)
                 .labelsHidden()
         }
-        #endif
     }
 }
 

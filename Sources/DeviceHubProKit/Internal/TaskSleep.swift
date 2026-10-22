@@ -10,7 +10,7 @@ extension Task where Success == Never, Failure == Never {
     /// version is `@_alwaysEmitIntoClient`, so each module emits its own weak
     /// copy of the `Clock.sleep(for:)` specialization for `ContinuousClock`.
     /// The copy compiled at our deployment target (macOS 15 when this was
-    /// found, 26 now) needs a 128-byte async context. The copies in the
+    /// found and again now) needs a 128-byte async context. The copies in the
     /// macOS 12 dependencies (grpc-swift-nio-transport,
     /// swift-service-lifecycle) need 112. The native build system merged the
     /// copies, and ld paired our body with a 112-byte function pointer, so

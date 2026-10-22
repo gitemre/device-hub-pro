@@ -40,9 +40,9 @@
 # Ad-hoc builds get no hardened runtime: they cannot be notarized, so it buys
 # them nothing. Its library validation also refuses an ad-hoc dylib in an
 # ad-hoc process ("mapping process and mapped file (non-platform) have
-# different Team IDs"), which made a hardened ad-hoc build abort before main
-# while the app bundled libswiftCompatibilitySpan.dylib for macOS 15. The
-# macOS 26 app bundles no dylib (check_swift_runtime).
+# different Team IDs"), so a hardened ad-hoc build would abort before main on
+# macOS 15, where dyld loads the bundled libswiftCompatibilitySpan.dylib
+# (embed_swift_runtime).
 
 set -euo pipefail
 
@@ -546,26 +546,35 @@ check_minimum_system_version() {
     done
 }
 
-# At the macOS 26 deployment target the executable uses only the Swift runtime
-# in the system's /usr/lib/swift. The macOS 15 build also linked the
-# back-deployment library @rpath/libswiftCompatibilitySpan.dylib, and this
-# script bundled it in Contents/Frameworks; the toolchain's back-deployment
-# libraries (lib/swift-5.0, swift-5.5, swift-6.2) all serve targets below
-# macOS 26, and otool -L of the macOS 26 build lists none (Swift 6.4, macOS 27
-# SDK). A toolchain that links one again stops the script: shipping it needs
-# Contents/Frameworks, an rpath to it, its own signature (see the hardened
-# runtime note at the top) and a THIRD_PARTY_NOTICES.md entry.
+# Built for macOS 15, the executable links Swift back-deployment libraries
+# such as @rpath/libswiftCompatibilitySpan.dylib. macOS 26 and later have them
+# in /usr/lib/swift (searched first); macOS 15 needs the copy this step puts in
+# Contents/Frameworks. sign_app signs it, and THIRD_PARTY_NOTICES.md lists it.
 #
 # rpaths: drop absolute paths on the build machine, which would name the
 # builder's folders and mean nothing on another Mac; keep /usr/lib/swift and
-# @-relative ones. At macOS 26 the release builds (Swift Build and native)
-# carry only @loader_path, but a debug build adds SwiftPM's absolute
-# PackageFrameworks folder, so a changed build setup can bring such paths in.
-check_swift_runtime() {
-    local references existing_rpaths rpath
+# @-relative ones, and make sure Contents/Frameworks is one of them when it
+# holds a library (embed_sparkle usually added it already).
+embed_swift_runtime() {
+    local references reference name library stdlib_tool toolchain_lib existing_rpaths rpath
     references="$(otool -L "$executable" | awk '/@rpath\/libswift/ { print $1 }' | sort -u)"
     if [[ -n "$references" ]]; then
-        die "the executable links Swift back-deployment libraries, which the deployment target's macOS does not ship: $(paste -sd ' ' - <<< "$references"). Bundle them in Contents/Frameworks (git log -S embed_swift_runtime -- Scripts/package-app.sh finds the removed step) or raise the deployment target."
+        note "Embedding Swift back-deployment libraries for macOS 15: $(paste -sd ' ' - <<< "$references")"
+        mkdir -p "$contents/Frameworks"
+        if stdlib_tool="$(xcrun --find swift-stdlib-tool 2>/dev/null)"; then
+            "$stdlib_tool" --copy --platform macosx --scan-executable "$executable" --destination "$contents/Frameworks"
+        else
+            toolchain_lib="$(dirname "$(xcrun --find swift)")/../lib"
+            while read -r reference; do
+                name="${reference#@rpath/}"
+                library="$(find "$toolchain_lib" -path "*/macosx/$name" -type f | sort -r | sed -n 1p)"
+                [[ -n "$library" ]] || die "cannot find $name in $toolchain_lib"
+                cp "$library" "$contents/Frameworks/$name"
+            done <<< "$references"
+        fi
+        while read -r reference; do
+            [[ -f "$contents/Frameworks/${reference#@rpath/}" ]] || die "${reference#@rpath/} was not embedded"
+        done <<< "$references"
     fi
 
     existing_rpaths="$(otool -l "$executable" | awk '$1 == "cmd" && $2 == "LC_RPATH" { getline; getline; print $2 }' | sort -u)"
@@ -575,6 +584,9 @@ check_swift_runtime() {
             /*) quietly install_name_tool -delete_rpath "$rpath" "$executable" ;;
         esac
     done <<< "$existing_rpaths"
+    if [[ -n "$references" ]] && ! grep -qx '@executable_path/../Frameworks' <<< "$existing_rpaths"; then
+        quietly install_name_tool -add_rpath @executable_path/../Frameworks "$executable"
+    fi
 }
 
 # Sets the codesign flags (macOS ships bash 3.2: no mapfile): sign_flags for
@@ -604,6 +616,12 @@ sign_app() {
     # Downloader's entitlements.
     local sparkle="$contents/Frameworks/Sparkle.framework" xpc
     local sparkle_b="$sparkle/Versions/B"
+    local library
+    shopt -s nullglob
+    for library in "$contents/Frameworks"/*.dylib; do
+        codesign "${code_sign_flags[@]}" "$library"
+    done
+    shopt -u nullglob
     if [[ -d "$sparkle" ]]; then
         shopt -s nullglob
         for xpc in "$sparkle_b"/XPCServices/*.xpc; do
@@ -705,7 +723,7 @@ else
     build_release
     assemble_app
     check_minimum_system_version
-    check_swift_runtime
+    embed_swift_runtime
     sign_app
 fi
 if ((make_dmg)); then

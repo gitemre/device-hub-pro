@@ -278,11 +278,16 @@ struct ContentView: View {
 
     /// Hides the system's shared toolbar-item background (the new design
     /// draws a glass rim around grouped controls; DH's capsules are flat, so
-    /// our own surface must be the only chrome).
+    /// our own surface must be the only chrome). macOS 15 draws no such
+    /// background.
     @ToolbarContentBuilder
     private func plainToolbarItem<T: ToolbarContent>(_ item: T) -> some ToolbarContent {
         #if swift(>=6.2)
-        item.sharedBackgroundVisibility(.hidden)
+        if #available(macOS 26, *) {
+            item.sharedBackgroundVisibility(.hidden)
+        } else {
+            item
+        }
         #else
         item
         #endif
@@ -292,9 +297,12 @@ struct ContentView: View {
     /// Device Hub's trailing clusters (TB-03, TB-04).
     @ToolbarContentBuilder
     private var trailingToolbar: some ToolbarContent {
-        // Push the device controls to the trailing edge, Device Hub style.
+        // Push the device controls to the trailing edge, Device Hub style
+        // (macOS 15 already puts primary actions there).
         #if swift(>=6.2)
-        ToolbarSpacer(.flexible, placement: .primaryAction)
+        if #available(macOS 26, *) {
+            ToolbarSpacer(.flexible, placement: .primaryAction)
+        }
         #endif
 
         // Background downloads (system images, the emulators waiting on

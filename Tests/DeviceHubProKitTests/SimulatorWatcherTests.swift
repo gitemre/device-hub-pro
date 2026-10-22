@@ -332,6 +332,9 @@ final class SimulatorWatcherTests: XCTestCase {
     /// must not wait for a yield in flight (see the `DeviceWatcher` test of
     /// the same name).
     func testStopReturnsWhileAYieldIsStalledOnTheConsumer() throws {
+        guard #available(macOS 26, *) else {
+            throw XCTSkip("the probe needs withTaskPriorityEscalationHandler (macOS 26)")
+        }
         let stub = try makeStub()
         // Without file events `start()` itself emits `.health(.degraded)`.
         let watcher = SimulatorWatcher(

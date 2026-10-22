@@ -531,6 +531,9 @@ final class DeviceWatcherTests: XCTestCase {
     /// (from `testArmedResumeRecordsAFailureTheAlertAlreadyShows`), whose
     /// teardown cancelled the consumer as the watcher reported a restart.
     func testStopReturnsWhileAYieldIsStalledOnTheConsumer() throws {
+        guard #available(macOS 26, *) else {
+            throw XCTSkip("the probe needs withTaskPriorityEscalationHandler (macOS 26)")
+        }
         let directory = try makeFixtureDirectory()
         let invoked = directory.appendingPathComponent("invoked")
         // One failed start: one `.restarting(attempt: 1)`, then a long wait.

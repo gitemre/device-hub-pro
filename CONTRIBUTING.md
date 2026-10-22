@@ -74,9 +74,9 @@ that matter most:
 
 ## Gotchas
 
-- The app target claims `-platform_version macos 26.0 27.0` in `linkerSettings`
+- The app target claims `-platform_version macos 15.0 27.0` in `linkerSettings`
   (Package.swift) on purpose. Without it, `LC_BUILD_VERSION` names the deployment
-  target (26.0) as the SDK instead of the SDK the app is built with. Do not remove
+  target (15.0) as the SDK instead of the SDK the app is built with. Do not remove
   it. Its first number must equal `platforms` and `LSMinimumSystemVersion` in
   `packaging/Info.plist`: `DeploymentTargetTests` (`swift test`) and
   `Scripts/package-app.sh` check all three. Keep the second number in sync with the

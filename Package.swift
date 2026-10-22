@@ -3,8 +3,9 @@ import PackageDescription
 
 let package = Package(
     name: "DeviceHubPro",
-    // The string form: `.v26` needs swift-tools-version 6.2.
-    platforms: [.macOS("26.0")],
+    // The string form, which DeploymentTargetTests reads. macOS 15 is the
+    // floor of grpc-swift 2; macOS 26-only APIs sit behind #available.
+    platforms: [.macOS("15.0")],
     products: [
         .executable(name: "DeviceHubPro", targets: ["DeviceHubProApp"]),
         .library(name: "DeviceHubProKit", targets: ["DeviceHubProKit"]),
@@ -76,12 +77,11 @@ let package = Package(
             resources: [.copy("Shaders.metal")],
             linkerSettings: [
                 // SwiftPM writes the deployment target into LC_BUILD_VERSION's
-                // SDK slot, so a plain 26.0 build reads `sdk 26.0`: an older
-                // SDK than the one the app is built and verified with. (At
-                // the old 15.0 target the same slot silently opted the app
-                // out of the macOS 26+ design: legacy traffic lights, toolbar
-                // band, controls.) Claim the real SDK so the app gets the
-                // current SDK's behaviour, like Device Hub. The minimum
+                // SDK slot, so a plain 15.0 build reads `sdk 15.0`, which
+                // silently opts the app out of the macOS 26+ design on macOS
+                // 26 (legacy traffic lights, toolbar band, controls). Claim
+                // the real SDK so the app gets the current SDK's behaviour,
+                // like Device Hub. The minimum
                 // (first number) must match `platforms` and packaging/
                 // Info.plist's LSMinimumSystemVersion (DeploymentTargetTests
                 // and package-app.sh check all three); the SDK (second) must
@@ -91,7 +91,7 @@ let package = Package(
                 .unsafeFlags([
                     "-Xlinker", "-platform_version",
                     "-Xlinker", "macos",
-                    "-Xlinker", "26.0",
+                    "-Xlinker", "15.0",
                     "-Xlinker", "27.0",
                 ])
             ]

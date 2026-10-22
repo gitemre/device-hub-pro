@@ -31,7 +31,7 @@
 	<key>LSApplicationCategoryType</key>
 	<string>public.app-category.developer-tools</string>
 	<key>LSMinimumSystemVersion</key>
-	<string>26.0</string>
+	<string>15.0</string>
 	<key>NSBonjourServices</key>
 	<array>
 		<string>_adb-tls-connect._tcp</string>
