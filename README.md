@@ -58,9 +58,9 @@
 
 ## Requirements
 
-- macOS 26 or later on an Apple silicon Mac
+- macOS 15 or later on an Apple silicon Mac
 - **Android:** nothing; the first launch sets it up
-- **iOS:** Xcode
+- **iOS:** Xcode. Touch and keyboard input for simulators is verified with Xcode 27 (macOS 26.6 or later); with an older Xcode the simulator shows view-only
 - **iPhone (optional):** turn it on in Settings; pair the phone in Xcode and switch on Developer Mode ([details](docs/features.md#everything-it-does))
 
 ## Good to know

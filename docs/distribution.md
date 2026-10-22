@@ -275,7 +275,7 @@ The workflow imports the certificate into a temporary keychain, which it deletes
 
 **Before installing:**
 
-- **macOS 26 or later.** Earlier versions do not open the app.
+- **macOS 15 or later.** Earlier versions do not open the app.
 - **Android SDK.** Install the platform tools and the emulator, for example through Android Studio's SDK Manager, or with `sdkmanager "platform-tools" "emulator"`. Opened from the Finder, Device Hub Pro finds the SDK only in `~/Library/Android/sdk`, Android Studio's default. It also finds `adb` and `emulator` in Homebrew's `/opt/homebrew/bin` or `/usr/local/bin`. Apps opened from the Finder do not see `ANDROID_HOME`, `ANDROID_SDK_ROOT` or `PATH` from shell profiles. If the SDK is somewhere else, do one of these:
   - Link it to the default location: `ln -s /path/to/sdk ~/Library/Android/sdk`.
   - Quit Device Hub Pro and start it with the variable set: `open --env ANDROID_HOME=/path/to/sdk -a "Device Hub Pro"`. `DHP_ADB=/path/to/adb` points at one `adb` binary instead.
